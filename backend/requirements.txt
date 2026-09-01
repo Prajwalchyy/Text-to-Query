@@ -24,8 +24,5 @@ structlog>=24.1.0
 fastapi>=0.110.0
 uvicorn>=0.28.0
 
-# Frontend Interactive Dashboard
-streamlit>=1.32.0
-
 # Testing & Benchmarking Suite
 pytest>=8.0.0
