@@ -13,7 +13,11 @@ import {
   Table as TableIcon, 
   ChevronDown, 
   ChevronRight,
-  Layers
+  Layers,
+  Search,
+  Maximize2,
+  Minimize2,
+  FolderPlus
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -25,15 +29,38 @@ export default function Sidebar({
   onRenameChat,
   tables = [],
   onSelectPrompt,
+  onOpenUpload,
   isDark,
   onToggleTheme,
   isOpen,
   onClose
 }) {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'schema'
-  const [expandedTable, setExpandedTable] = useState(tables.length > 0 ? tables[0].name : null);
+  // Multi-table expansion state (Set of table names currently expanded)
+  const [expandedTables, setExpandedTables] = useState(() => new Set(tables.length > 0 ? [tables[0].name] : []));
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const toggleTable = (tableName) => {
+    setExpandedTables((prev) => {
+      const next = new Set(prev);
+      if (next.has(tableName)) {
+        next.delete(tableName);
+      } else {
+        next.add(tableName);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    setExpandedTables(new Set(tables.map((t) => t.name)));
+  };
+
+  const collapseAll = () => {
+    setExpandedTables(new Set());
+  };
 
   const startEditing = (chat, e) => {
     e.stopPropagation();
@@ -53,6 +80,15 @@ export default function Sidebar({
     if (e) e.stopPropagation();
     setEditingChatId(null);
   };
+
+  // Filter tables and columns by search query
+  const filteredTables = tables.filter((t) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const nameMatch = t.name.toLowerCase().includes(q);
+    const colMatch = t.cols.some((c) => c.toLowerCase().includes(q));
+    return nameMatch || colMatch;
+  });
 
   return (
     <aside
@@ -111,6 +147,17 @@ export default function Sidebar({
           >
             <Plus className="w-4 h-4" />
             <span>New Conversation</span>
+          </button>
+        )}
+
+        {/* Upload Database Action (Only visible on Tables tab) */}
+        {activeTab === 'schema' && onOpenUpload && (
+          <button
+            onClick={onOpenUpload}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-all shadow-sm shadow-indigo-600/30 cursor-pointer"
+          >
+            <FolderPlus className="w-4 h-4" />
+            <span>+ Upload Custom Database</span>
           </button>
         )}
       </div>
@@ -222,25 +269,64 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* TAB 2: DATABASE SCHEMA EXPLORER */}
+        {/* TAB 2: DATABASE SCHEMA EXPLORER (With Multi-Table Expansion & Search) */}
         {activeTab === 'schema' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-2 mb-2">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Database Schema
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-mono">
-                {tables.length} tables
-              </span>
+          <div className="space-y-2.5">
+            {/* Instant Search Bar */}
+            <div className="relative px-0.5">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tables or columns..."
+                className={`w-full pl-8 pr-3 py-1.5 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
+                  isDark ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                }`}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
 
-            {tables.length === 0 ? (
+            {/* Quick Actions Header: Table Count + Expand/Collapse All */}
+            <div className="flex items-center justify-between px-1 text-[10px]">
+              <span className="font-semibold text-slate-400 uppercase tracking-wider">
+                {searchQuery ? `Matches (${filteredTables.length})` : `Tables (${tables.length})`}
+              </span>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={expandAll}
+                  className="text-slate-400 hover:text-indigo-400 flex items-center gap-0.5 cursor-pointer"
+                  title="Expand all tables"
+                >
+                  <Maximize2 className="w-2.5 h-2.5" /> Expand All
+                </button>
+                <span className="text-slate-600">|</span>
+                <button
+                  onClick={collapseAll}
+                  className="text-slate-400 hover:text-indigo-400 flex items-center gap-0.5 cursor-pointer"
+                  title="Collapse all tables"
+                >
+                  <Minimize2 className="w-2.5 h-2.5" /> Collapse
+                </button>
+              </div>
+            </div>
+
+            {filteredTables.length === 0 ? (
               <div className="text-xs text-slate-500 text-center py-6">
-                Connecting to database...
+                {searchQuery ? `No tables or columns match "${searchQuery}"` : "Connecting to database..."}
               </div>
             ) : (
-              tables.map((t) => {
-                const isExpanded = expandedTable === t.name;
+              filteredTables.map((t) => {
+                // Check if this specific table is expanded
+                const isExpanded = expandedTables.has(t.name) || Boolean(searchQuery.trim());
                 return (
                   <div
                     key={t.name}
@@ -248,23 +334,23 @@ export default function Sidebar({
                       isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-white'
                     }`}
                   >
-                    {/* Table Title Bar */}
+                    {/* Table Title Bar (Toggles only this table independently) */}
                     <div
-                      onClick={() => setExpandedTable(isExpanded ? null : t.name)}
+                      onClick={() => toggleTable(t.name)}
                       className={`flex items-center justify-between px-3 py-2 cursor-pointer select-none transition-colors ${
                         isExpanded
                           ? isDark ? 'bg-slate-800/60' : 'bg-slate-100'
                           : isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center gap-2 text-xs font-semibold">
-                        <TableIcon className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>{t.name}</span>
+                      <div className="flex items-center gap-2 text-xs font-semibold truncate">
+                        <TableIcon className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span className="truncate">{t.name}</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[10px] text-slate-400 font-mono">
-                          {t.cols.length}
+                          {t.cols.length} cols
                         </span>
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
                       </div>
@@ -274,14 +360,22 @@ export default function Sidebar({
                     {isExpanded && (
                       <div className="p-2.5 border-t border-slate-800/40 space-y-1.5">
                         <ul className="space-y-1 text-xs">
-                          {t.cols.map((col, idx) => (
-                            <li key={idx} className="flex items-center gap-2 py-0.5 px-1 rounded">
-                              <span className="w-1 h-1 rounded-full bg-indigo-400 shrink-0" />
-                              <code className={`font-mono text-[10px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                                {col}
-                              </code>
-                            </li>
-                          ))}
+                          {t.cols.map((col, idx) => {
+                            const isMatched = searchQuery && col.toLowerCase().includes(searchQuery.toLowerCase());
+                            return (
+                              <li 
+                                key={idx} 
+                                className={`flex items-center gap-2 py-0.5 px-1 rounded ${
+                                  isMatched ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : ''
+                                }`}
+                              >
+                                <span className={`w-1 h-1 rounded-full shrink-0 ${isMatched ? 'bg-indigo-400' : 'bg-slate-500'}`} />
+                                <code className={`font-mono text-[10px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                  {col}
+                                </code>
+                              </li>
+                            );
+                          })}
                         </ul>
 
                         <button

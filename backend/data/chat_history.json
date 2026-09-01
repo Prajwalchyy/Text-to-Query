@@ -1,5 +1,296 @@
 [
   {
+    "id": "1788276510507",
+    "title": "how many doctor in each departme",
+    "created_at": "2026-09-01T15:28:30.526047+00:00",
+    "messages": [
+      {
+        "id": "1788276718743",
+        "role": "user",
+        "content": "how many doctor in each department have?",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:31:58.798381+00:00"
+      },
+      {
+        "id": "1788276726526",
+        "role": "assistant",
+        "content": "Each department listed—Cardiology, Neurology, Pediatrics, Orthopedics, and Dermatology—has exactly one doctor.",
+        "sql": "SELECT d.DepartmentName, COUNT(doc.DoctorID) AS DoctorCount\nFROM Departments d\nLEFT JOIN Doctors doc ON d.DepartmentID = doc.DepartmentID\nGROUP BY d.DepartmentID;",
+        "data": [
+          {
+            "DepartmentName": "Cardiology",
+            "DoctorCount": 1
+          },
+          {
+            "DepartmentName": "Neurology",
+            "DoctorCount": 1
+          },
+          {
+            "DepartmentName": "Pediatrics",
+            "DoctorCount": 1
+          },
+          {
+            "DepartmentName": "Orthopedics",
+            "DoctorCount": 1
+          },
+          {
+            "DepartmentName": "Dermatology",
+            "DoctorCount": 1
+          },
+          {
+            "DepartmentName": "Emergency Care",
+            "DoctorCount": 0
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.97,
+          "latency_ms": 7634,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "healthcare_patients_1788275477",
+          "db_name": "Healthcare patients"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:32:06.536384+00:00"
+      },
+      {
+        "id": "1788277252997",
+        "role": "user",
+        "content": "count total doctor ",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:40:53.012837+00:00"
+      },
+      {
+        "id": "1788277254565",
+        "role": "assistant",
+        "content": "There are 5 doctors in the database.",
+        "sql": "SELECT COUNT(*) FROM Doctors;",
+        "data": [
+          {
+            "COUNT(*)": 5
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.98,
+          "latency_ms": 1462,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "healthcare_patients_1788275477",
+          "db_name": "Healthcare patients"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:40:54.583337+00:00"
+      },
+      {
+        "id": "1788277532927",
+        "role": "user",
+        "content": "find how many patient each doctor see",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:45:32.942423+00:00"
+      },
+      {
+        "id": "1788277535742",
+        "role": "assistant",
+        "content": "According to the data, each doctor—Sarah Connors, Robert Chen, Emily Watson, Michael Chang, and Jessica Alba—has seen exactly one distinct patient.",
+        "sql": "SELECT d.DoctorID, d.FirstName, d.LastName, COUNT(DISTINCT a.PatientID) AS PatientCount\nFROM Doctors d\nJOIN Appointments a ON d.DoctorID = a.DoctorID\nGROUP BY d.DoctorID, d.FirstName, d.LastName;",
+        "data": [
+          {
+            "DoctorID": 1,
+            "FirstName": "Sarah",
+            "LastName": "Connors",
+            "PatientCount": 1
+          },
+          {
+            "DoctorID": 2,
+            "FirstName": "Robert",
+            "LastName": "Chen",
+            "PatientCount": 1
+          },
+          {
+            "DoctorID": 3,
+            "FirstName": "Emily",
+            "LastName": "Watson",
+            "PatientCount": 1
+          },
+          {
+            "DoctorID": 4,
+            "FirstName": "Michael",
+            "LastName": "Chang",
+            "PatientCount": 1
+          },
+          {
+            "DoctorID": 5,
+            "FirstName": "Jessica",
+            "LastName": "Alba",
+            "PatientCount": 1
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.97,
+          "latency_ms": 2736,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "healthcare_patients_1788275477",
+          "db_name": "Healthcare patients"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:45:35.758892+00:00"
+      },
+      {
+        "id": "1788277551906",
+        "role": "user",
+        "content": "select * from patient",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:45:51.922747+00:00"
+      },
+      {
+        "id": "1788277554432",
+        "role": "assistant",
+        "content": "The query returns five patients: 1) James Wilson (PatientID 1, DOB 1985-04-12, male, blood type O+, emergency contact 555-0192); 2) Olivia Taylor (PatientID 2, DOB 1992-09-23, female, blood type A+, emergency contact 555-0143); 3) William Martinez (PatientID 3, DOB 1978-11-05, male, blood type B-, emergency contact 555-0188); 4) Sophia Anderson (PatientID 4, DOB 2001-02-18, female, blood type AB+, emergency contact 555-0112); 5) Lucas Thomas (PatientID 5, DOB 1965-07-30, male, blood type O-, emergency contact 555-0155).",
+        "sql": "SELECT * FROM Patients;",
+        "data": [
+          {
+            "PatientID": 1,
+            "FirstName": "James",
+            "LastName": "Wilson",
+            "DateOfBirth": "1985-04-12",
+            "Gender": "M",
+            "BloodType": "O+",
+            "EmergencyContact": "555-0192"
+          },
+          {
+            "PatientID": 2,
+            "FirstName": "Olivia",
+            "LastName": "Taylor",
+            "DateOfBirth": "1992-09-23",
+            "Gender": "F",
+            "BloodType": "A+",
+            "EmergencyContact": "555-0143"
+          },
+          {
+            "PatientID": 3,
+            "FirstName": "William",
+            "LastName": "Martinez",
+            "DateOfBirth": "1978-11-05",
+            "Gender": "M",
+            "BloodType": "B-",
+            "EmergencyContact": "555-0188"
+          },
+          {
+            "PatientID": 4,
+            "FirstName": "Sophia",
+            "LastName": "Anderson",
+            "DateOfBirth": "2001-02-18",
+            "Gender": "F",
+            "BloodType": "AB+",
+            "EmergencyContact": "555-0112"
+          },
+          {
+            "PatientID": 5,
+            "FirstName": "Lucas",
+            "LastName": "Thomas",
+            "DateOfBirth": "1965-07-30",
+            "Gender": "M",
+            "BloodType": "O-",
+            "EmergencyContact": "555-0155"
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.97,
+          "latency_ms": 2429,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "healthcare_patients_1788275477",
+          "db_name": "Healthcare patients"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:45:54.452393+00:00"
+      }
+    ]
+  },
+  {
+    "id": "1788276219944",
+    "title": "List the top 5 customers by tota",
+    "created_at": "2026-09-01T15:23:39.962976+00:00",
+    "messages": [
+      {
+        "id": "1788276499933",
+        "role": "user",
+        "content": "List the top 5 customers by total invoice spending.",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:28:19.976386+00:00"
+      },
+      {
+        "id": "1788276507304",
+        "role": "assistant",
+        "content": "The query correctly identified the top five customers by total invoice spending: Helena Holý spent $49.62, Richard Cunningham $47.62, Luis Rojas $46.62, Ladislav Kovács $45.62, and Hugh O'Reilly also $45.62.",
+        "sql": "SELECT \n    c.CustomerId,\n    c.FirstName,\n    c.LastName,\n    SUM(i.Total) AS TotalSpent\nFROM Customer c\nJOIN Invoice i ON c.CustomerId = i.CustomerId\nGROUP BY c.CustomerId, c.FirstName, c.LastName\nORDER BY TotalSpent DESC\nLIMIT 5;",
+        "data": [
+          {
+            "CustomerId": 6,
+            "FirstName": "Helena",
+            "LastName": "Holý",
+            "TotalSpent": 49.62
+          },
+          {
+            "CustomerId": 26,
+            "FirstName": "Richard",
+            "LastName": "Cunningham",
+            "TotalSpent": 47.62
+          },
+          {
+            "CustomerId": 57,
+            "FirstName": "Luis",
+            "LastName": "Rojas",
+            "TotalSpent": 46.62
+          },
+          {
+            "CustomerId": 45,
+            "FirstName": "Ladislav",
+            "LastName": "Kovács",
+            "TotalSpent": 45.62
+          },
+          {
+            "CustomerId": 46,
+            "FirstName": "Hugh",
+            "LastName": "O'Reilly",
+            "TotalSpent": 45.62
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.98,
+          "latency_ms": 7241,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "chinook",
+          "db_name": "Chinook (Music)"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T15:28:27.320922+00:00"
+      }
+    ]
+  },
+  {
     "id": "1788272342343",
     "title": "General Music Queries",
     "created_at": "2026-09-01T14:19:02.353231+00:00",

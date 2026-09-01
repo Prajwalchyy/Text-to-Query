@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Shield, Database, PlusCircle, ChevronDown } from 'lucide-react';
+import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
-import SchemaDrawer from './components/SchemaDrawer';
 import UploadDbModal from './components/UploadDbModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -30,7 +29,6 @@ export default function App() {
 
   // Schema states
   const [tables, setTables] = useState([]);
-  const [schemaDrawerOpen, setSchemaDrawerOpen] = useState(false);
   const [prefilledPrompt, setPrefilledPrompt] = useState('');
 
   // Execution states
@@ -79,7 +77,6 @@ export default function App() {
         const data = await res.json();
         setDatabases(data.databases || []);
         if (data.databases && data.databases.length > 0) {
-          // If current selectedDbId is not in list, fallback to first
           if (!data.databases.some(d => d.id === selectedDbId)) {
             setSelectedDbId(data.databases[0].id);
           }
@@ -199,6 +196,14 @@ export default function App() {
     setSelectedDbId(newDb.id);
   };
 
+  // Callback when a database is deleted
+  const handleDeleteDatabase = (deletedDbId) => {
+    setDatabases(prev => prev.filter(d => d.id !== deletedDbId));
+    if (selectedDbId === deletedDbId) {
+      setSelectedDbId("chinook");
+    }
+  };
+
   // Send message: Runs Text-to-SQL Pipeline against the selected database
   const handleSendMessage = async (text) => {
     if (!text.trim() || isLoading) return;
@@ -291,7 +296,7 @@ export default function App() {
     <div className={`flex h-screen overflow-hidden font-sans transition-colors duration-200 ${
       isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
-      {/* ChatGPT-style Left Sidebar */}
+      {/* ChatGPT-style Left Sidebar (with integrated Chats & Searchable Tables) */}
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
@@ -301,26 +306,20 @@ export default function App() {
         onRenameChat={handleRenameChat}
         tables={tables}
         onSelectPrompt={handleSelectPrompt}
+        onOpenUpload={() => setUploadModalOpen(true)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      {/* Slide-over Schema Drawer */}
-      <SchemaDrawer
-        isOpen={schemaDrawerOpen}
-        onClose={() => setSchemaDrawerOpen(false)}
-        tables={tables}
-        onSelectPrompt={handleSelectPrompt}
-        isDark={isDark}
-      />
-
-      {/* Upload Database Modal */}
+      {/* Manage & Upload Databases Modal */}
       <UploadDbModal
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
+        databases={databases}
         onUploadSuccess={handleUploadSuccess}
+        onDeleteDatabase={handleDeleteDatabase}
         isDark={isDark}
         apiBaseUrl={API_BASE_URL}
       />
@@ -345,15 +344,21 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* 🗄️ LIVE DATABASE DROPDOWN SELECTOR */}
-            <div className="flex items-center gap-1.5">
+            {/* 🗄️ PROMINENT DATABASE SELECTOR & UPLOAD CONTROLS */}
+            <div className="flex items-center gap-2">
               <div className={`relative flex items-center rounded-xl border text-xs ${
                 isDark ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'
               }`}>
                 <Database className="w-3.5 h-3.5 ml-2.5 text-indigo-400 shrink-0" />
                 <select
                   value={selectedDbId}
-                  onChange={(e) => setSelectedDbId(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === '__upload_new__') {
+                      setUploadModalOpen(true);
+                    } else {
+                      setSelectedDbId(e.target.value);
+                    }
+                  }}
                   className="bg-transparent py-1.5 pl-2 pr-7 text-xs font-medium focus:outline-none appearance-none cursor-pointer"
                   title="Switch database for this chat"
                 >
@@ -366,36 +371,23 @@ export default function App() {
                       {db.name} ({db.table_count} tables)
                     </option>
                   ))}
+                  <option value="__upload_new__" className="text-indigo-400 font-semibold">
+                    + Upload New Database...
+                  </option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 pointer-events-none" />
               </div>
 
-              {/* + Upload Custom DB Button */}
+              {/* ➕ CLEAR, PROMINENT "UPLOAD DB" BUTTON */}
               <button
                 onClick={() => setUploadModalOpen(true)}
-                className={`p-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-slate-800/80 border-slate-700 text-indigo-400 hover:bg-slate-700' 
-                    : 'bg-white border-slate-300 text-indigo-600 hover:bg-slate-100 shadow-xs'
-                }`}
-                title="Upload your own database file (.db)"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs shadow-indigo-600/30 transition-all cursor-pointer"
+                title="Manage or upload database files (.db)"
               >
-                <PlusCircle className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
+                <span>Upload DB</span>
               </button>
             </div>
-
-            {/* Schema Drawer Trigger Button */}
-            <button
-              onClick={() => setSchemaDrawerOpen(true)}
-              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                isDark
-                  ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'
-                  : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 shadow-xs'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span>Tables ({tables.length})</span>
-            </button>
 
             {!apiOnline && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -433,7 +425,7 @@ export default function App() {
                 <h2 className="text-xl font-bold mb-1.5">What can I query for you today?</h2>
                 <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-4">
                   Currently querying: <strong className="text-indigo-400">{currentDb.name}</strong> ({tables.length} tables).
-                  You can switch databases using the dropdown above or upload your own SQLite file.
+                  You can inspect tables in the left sidebar or upload your own SQLite file.
                 </p>
               </div>
             )}
@@ -457,12 +449,11 @@ export default function App() {
           </div>
         </div>
 
-        {/* Bottom Sticky Prompt Bar */}
+        {/* Bottom Sticky Prompt Bar (Clean without suggestions) */}
         <ChatInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
           isDark={isDark}
-          showSuggestions={!activeChat?.messages || activeChat.messages.length === 0}
           prefilledText={prefilledPrompt}
         />
       </div>

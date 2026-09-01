@@ -1,18 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 
-const SUGGESTIONS = [
-  "Which 3 artists have the most albums in the catalog?",
-  "List the top 5 customers by total invoice spending.",
-  "How many total tracks are in the database?",
-  "Find the top 5 longest tracks by duration."
-];
-
 export default function ChatInput({ 
   onSendMessage, 
   isLoading, 
   isDark, 
-  showSuggestions,
   prefilledText = '' 
 }) {
   const [text, setText] = useState('');
@@ -42,26 +34,6 @@ export default function ChatInput({
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-4">
-      {/* Quick Suggestion Pills (when chat is empty) */}
-      {showSuggestions && (
-        <div className="flex flex-wrap gap-2 mb-3 justify-center">
-          {SUGGESTIONS.map((s, idx) => (
-            <button
-              key={idx}
-              onClick={() => onSendMessage(s)}
-              disabled={isLoading}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                isDark
-                  ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-indigo-300'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-400 hover:text-indigo-600 shadow-xs'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Floating Prompt Bar */}
       <form onSubmit={handleSubmit} className="relative">
         <div className={`flex items-center rounded-2xl border transition-all p-2 shadow-lg ${
@@ -75,7 +47,7 @@ export default function ChatInput({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your database (or click a table from the schema explorer)..."
+            placeholder="Ask anything about your database (e.g. Total sales by country, Top 5 products)..."
             className={`w-full px-3 py-1.5 text-sm resize-none bg-transparent focus:outline-none max-h-32 ${
               isDark ? 'text-slate-100 placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
             }`}
