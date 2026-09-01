@@ -3,6 +3,9 @@ import {
   Plus, 
   MessageSquare, 
   Trash2, 
+  Pencil, 
+  Check, 
+  X, 
   Database, 
   Sun, 
   Moon, 
@@ -19,6 +22,7 @@ export default function Sidebar({
   onSelectChat,
   onNewChat,
   onDeleteChat,
+  onRenameChat,
   tables = [],
   onSelectPrompt,
   isDark,
@@ -28,6 +32,27 @@ export default function Sidebar({
 }) {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'schema'
   const [expandedTable, setExpandedTable] = useState(tables.length > 0 ? tables[0].name : null);
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+
+  const startEditing = (chat, e) => {
+    e.stopPropagation();
+    setEditingChatId(chat.id);
+    setEditTitle(chat.title);
+  };
+
+  const handleSaveRename = (chatId, e) => {
+    if (e) e.stopPropagation();
+    if (editTitle.trim() && onRenameChat) {
+      onRenameChat(chatId, editTitle.trim());
+    }
+    setEditingChatId(null);
+  };
+
+  const handleCancelRename = (e) => {
+    if (e) e.stopPropagation();
+    setEditingChatId(null);
+  };
 
   return (
     <aside
@@ -106,10 +131,12 @@ export default function Sidebar({
             ) : (
               chats.map((chat) => {
                 const isActive = chat.id === activeChatId;
+                const isEditing = editingChatId === chat.id;
+
                 return (
                   <div
                     key={chat.id}
-                    className={`group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       isActive
                         ? isDark
                           ? 'bg-slate-800 text-white border border-slate-700'
@@ -119,25 +146,75 @@ export default function Sidebar({
                           : 'text-slate-600 hover:bg-slate-200/50 hover:text-slate-900'
                     }`}
                     onClick={() => {
-                      onSelectChat(chat.id);
-                      if (onClose) onClose();
+                      if (!isEditing) {
+                        onSelectChat(chat.id);
+                        if (onClose) onClose();
+                      }
                     }}
                   >
-                    <div className="flex items-center gap-2.5 truncate pr-2">
-                      <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
-                      <span className="truncate">{chat.title || 'Untitled Conversation'}</span>
-                    </div>
+                    {isEditing ? (
+                      /* Inline Edit Mode */
+                      <div className="flex items-center gap-1.5 w-full py-0.5" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRename(chat.id, e);
+                            if (e.key === 'Escape') handleCancelRename(e);
+                          }}
+                          autoFocus
+                          className={`w-full px-2 py-1 rounded text-xs focus:outline-none border ${
+                            isDark ? 'bg-slate-950 border-indigo-500 text-white' : 'bg-white border-indigo-500 text-slate-900'
+                          }`}
+                        />
+                        <button
+                          onClick={(e) => handleSaveRename(chat.id, e)}
+                          className="p-1 text-emerald-400 hover:bg-emerald-500/10 rounded cursor-pointer shrink-0"
+                          title="Save (Enter)"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={handleCancelRename}
+                          className="p-1 text-rose-400 hover:bg-rose-500/10 rounded cursor-pointer shrink-0"
+                          title="Cancel (Esc)"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      /* Standard View Mode */
+                      <>
+                        <div className="flex items-center gap-2.5 truncate pr-2 flex-1">
+                          <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+                          <span className="truncate">{chat.title || 'Untitled Conversation'}</span>
+                        </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteChat(chat.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-rose-500/10 hover:text-rose-400 text-slate-500 transition-all cursor-pointer"
-                      title="Delete chat"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Rename Button */}
+                          <button
+                            onClick={(e) => startEditing(chat, e)}
+                            className="p-1 rounded hover:bg-indigo-500/10 hover:text-indigo-400 text-slate-500 transition-all cursor-pointer"
+                            title="Rename chat"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteChat(chat.id);
+                            }}
+                            className="p-1 rounded hover:bg-rose-500/10 hover:text-rose-400 text-slate-500 transition-all cursor-pointer"
+                            title="Delete chat"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })
@@ -150,7 +227,7 @@ export default function Sidebar({
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2 mb-2">
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                Chinook SQLite Schema
+                Database Schema
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-mono">
                 {tables.length} tables
@@ -233,7 +310,7 @@ export default function Sidebar({
       <div className={`p-4 border-t ${isDark ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-200 bg-white/40'}`}>
         <div className="flex items-center justify-between mb-3 px-1 text-xs">
           <span className="flex items-center gap-1.5 text-slate-400">
-            <Database className="w-3.5 h-3.5 text-indigo-400" /> Chinook SQLite
+            <Database className="w-3.5 h-3.5 text-indigo-400" /> System Status
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
             Active

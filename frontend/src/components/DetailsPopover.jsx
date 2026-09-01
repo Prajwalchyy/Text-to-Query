@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Info, ShieldCheck, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { Info, ShieldCheck, CheckCircle2, AlertTriangle, X, ShieldAlert } from 'lucide-react';
 
 export default function DetailsPopover({ telemetry, isDark }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,7 +22,15 @@ export default function DetailsPopover({ telemetry, isDark }) {
 
   if (!telemetry) return null;
 
-  const { confidence_score = 0, latency_ms = 0, attempts = 1, status = "SUCCESS" } = telemetry;
+  const { 
+    confidence_score = 0, 
+    latency_ms = 0, 
+    attempts = 1, 
+    status = "SUCCESS", 
+    error = null 
+  } = telemetry;
+
+  const isSuccess = status === "SUCCESS";
   const confidencePercent = Math.round(confidence_score * 100);
   const latencySec = (latency_ms / 1000).toFixed(2);
 
@@ -32,20 +40,26 @@ export default function DetailsPopover({ telemetry, isDark }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
-          isDark
-            ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
+          !isSuccess
+            ? isDark ? 'text-rose-400 hover:bg-rose-500/10' : 'text-rose-600 hover:bg-rose-50'
+            : isDark
+              ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/60'
         }`}
         aria-label="View response technical details"
       >
-        <Info className="w-3.5 h-3.5 text-indigo-400" />
-        <span>Response Details</span>
+        {!isSuccess ? (
+          <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+        ) : (
+          <Info className="w-3.5 h-3.5 text-indigo-400" />
+        )}
+        <span>Response Details {!isSuccess && "(Blocked)"}</span>
       </button>
 
       {/* Floating details card */}
       {isOpen && (
         <div
-          className={`absolute left-0 bottom-8 z-50 w-72 rounded-xl p-4 shadow-xl border backdrop-blur-md transition-all text-xs ${
+          className={`absolute left-0 bottom-8 z-50 w-80 rounded-xl p-4 shadow-xl border backdrop-blur-md transition-all text-xs ${
             isDark
               ? 'bg-slate-900/95 border-slate-700/80 text-slate-200 shadow-black/50'
               : 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-300/50'
@@ -86,7 +100,7 @@ export default function DetailsPopover({ telemetry, isDark }) {
             <div className="flex items-center justify-between pt-1 border-t border-slate-700/30">
               <span className="text-slate-400">Execution Status:</span>
               <div className="flex items-center gap-1">
-                {status === "SUCCESS" ? (
+                {isSuccess ? (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="font-semibold text-emerald-400">Successful</span>
@@ -102,8 +116,26 @@ export default function DetailsPopover({ telemetry, isDark }) {
 
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Guardrails:</span>
-              <span className="text-emerald-400 font-medium">AST & Allowlist Passed</span>
+              {isSuccess ? (
+                <span className="text-emerald-400 font-medium">AST & Allowlist Passed</span>
+              ) : (
+                <span className="text-rose-400 font-medium">Enforced (Read-Only)</span>
+              )}
             </div>
+
+            {/* Detailed Guardrail Diagnostic Note (Cleanly inside popover) */}
+            {error && (
+              <div className="mt-2.5 pt-2 border-t border-slate-700/40">
+                <span className="text-[10px] font-semibold text-rose-400 block mb-1">
+                  Guardrail Diagnostic:
+                </span>
+                <p className={`text-[11px] font-mono leading-relaxed p-2 rounded-lg border break-words ${
+                  isDark ? 'bg-slate-950/70 border-slate-800 text-slate-300' : 'bg-rose-50/50 border-rose-200 text-rose-800'
+                }`}>
+                  {error}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

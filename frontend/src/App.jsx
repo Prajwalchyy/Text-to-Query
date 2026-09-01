@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Shield, Database } from 'lucide-react';
+import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Shield, Database, PlusCircle, ChevronDown } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import SchemaDrawer from './components/SchemaDrawer';
+import UploadDbModal from './components/UploadDbModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -21,19 +22,35 @@ export default function App() {
   // Chat sessions state (Loaded and saved directly via FastAPI Backend)
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+
+  // Multi-Database states
+  const [databases, setDatabases] = useState([]);
+  const [selectedDbId, setSelectedDbId] = useState("chinook");
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  // Schema states
   const [tables, setTables] = useState([]);
   const [schemaDrawerOpen, setSchemaDrawerOpen] = useState(false);
   const [prefilledPrompt, setPrefilledPrompt] = useState('');
+
+  // Execution states
   const [isLoading, setIsLoading] = useState(false);
   const [apiOnline, setApiOnline] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // 1. Initial Load: Fetch chats and live database schema from Backend
+  // 1. Initial Load: Fetch chats, databases, and schema
   useEffect(() => {
     loadChatsFromBackend();
-    loadSchemaFromBackend();
+    loadDatabases();
   }, []);
+
+  // When selected database changes, reload schema for that database
+  useEffect(() => {
+    if (selectedDbId) {
+      loadSchemaForDb(selectedDbId);
+    }
+  }, [selectedDbId]);
 
   const loadChatsFromBackend = async () => {
     try {
@@ -55,15 +72,33 @@ export default function App() {
     }
   };
 
-  const loadSchemaFromBackend = async () => {
+  const loadDatabases = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/tables`);
+      const res = await fetch(`${API_BASE_URL}/databases`);
+      if (res.ok) {
+        const data = await res.json();
+        setDatabases(data.databases || []);
+        if (data.databases && data.databases.length > 0) {
+          // If current selectedDbId is not in list, fallback to first
+          if (!data.databases.some(d => d.id === selectedDbId)) {
+            setSelectedDbId(data.databases[0].id);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load databases:", e);
+    }
+  };
+
+  const loadSchemaForDb = async (dbId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/tables?db_id=${encodeURIComponent(dbId)}`);
       if (res.ok) {
         const data = await res.json();
         setTables(data.tables || []);
       }
     } catch (e) {
-      console.error("Failed to load schema:", e);
+      console.error("Failed to load schema for db:", dbId, e);
     }
   };
 
@@ -87,6 +122,7 @@ export default function App() {
 
   // Active chat session object
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0] || { messages: [] };
+  const currentDb = databases.find(d => d.id === selectedDbId) || { name: "Chinook (Music)", id: "chinook" };
 
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -97,7 +133,7 @@ export default function App() {
     scrollToBottom();
   }, [activeChat?.messages, isLoading]);
 
-  // 2. Create a new conversation on Backend
+  // Create a new conversation on Backend
   const handleNewChat = async () => {
     const newId = Date.now().toString();
     const newChatObj = { id: newId, title: "New Conversation", messages: [] };
@@ -116,7 +152,7 @@ export default function App() {
     }
   };
 
-  // 3. Delete a conversation on Backend
+  // Delete a conversation on Backend
   const handleDeleteChat = async (chatId) => {
     setChats(prev => {
       const filtered = prev.filter(c => c.id !== chatId);
@@ -142,7 +178,28 @@ export default function App() {
     }
   };
 
-  // 4. Send message: Saves to Backend Database & runs Text-to-SQL Pipeline
+  // Rename a conversation on Backend
+  const handleRenameChat = async (chatId, newTitle) => {
+    setChats(prev => prev.map(c => c.id === chatId ? { ...c, title: newTitle } : c));
+
+    try {
+      await fetch(`${API_BASE_URL}/chats/${chatId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+    } catch (err) {
+      console.error("Backend error renaming chat:", err);
+    }
+  };
+
+  // Callback when a new database is uploaded
+  const handleUploadSuccess = (newDb) => {
+    setDatabases(prev => [...prev, newDb]);
+    setSelectedDbId(newDb.id);
+  };
+
+  // Send message: Runs Text-to-SQL Pipeline against the selected database
   const handleSendMessage = async (text) => {
     if (!text.trim() || isLoading) return;
 
@@ -178,7 +235,10 @@ export default function App() {
       const response = await fetch(`${API_BASE_URL}/chats/${currentChatId}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
+        body: JSON.stringify({ 
+          question: text,
+          db_id: selectedDbId 
+        }),
       });
 
       if (!response.ok) {
@@ -231,13 +291,14 @@ export default function App() {
     <div className={`flex h-screen overflow-hidden font-sans transition-colors duration-200 ${
       isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
-      {/* ChatGPT-style Left Sidebar (With Chats and Schema Tabs) */}
+      {/* ChatGPT-style Left Sidebar */}
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
         onSelectChat={setActiveChatId}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
         tables={tables}
         onSelectPrompt={handleSelectPrompt}
         isDark={isDark}
@@ -255,9 +316,18 @@ export default function App() {
         isDark={isDark}
       />
 
+      {/* Upload Database Modal */}
+      <UploadDbModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onUploadSuccess={handleUploadSuccess}
+        isDark={isDark}
+        apiBaseUrl={API_BASE_URL}
+      />
+
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">
-        {/* Top Navbar */}
+        {/* Top Navbar with Dynamic Database Selector */}
         <header className={`h-14 px-4 flex items-center justify-between border-b shrink-0 backdrop-blur-md ${
           isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white/70 border-slate-200'
         }`}>
@@ -275,17 +345,56 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Database Schema Explorer Trigger Button */}
+            {/* 🗄️ LIVE DATABASE DROPDOWN SELECTOR */}
+            <div className="flex items-center gap-1.5">
+              <div className={`relative flex items-center rounded-xl border text-xs ${
+                isDark ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'
+              }`}>
+                <Database className="w-3.5 h-3.5 ml-2.5 text-indigo-400 shrink-0" />
+                <select
+                  value={selectedDbId}
+                  onChange={(e) => setSelectedDbId(e.target.value)}
+                  className="bg-transparent py-1.5 pl-2 pr-7 text-xs font-medium focus:outline-none appearance-none cursor-pointer"
+                  title="Switch database for this chat"
+                >
+                  {databases.map((db) => (
+                    <option 
+                      key={db.id} 
+                      value={db.id}
+                      className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
+                    >
+                      {db.name} ({db.table_count} tables)
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 pointer-events-none" />
+              </div>
+
+              {/* + Upload Custom DB Button */}
+              <button
+                onClick={() => setUploadModalOpen(true)}
+                className={`p-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                  isDark 
+                    ? 'bg-slate-800/80 border-slate-700 text-indigo-400 hover:bg-slate-700' 
+                    : 'bg-white border-slate-300 text-indigo-600 hover:bg-slate-100 shadow-xs'
+                }`}
+                title="Upload your own database file (.db)"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Schema Drawer Trigger Button */}
             <button
               onClick={() => setSchemaDrawerOpen(true)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                 isDark
                   ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'
                   : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 shadow-xs'
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Explore Schema ({tables.length})</span>
+              <span>Tables ({tables.length})</span>
             </button>
 
             {!apiOnline && (
@@ -293,10 +402,6 @@ export default function App() {
                 <WifiOff className="w-3.5 h-3.5" /> Offline
               </span>
             )}
-
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Shield className="w-3.5 h-3.5" /> AST Guardrails
-            </span>
           </div>
         </header>
 
@@ -308,7 +413,7 @@ export default function App() {
               <span>Backend API is not responding. Ensure <code>python backend/main.py</code> is running.</span>
             </div>
             <button
-              onClick={() => { loadChatsFromBackend(); loadSchemaFromBackend(); }}
+              onClick={() => { loadChatsFromBackend(); loadDatabases(); }}
               className="text-xs underline flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3 h-3" /> Retry
@@ -321,13 +426,14 @@ export default function App() {
           <div className="max-w-3xl mx-auto w-full">
             {/* Empty State Welcome Screen */}
             {(!activeChat?.messages || activeChat.messages.length === 0) && (
-              <div className="py-16 text-center animate-fadeIn">
+              <div className="py-14 text-center animate-fadeIn">
                 <div className="inline-flex p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4 shadow-sm">
                   <Sparkles className="w-8 h-8" />
                 </div>
-                <h2 className="text-xl font-bold mb-2">What can I query for you today?</h2>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-6">
-                  Ask database questions in plain English. Check the <strong>Explore Schema</strong> button above or the <strong>Tables</strong> tab on the left to browse available tables and columns.
+                <h2 className="text-xl font-bold mb-1.5">What can I query for you today?</h2>
+                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-4">
+                  Currently querying: <strong className="text-indigo-400">{currentDb.name}</strong> ({tables.length} tables).
+                  You can switch databases using the dropdown above or upload your own SQLite file.
                 </p>
               </div>
             )}
@@ -343,7 +449,7 @@ export default function App() {
                 <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
                   <Sparkles className="w-4 h-4 animate-spin" />
                 </div>
-                <span>Analyzing schema, applying guardrails & generating SQL...</span>
+                <span>Analyzing {currentDb.name} schema, applying guardrails & generating SQL...</span>
               </div>
             )}
 

@@ -1,7 +1,7 @@
 [
   {
     "id": "1788272342343",
-    "title": "hello",
+    "title": "General Music Queries",
     "created_at": "2026-09-01T14:19:02.353231+00:00",
     "messages": [
       {
@@ -24608,6 +24608,33 @@
         },
         "status": "SUCCESS",
         "timestamp": "2026-09-01T14:34:19.964239+00:00"
+      },
+      {
+        "id": "1788274027712",
+        "role": "user",
+        "content": "provide me to delete query of employee  whose age is more than 25 ",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T14:47:07.723868+00:00"
+      },
+      {
+        "id": "1788274033389",
+        "role": "assistant",
+        "content": "Query execution failed: Failed after 3 attempts: Security Violation: Forbidden keyword 'DELETE' detected.",
+        "sql": "DELETE FROM Employee\nWHERE BirthDate <= date('now','-25 years');",
+        "data": [],
+        "telemetry": {
+          "confidence_score": 0.0,
+          "latency_ms": 5578,
+          "attempts": 3,
+          "status": "FAILED",
+          "db_id": "chinook",
+          "db_name": "Chinook (Music)"
+        },
+        "status": "FAILED",
+        "timestamp": "2026-09-01T14:47:13.401395+00:00"
       }
     ]
   }

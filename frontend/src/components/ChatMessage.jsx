@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Sparkles, AlertTriangle } from 'lucide-react';
+import { User, Sparkles, Database } from 'lucide-react';
 import SqlCodeBlock from './SqlCodeBlock';
 import DataTable from './DataTable';
 import DetailsPopover from './DetailsPopover';
@@ -28,7 +28,18 @@ export default function ChatMessage({ message, isDark }) {
     );
   }
 
-  // AI Assistant Message
+  const dbName = message.telemetry?.db_name || message.db_name;
+  const hasSql = Boolean(message.sql);
+  const hasData = Boolean(message.data && message.data.length > 0);
+
+  // Combine telemetry with message error details if needed
+  const telemetryData = {
+    ...message.telemetry,
+    status: message.telemetry?.status || message.status,
+    error: message.telemetry?.error || (message.status === 'FAILED' ? message.content : null)
+  };
+
+  // AI Assistant Message (Clean Query + Data Output)
   return (
     <div className="flex justify-start mb-6 w-full animate-fadeIn">
       <div className="flex items-start gap-3 max-w-3xl w-full">
@@ -45,31 +56,35 @@ export default function ChatMessage({ message, isDark }) {
             ? 'bg-slate-900/60 border-slate-800/90 text-slate-200' 
             : 'bg-white border-slate-200/90 text-slate-800'
         }`}>
-          {/* Security alert banner if blocked */}
-          {message.status === 'FAILED' && (
-            <div className="mb-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>Query intercepted by AST guardrails. Destructive operation blocked.</span>
+          {/* Database Source Badge */}
+          {dbName && (
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <Database className="w-3 h-3" />
+                <span>{dbName}</span>
+              </span>
             </div>
           )}
 
-          {/* 1. Plain English Answer / Explanation */}
-          <div className="text-sm leading-relaxed prose prose-invert max-w-none">
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          </div>
+          {/* Conversational text fallback (only shown if no SQL/data exists, like a simple greeting) */}
+          {!hasSql && !hasData && (
+            <div className="text-sm leading-relaxed mb-2">
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+          )}
 
-          {/* 2. Generated SQL Code Block */}
-          {message.sql && (
+          {/* 1. Generated SQL Query */}
+          {hasSql && (
             <SqlCodeBlock sql={message.sql} isDark={isDark} />
           )}
 
-          {/* 3. Query Results Table (Collapsible) */}
-          {message.data && message.data.length > 0 && (
+          {/* 2. Direct Result Data Table */}
+          {hasData && (
             <DataTable data={message.data} isDark={isDark} />
           )}
 
-          {/* 4. Low-priority Technical Details Popover */}
-          <DetailsPopover telemetry={message.telemetry} isDark={isDark} />
+          {/* 3. Technical Details Popover (Includes Guardrail reason and Latency) */}
+          <DetailsPopover telemetry={telemetryData} isDark={isDark} />
         </div>
       </div>
     </div>
