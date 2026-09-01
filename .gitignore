@@ -1,0 +1,22 @@
+# Environment secrets
+.env
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Database files
+*.db
+*.sqlite
+
+# IDE settings & agent configs
+.vscode/
+.idea/
+.agents/
+
+# Internal documentation & guides
+docs/
+guide/
+.codegraphy/*
