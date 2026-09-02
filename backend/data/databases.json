@@ -16,5 +16,15 @@
     "table_count": 5,
     "is_default": false,
     "created_at": "2026-09-01T15:11:17.553613+00:00"
+  },
+  {
+    "id": "ecommerce_store",
+    "name": "E-Commerce Store (NoSQL)",
+    "type": "nosql",
+    "filename": "ecommerce_store.json",
+    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\nosql_default\\ecommerce_store.json",
+    "doc_count": 50,
+    "is_default": true,
+    "created_at": "2026-09-02T17:00:42.386418+00:00"
   }
 ]

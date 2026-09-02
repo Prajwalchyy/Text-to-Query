@@ -9,12 +9,13 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 UPLOADS_DIR = DATA_DIR / "uploads"
 REGISTRY_FILE = DATA_DIR / "databases.json"
 DEFAULT_CHINOOK = DATA_DIR / "chinook.db"
+DEFAULT_NOSQL = DATA_DIR / "nosql_default" / "ecommerce_store.json"
 
 
 class DatabaseRegistry:
     """
-    Manages custom and system SQLite databases.
-    Enables users to upload, name, and switch between multiple databases in the system.
+    Manages multi-format data sources (Relational SQLite Databases & NoSQL JSON Collections).
+    Enables users to upload, name, and switch between SQL and NoSQL data sources.
     """
     def __init__(self, registry_file: Path = REGISTRY_FILE):
         self.registry_file = registry_file
@@ -23,21 +24,43 @@ class DatabaseRegistry:
         self._init_registry()
 
     def _init_registry(self):
-        """Initializes the databases registry file with default Chinook database if not exists."""
-        if self.registry_file.exists() == False:
-            default_dbs = []
-            if DEFAULT_CHINOOK.exists() == True:
-                table_count = self._count_tables(DEFAULT_CHINOOK)
-                default_dbs.append({
-                    "id": "chinook",
-                    "name": "Chinook (Music)",
-                    "filename": "chinook.db",
-                    "path": str(DEFAULT_CHINOOK.resolve()),
-                    "table_count": table_count,
-                    "is_default": True,
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-            self._write_registry(default_dbs)
+        """Initializes the databases registry with default Chinook SQL and E-Commerce NoSQL datasets."""
+        dbs = self._read_registry()
+        existing_ids = [d["id"] for d in dbs]
+        updated = False
+
+        # 1. Default Chinook SQL DB
+        if "chinook" not in existing_ids and DEFAULT_CHINOOK.exists() == True:
+            table_count = self._count_tables(DEFAULT_CHINOOK)
+            dbs.append({
+                "id": "chinook",
+                "name": "Chinook (Music)",
+                "type": "sql",
+                "filename": "chinook.db",
+                "path": str(DEFAULT_CHINOOK.resolve()),
+                "table_count": table_count,
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            updated = True
+
+        # 2. Default NoSQL E-Commerce Store
+        if "ecommerce_store" not in existing_ids and DEFAULT_NOSQL.exists() == True:
+            doc_count = self._count_json_docs(DEFAULT_NOSQL)
+            dbs.append({
+                "id": "ecommerce_store",
+                "name": "E-Commerce Store (NoSQL)",
+                "type": "nosql",
+                "filename": "ecommerce_store.json",
+                "path": str(DEFAULT_NOSQL.resolve()),
+                "doc_count": doc_count,
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            updated = True
+
+        if updated == True or self.registry_file.exists() == False:
+            self._write_registry(dbs)
 
     def _read_registry(self) -> List[Dict[str, Any]]:
         try:
@@ -65,44 +88,74 @@ class DatabaseRegistry:
         except Exception:
             return 0
 
+    def _count_json_docs(self, json_path: Path) -> int:
+        """Counts documents in a JSON or JSONL file."""
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content.startswith("["):
+                    return len(json.loads(content))
+                else:
+                    return len([line for line in content.splitlines() if line.strip() != ""])
+        except Exception:
+            return 0
+
     def list_databases(self) -> List[Dict[str, Any]]:
-        """Returns all registered databases."""
+        """Returns all registered data sources (SQL and NoSQL)."""
         return self._read_registry()
 
     def get_database(self, db_id: str) -> Optional[Dict[str, Any]]:
-        """Finds a database entry by ID."""
+        """Finds a data source entry by ID."""
         dbs = self._read_registry()
         return next((d for d in dbs if d["id"] == db_id), None)
 
     def register_database(self, name: str, file_path: Path, filename: str) -> Dict[str, Any]:
         """
-        Validates SQLite file and registers it with a custom user-defined name.
+        Validates uploaded file (.db/.sqlite for SQL, or .json/.jsonl for NoSQL)
+        and registers it with user-specified custom name and type tag.
         """
-        # Validate that it is a valid SQLite database
-        try:
-            conn = sqlite3.connect(file_path)
-            cursor = conn.cursor()
-            cursor.execute("PRAGMA schema_version;")
-            cursor.fetchone()
-            conn.close()
-        except Exception as e:
-            raise ValueError(f"Invalid SQLite database file: {str(e)}")
-
-        table_count = self._count_tables(file_path)
-
-        # Generate a URL-friendly ID from custom name
+        is_nosql = filename.lower().endswith((".json", ".jsonl"))
         clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip().lower())
         db_id = f"{clean_name}_{int(datetime.now(timezone.utc).timestamp())}"
 
-        new_entry = {
-            "id": db_id,
-            "name": name.strip(),
-            "filename": filename,
-            "path": str(file_path.resolve()),
-            "table_count": table_count,
-            "is_default": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
+        if is_nosql == True:
+            # Validate JSON format
+            doc_count = self._count_json_docs(file_path)
+            if doc_count == 0:
+                raise ValueError("The uploaded JSON file is empty or contains invalid JSON documents.")
+
+            new_entry = {
+                "id": db_id,
+                "name": name.strip(),
+                "type": "nosql",
+                "filename": filename,
+                "path": str(file_path.resolve()),
+                "doc_count": doc_count,
+                "is_default": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        else:
+            # Validate SQLite format
+            try:
+                conn = sqlite3.connect(file_path)
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA schema_version;")
+                cursor.fetchone()
+                conn.close()
+            except Exception as e:
+                raise ValueError(f"Invalid SQLite database file: {str(e)}")
+
+            table_count = self._count_tables(file_path)
+            new_entry = {
+                "id": db_id,
+                "name": name.strip(),
+                "type": "sql",
+                "filename": filename,
+                "path": str(file_path.resolve()),
+                "table_count": table_count,
+                "is_default": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
 
         dbs = self._read_registry()
         dbs.append(new_entry)
@@ -110,7 +163,7 @@ class DatabaseRegistry:
         return new_entry
 
     def delete_database(self, db_id: str) -> bool:
-        """Deletes a custom database (cannot delete system default)."""
+        """Deletes a custom user data source (cannot delete system defaults)."""
         dbs = self._read_registry()
         target = next((d for d in dbs if d["id"] == db_id), None)
 

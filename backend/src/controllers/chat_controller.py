@@ -116,7 +116,8 @@ class ChatController:
                 "status": result.get("status", "SUCCESS"),
                 "error": result.get("error"),
                 "db_id": db_id,
-                "db_name": db_info.get("name", "Chinook")
+                "db_name": db_info.get("name", "Default"),
+                "db_type": db_info.get("type", "sql")
             }
 
             chat_storage.add_message(
@@ -138,7 +139,8 @@ class ChatController:
                 "data": result.get("data"),
                 "telemetry": telemetry,
                 "status": result.get("status", "SUCCESS"),
-                "db_name": db_info.get("name", "Chinook")
+                "db_name": db_info.get("name", "Default"),
+                "db_type": db_info.get("type", "sql")
             }
 
         except Exception as e:

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Database, CheckCircle2, AlertTriangle, Loader2, Trash2, Lock, Layers } from 'lucide-react';
+import { Upload, X, Database, CheckCircle2, AlertTriangle, Loader2, Trash2, Lock, Layers, FileJson } from 'lucide-react';
 
 export default function UploadDbModal({ 
   isOpen, 
@@ -25,7 +25,7 @@ export default function UploadDbModal({
       setFile(selected);
       // Auto-populate default name from filename if empty
       if (!dbName.trim()) {
-        const cleanName = selected.name.replace(/\.(db|sqlite|sqlite3)$/i, '').replace(/[_-]/g, ' ');
+        const cleanName = selected.name.replace(/\.(db|sqlite|sqlite3|json|jsonl)$/i, '').replace(/[_-]/g, ' ');
         setDbName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
       }
     }
@@ -34,11 +34,11 @@ export default function UploadDbModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file) {
-      setErrorMsg("Please select a .db or .sqlite database file.");
+      setErrorMsg("Please select an SQLite (.db) or NoSQL (.json) file.");
       return;
     }
     if (!dbName.trim()) {
-      setErrorMsg("Please provide a name for this database.");
+      setErrorMsg("Please provide a name for this dataset.");
       return;
     }
 
@@ -66,14 +66,14 @@ export default function UploadDbModal({
       setDbName('');
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || "Failed to upload database.");
+      setErrorMsg(err.message || "Failed to upload file.");
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async (dbId, name) => {
-    if (!window.confirm(`Are you sure you want to delete the database "${name}"?`)) {
+    if (!window.confirm(`Are you sure you want to delete "${name}"?`)) {
       return;
     }
 
@@ -87,14 +87,14 @@ export default function UploadDbModal({
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.detail || "Failed to delete database.");
+        throw new Error(err.detail || "Failed to delete data source.");
       }
 
       if (onDeleteDatabase) {
         onDeleteDatabase(dbId);
       }
     } catch (err) {
-      setErrorMsg(err.message || "Failed to delete database.");
+      setErrorMsg(err.message || "Failed to delete data source.");
     } finally {
       setDeletingId(null);
     }
@@ -112,8 +112,8 @@ export default function UploadDbModal({
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold">Manage Databases</h3>
-              <p className="text-xs text-slate-400">View active databases or upload new SQLite files</p>
+              <h3 className="text-base font-bold">Manage Data Sources</h3>
+              <p className="text-xs text-slate-400">View active SQL/NoSQL sources or upload new datasets</p>
             </div>
           </div>
           <button
@@ -128,23 +128,36 @@ export default function UploadDbModal({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2 px-0.5">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              Installed Databases ({databases.length})
+              Installed Data Sources ({databases.length})
             </span>
           </div>
 
-          <div className={`divide-y rounded-xl border overflow-hidden max-h-48 overflow-y-auto ${
+          <div className={`divide-y rounded-xl border overflow-hidden max-h-52 overflow-y-auto ${
             isDark ? 'bg-slate-950/60 border-slate-800 divide-slate-800/80' : 'bg-slate-50 border-slate-200 divide-slate-200'
           }`}>
             {databases.map((db) => {
-              const isDefault = Boolean(db.is_default || db.id === 'chinook');
+              const isDefault = Boolean(db.is_default || db.id === 'chinook' || db.id === 'ecommerce_store');
+              const isNoSql = db.type === 'nosql';
+
               return (
                 <div key={db.id} className="flex items-center justify-between p-3 text-xs">
                   <div className="flex items-center gap-2.5 truncate pr-2">
-                    <Database className={`w-4 h-4 shrink-0 ${isDefault ? 'text-indigo-400' : 'text-emerald-400'}`} />
+                    {isNoSql ? (
+                      <FileJson className="w-4 h-4 shrink-0 text-amber-400" />
+                    ) : (
+                      <Database className={`w-4 h-4 shrink-0 ${isDefault ? 'text-indigo-400' : 'text-emerald-400'}`} />
+                    )}
                     <div className="truncate">
-                      <p className="font-semibold truncate">{db.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold truncate">{db.name}</p>
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold ${
+                          isNoSql ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        }`}>
+                          {isNoSql ? 'NoSQL' : 'SQL'}
+                        </span>
+                      </div>
                       <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                        <Layers className="w-3 h-3" /> {db.table_count || 0} tables
+                        <Layers className="w-3 h-3" /> {isNoSql ? `${db.doc_count || 0} docs` : `${db.table_count || 0} tables`}
                       </p>
                     </div>
                   </div>
@@ -158,7 +171,7 @@ export default function UploadDbModal({
                       onClick={() => handleDelete(db.id, db.name)}
                       disabled={deletingId === db.id}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shrink-0"
-                      title="Delete this custom database"
+                      title="Delete this custom data source"
                     >
                       {deletingId === db.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -174,10 +187,10 @@ export default function UploadDbModal({
           </div>
         </div>
 
-        {/* SECTION 2: UPLOAD NEW DATABASE FORM */}
+        {/* SECTION 2: UPLOAD NEW DATASET FORM */}
         <div className="pt-4 border-t border-slate-700/40">
           <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-3 px-0.5">
-            Upload New Database (.db, .sqlite)
+            Upload New Data Source (.db, .sqlite, .json)
           </span>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -194,7 +207,7 @@ export default function UploadDbModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".db,.sqlite,.sqlite3"
+                  accept=".db,.sqlite,.sqlite3,.json,.jsonl"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -206,23 +219,23 @@ export default function UploadDbModal({
                 ) : (
                   <div>
                     <Upload className="w-5 h-5 mx-auto mb-1 text-indigo-400" />
-                    <p className="text-xs font-medium">Click to select SQLite file</p>
-                    <p className="text-[10px] text-slate-400">Supports .db, .sqlite, .sqlite3</p>
+                    <p className="text-xs font-medium">Click to select SQL (.db) or NoSQL (.json) file</p>
+                    <p className="text-[10px] text-slate-400">Supports .db, .sqlite, .json, .jsonl</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Database Name Input */}
+            {/* Dataset Name Input */}
             <div>
               <label className="block text-xs font-semibold mb-1 text-slate-300">
-                Custom Database Name
+                Custom Display Name
               </label>
               <input
                 type="text"
                 value={dbName}
                 onChange={(e) => setDbName(e.target.value)}
-                placeholder="e.g. Sales 2025, Store Inventory, Healthcare"
+                placeholder="e.g. Sales 2025, Ecommerce Orders, Patient Records"
                 className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
                   isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
                 }`}

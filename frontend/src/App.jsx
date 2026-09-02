@@ -360,29 +360,32 @@ export default function App() {
                     }
                   }}
                   className="bg-transparent py-1.5 pl-2 pr-7 text-xs font-medium focus:outline-none appearance-none cursor-pointer"
-                  title="Switch database for this chat"
+                  title="Switch data source for this chat"
                 >
-                  {databases.map((db) => (
-                    <option 
-                      key={db.id} 
-                      value={db.id}
-                      className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
-                    >
-                      {db.name} ({db.table_count} tables)
-                    </option>
-                  ))}
+                  {databases.map((db) => {
+                    const isNoSql = db.type === 'nosql';
+                    return (
+                      <option 
+                        key={db.id} 
+                        value={db.id}
+                        className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
+                      >
+                        {isNoSql ? `📄 ${db.name} (${db.doc_count || 0} docs)` : `🗄️ ${db.name} (${db.table_count || 0} tables)`}
+                      </option>
+                    );
+                  })}
                   <option value="__upload_new__" className="text-indigo-400 font-semibold">
-                    + Upload New Database...
+                    + Upload New Data Source...
                   </option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 pointer-events-none" />
               </div>
 
-              {/* ➕ CLEAR, PROMINENT "UPLOAD DB" BUTTON */}
+              {/* ➕ CLEAR, PROMINENT "UPLOAD DATA" BUTTON */}
               <button
                 onClick={() => setUploadModalOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs shadow-indigo-600/30 transition-all cursor-pointer"
-                title="Manage or upload database files (.db)"
+                title="Manage or upload SQLite (.db) or NoSQL (.json) datasets"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Upload DB</span>

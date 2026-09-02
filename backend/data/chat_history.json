@@ -1,5 +1,2274 @@
 [
   {
+    "id": "test_chat_sql",
+    "title": "How many total customers are the",
+    "created_at": "2026-09-02T17:03:34.330460+00:00",
+    "messages": [
+      {
+        "id": "1788368614363",
+        "role": "user",
+        "content": "How many total customers are there in the database?",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:03:34.384078+00:00"
+      },
+      {
+        "id": "1788368615817",
+        "role": "assistant",
+        "content": "There are 59 customers in the database.",
+        "sql": "SELECT COUNT(*) AS TotalCustomers FROM Customer;",
+        "data": [
+          {
+            "TotalCustomers": 59
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.99,
+          "latency_ms": 1381,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "chinook",
+          "db_name": "Chinook (Music)",
+          "db_type": "sql"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:03:35.835041+00:00"
+      },
+      {
+        "id": "1788369068684",
+        "role": "user",
+        "content": "Show me the top 5 records from the ecommerce_store (Collection) table.",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:11:08.693608+00:00"
+      },
+      {
+        "id": "1788369071386",
+        "role": "assistant",
+        "content": "Found 50 matching documents from ecommerce_store.",
+        "sql": "db.ecommerce_store.find({}).limit(5)",
+        "data": [
+          {
+            "_id": "ORD-1001",
+            "order_date": "2025-002-02T11:30:00Z",
+            "status": "Shipped",
+            "total_amount": 119.97,
+            "customer": {
+              "customer_id": "CUST-501",
+              "name": "Sarah Jenkins",
+              "email": "sarah.jenkins@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "90111"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900023",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1002",
+            "order_date": "2025-003-03T12:30:00Z",
+            "status": "Processing",
+            "total_amount": 219.47,
+            "customer": {
+              "customer_id": "CUST-502",
+              "name": "Michael Chang",
+              "email": "michael.chang@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "90222"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "fragile",
+              "bulk_discount",
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900046",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1003",
+            "order_date": "2025-001-04T13:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 499.0,
+            "customer": {
+              "customer_id": "CUST-503",
+              "name": "Emma Watson",
+              "email": "emma.watson@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "90333"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900069",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1004",
+            "order_date": "2025-002-05T14:30:00Z",
+            "status": "Delivered",
+            "total_amount": 812.99,
+            "customer": {
+              "customer_id": "CUST-504",
+              "name": "David Miller",
+              "email": "david.miller@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "90444"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "first_time_buyer",
+              "international"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900092",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1005",
+            "order_date": "2025-003-06T15:30:00Z",
+            "status": "Delivered",
+            "total_amount": 154.96,
+            "customer": {
+              "customer_id": "CUST-505",
+              "name": "Olivia Taylor",
+              "email": "olivia.taylor@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "90555"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "international",
+              "priority_customer",
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900115",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1006",
+            "order_date": "2025-001-07T16:30:00Z",
+            "status": "Delivered",
+            "total_amount": 229.0,
+            "customer": {
+              "customer_id": "CUST-506",
+              "name": "James Wilson",
+              "email": "james.wilson@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "London",
+                "state": "England",
+                "country": "UK",
+                "postal_code": "90666"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900138",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1007",
+            "order_date": "2025-002-08T17:30:00Z",
+            "status": "Shipped",
+            "total_amount": 788.98,
+            "customer": {
+              "customer_id": "CUST-507",
+              "name": "Sophia Anderson",
+              "email": "sophia.anderson@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Toronto",
+                "state": "ON",
+                "country": "Canada",
+                "postal_code": "90777"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "express_shipping",
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900161",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1008",
+            "order_date": "2025-003-09T18:30:00Z",
+            "status": "Processing",
+            "total_amount": 174.96,
+            "customer": {
+              "customer_id": "CUST-508",
+              "name": "Liam Martinez",
+              "email": "liam.martinez@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Berlin",
+                "state": "Berlin",
+                "country": "Germany",
+                "postal_code": "90888"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile",
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900184",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1009",
+            "order_date": "2025-001-10T19:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 89.99,
+            "customer": {
+              "customer_id": "CUST-509",
+              "name": "Isabella Thomas",
+              "email": "isabella.thomas@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Austin",
+                "state": "TX",
+                "country": "USA",
+                "postal_code": "90999"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "fragile"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900207",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1010",
+            "order_date": "2025-002-11T20:30:00Z",
+            "status": "Delivered",
+            "total_amount": 1197.99,
+            "customer": {
+              "customer_id": "CUST-510",
+              "name": "Lucas Brown",
+              "email": "lucas.brown@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "91110"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "bulk_discount",
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900230",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1011",
+            "order_date": "2025-003-12T21:30:00Z",
+            "status": "Delivered",
+            "total_amount": 508.97,
+            "customer": {
+              "customer_id": "CUST-511",
+              "name": "Mia Garcia",
+              "email": "mia.garcia@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "91221"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "first_time_buyer",
+              "international",
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900253",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1012",
+            "order_date": "2025-001-13T10:30:00Z",
+            "status": "Delivered",
+            "total_amount": 129.5,
+            "customer": {
+              "customer_id": "CUST-512",
+              "name": "Benjamin Davis",
+              "email": "benjamin.davis@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "91332"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "international"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900276",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1013",
+            "order_date": "2025-002-14T11:30:00Z",
+            "status": "Shipped",
+            "total_amount": 957.0,
+            "customer": {
+              "customer_id": "CUST-513",
+              "name": "Charlotte Rodriguez",
+              "email": "charlotte.rodriguez@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "91443"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "priority_customer",
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900299",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1014",
+            "order_date": "2025-003-15T12:30:00Z",
+            "status": "Processing",
+            "total_amount": 1012.98,
+            "customer": {
+              "customer_id": "CUST-514",
+              "name": "Henry Martinez",
+              "email": "henry.martinez@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "91554"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "express_shipping",
+              "gift_wrapped",
+              "fragile"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900322",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1015",
+            "order_date": "2025-001-16T13:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 24.99,
+            "customer": {
+              "customer_id": "CUST-515",
+              "name": "Amelia Hernandez",
+              "email": "amelia.hernandez@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "London",
+                "state": "England",
+                "country": "UK",
+                "postal_code": "91665"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900345",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1016",
+            "order_date": "2025-002-17T14:30:00Z",
+            "status": "Delivered",
+            "total_amount": 408.98,
+            "customer": {
+              "customer_id": "CUST-516",
+              "name": "Alexander Lopez",
+              "email": "alexander.lopez@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Toronto",
+                "state": "ON",
+                "country": "Canada",
+                "postal_code": "91776"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "fragile",
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900368",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1017",
+            "order_date": "2025-003-18T15:30:00Z",
+            "status": "Delivered",
+            "total_amount": 1287.98,
+            "customer": {
+              "customer_id": "CUST-517",
+              "name": "Harper Gonzalez",
+              "email": "harper.gonzalez@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Berlin",
+                "state": "Berlin",
+                "country": "Germany",
+                "postal_code": "91887"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "bulk_discount",
+              "first_time_buyer",
+              "international"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900391",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1018",
+            "order_date": "2025-001-19T16:30:00Z",
+            "status": "Delivered",
+            "total_amount": 39.99,
+            "customer": {
+              "customer_id": "CUST-518",
+              "name": "Daniel Perez",
+              "email": "daniel.perez@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Austin",
+                "state": "TX",
+                "country": "USA",
+                "postal_code": "91998"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900414",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1019",
+            "order_date": "2025-002-20T17:30:00Z",
+            "status": "Shipped",
+            "total_amount": 348.99,
+            "customer": {
+              "customer_id": "CUST-519",
+              "name": "Evelyn Sanchez",
+              "email": "evelyn.sanchez@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "92109"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "international",
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900437",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1020",
+            "order_date": "2025-003-21T18:30:00Z",
+            "status": "Processing",
+            "total_amount": 1426.99,
+            "customer": {
+              "customer_id": "CUST-520",
+              "name": "Matthew Clark",
+              "email": "matthew.clark@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "92220"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "priority_customer",
+              "express_shipping",
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900460",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1021",
+            "order_date": "2025-001-22T19:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 49.99,
+            "customer": {
+              "customer_id": "CUST-521",
+              "name": "Abigail Ramirez",
+              "email": "abigail.ramirez@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "92331"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900483",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1022",
+            "order_date": "2025-002-23T20:30:00Z",
+            "status": "Delivered",
+            "total_amount": 179.48,
+            "customer": {
+              "customer_id": "CUST-522",
+              "name": "Joseph Lewis",
+              "email": "joseph.lewis@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "92442"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900506",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1023",
+            "order_date": "2025-003-24T21:30:00Z",
+            "status": "Delivered",
+            "total_amount": 1046.99,
+            "customer": {
+              "customer_id": "CUST-523",
+              "name": "Emily Robinson",
+              "email": "emily.robinson@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "92553"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "fragile",
+              "bulk_discount",
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900529",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1024",
+            "order_date": "2025-001-25T10:30:00Z",
+            "status": "Delivered",
+            "total_amount": 34.99,
+            "customer": {
+              "customer_id": "CUST-524",
+              "name": "Samuel Walker",
+              "email": "samuel.walker@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "London",
+                "state": "England",
+                "country": "UK",
+                "postal_code": "92664"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900552",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1025",
+            "order_date": "2025-002-26T11:30:00Z",
+            "status": "Shipped",
+            "total_amount": 104.97,
+            "customer": {
+              "customer_id": "CUST-525",
+              "name": "Elizabeth Young",
+              "email": "elizabeth.young@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Toronto",
+                "state": "ON",
+                "country": "Canada",
+                "postal_code": "92775"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "first_time_buyer",
+              "international"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900575",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1026",
+            "order_date": "2025-003-27T12:30:00Z",
+            "status": "Processing",
+            "total_amount": 538.48,
+            "customer": {
+              "customer_id": "CUST-526",
+              "name": "Sebastian Allen",
+              "email": "sebastian.allen@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Berlin",
+                "state": "Berlin",
+                "country": "Germany",
+                "postal_code": "92886"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "international",
+              "priority_customer",
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900598",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1027",
+            "order_date": "2025-001-28T13:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 389.0,
+            "customer": {
+              "customer_id": "CUST-527",
+              "name": "Sofia King",
+              "email": "sofia.king@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Austin",
+                "state": "TX",
+                "country": "USA",
+                "postal_code": "92997"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900621",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1028",
+            "order_date": "2025-002-01T14:30:00Z",
+            "status": "Delivered",
+            "total_amount": 139.97,
+            "customer": {
+              "customer_id": "CUST-528",
+              "name": "David Wright",
+              "email": "david.wright@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "93108"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "express_shipping",
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900644",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1029",
+            "order_date": "2025-003-02T15:30:00Z",
+            "status": "Delivered",
+            "total_amount": 373.98,
+            "customer": {
+              "customer_id": "CUST-529",
+              "name": "Avery Scott",
+              "email": "avery.scott@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "93219"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile",
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900667",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1030",
+            "order_date": "2025-001-03T16:30:00Z",
+            "status": "Delivered",
+            "total_amount": 199.99,
+            "customer": {
+              "customer_id": "CUST-530",
+              "name": "Carter Torres",
+              "email": "carter.torres@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "93330"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "fragile"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900690",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1031",
+            "order_date": "2025-002-04T17:30:00Z",
+            "status": "Shipped",
+            "total_amount": 119.97,
+            "customer": {
+              "customer_id": "CUST-531",
+              "name": "Scarlett Nguyen",
+              "email": "scarlett.nguyen@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "93441"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "bulk_discount",
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900713",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1032",
+            "order_date": "2025-003-05T18:30:00Z",
+            "status": "Processing",
+            "total_amount": 219.47,
+            "customer": {
+              "customer_id": "CUST-532",
+              "name": "Jayden Hill",
+              "email": "jayden.hill@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "93552"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "first_time_buyer",
+              "international",
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900736",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1033",
+            "order_date": "2025-001-06T19:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 499.0,
+            "customer": {
+              "customer_id": "CUST-533",
+              "name": "Grace Flores",
+              "email": "grace.flores@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "London",
+                "state": "England",
+                "country": "UK",
+                "postal_code": "93663"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "international"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900759",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1034",
+            "order_date": "2025-002-07T20:30:00Z",
+            "status": "Delivered",
+            "total_amount": 812.99,
+            "customer": {
+              "customer_id": "CUST-534",
+              "name": "John Green",
+              "email": "john.green@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Toronto",
+                "state": "ON",
+                "country": "Canada",
+                "postal_code": "93774"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "priority_customer",
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900782",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1035",
+            "order_date": "2025-003-08T21:30:00Z",
+            "status": "Delivered",
+            "total_amount": 154.96,
+            "customer": {
+              "customer_id": "CUST-535",
+              "name": "Chloe Adams",
+              "email": "chloe.adams@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Berlin",
+                "state": "Berlin",
+                "country": "Germany",
+                "postal_code": "93885"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "express_shipping",
+              "gift_wrapped",
+              "fragile"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900805",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1036",
+            "order_date": "2025-001-09T10:30:00Z",
+            "status": "Delivered",
+            "total_amount": 229.0,
+            "customer": {
+              "customer_id": "CUST-536",
+              "name": "Luke Nelson",
+              "email": "luke.nelson@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Austin",
+                "state": "TX",
+                "country": "USA",
+                "postal_code": "93996"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900828",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1037",
+            "order_date": "2025-002-10T11:30:00Z",
+            "status": "Shipped",
+            "total_amount": 788.98,
+            "customer": {
+              "customer_id": "CUST-537",
+              "name": "Victoria Baker",
+              "email": "victoria.baker@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "94107"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "fragile",
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900851",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1038",
+            "order_date": "2025-003-11T12:30:00Z",
+            "status": "Processing",
+            "total_amount": 174.96,
+            "customer": {
+              "customer_id": "CUST-538",
+              "name": "Anthony Hall",
+              "email": "anthony.hall@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "94218"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "bulk_discount",
+              "first_time_buyer",
+              "international"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900874",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1039",
+            "order_date": "2025-001-12T13:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 89.99,
+            "customer": {
+              "customer_id": "CUST-539",
+              "name": "Riley Rivera",
+              "email": "riley.rivera@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "94329"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-900897",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1040",
+            "order_date": "2025-002-13T14:30:00Z",
+            "status": "Delivered",
+            "total_amount": 1197.99,
+            "customer": {
+              "customer_id": "CUST-540",
+              "name": "Dylan Campbell",
+              "email": "dylan.campbell@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "94440"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "international",
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-900920",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1041",
+            "order_date": "2025-003-14T15:30:00Z",
+            "status": "Delivered",
+            "total_amount": 508.97,
+            "customer": {
+              "customer_id": "CUST-541",
+              "name": "Aria Mitchell",
+              "email": "aria.mitchell@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "94551"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ergonomic Desk Mat",
+                "category": "Office Supplies",
+                "unit_price": 49.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "priority_customer",
+              "express_shipping",
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-900943",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1042",
+            "order_date": "2025-001-15T16:30:00Z",
+            "status": "Delivered",
+            "total_amount": 129.5,
+            "customer": {
+              "customer_id": "CUST-542",
+              "name": "Leo Roberts",
+              "email": "leo.roberts@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "London",
+                "state": "England",
+                "country": "UK",
+                "postal_code": "94662"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-900966",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1043",
+            "order_date": "2025-002-16T17:30:00Z",
+            "status": "Shipped",
+            "total_amount": 957.0,
+            "customer": {
+              "customer_id": "CUST-543",
+              "name": "Zoey Carter",
+              "email": "zoey.carter@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "Toronto",
+                "state": "ON",
+                "country": "Canada",
+                "postal_code": "94773"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-900989",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1044",
+            "order_date": "2025-003-17T18:30:00Z",
+            "status": "Processing",
+            "total_amount": 1012.98,
+            "customer": {
+              "customer_id": "CUST-544",
+              "name": "Gabriel Phillips",
+              "email": "gabriel.phillips@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "Berlin",
+                "state": "Berlin",
+                "country": "Germany",
+                "postal_code": "94884"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Ceramic Coffee Mug Set",
+                "category": "Home & Kitchen",
+                "unit_price": 34.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "fragile",
+              "bulk_discount",
+              "first_time_buyer"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-901012",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1045",
+            "order_date": "2025-001-18T19:30:00Z",
+            "status": "Cancelled",
+            "total_amount": 24.99,
+            "customer": {
+              "customer_id": "CUST-545",
+              "name": "Penelope Evans",
+              "email": "penelope.evans@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Austin",
+                "state": "TX",
+                "country": "USA",
+                "postal_code": "94995"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Stainless Steel Water Bottle",
+                "category": "Sports & Outdoors",
+                "unit_price": 24.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-901035",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1046",
+            "order_date": "2025-002-19T20:30:00Z",
+            "status": "Delivered",
+            "total_amount": 408.98,
+            "customer": {
+              "customer_id": "CUST-546",
+              "name": "Julian Turner",
+              "email": "julian.turner@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Seattle",
+                "state": "WA",
+                "country": "USA",
+                "postal_code": "95106"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "first_time_buyer",
+              "international"
+            ],
+            "payment": {
+              "method": "Credit Card",
+              "transaction_id": "TXN-901058",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1047",
+            "order_date": "2025-003-20T21:30:00Z",
+            "status": "Delivered",
+            "total_amount": 1287.98,
+            "customer": {
+              "customer_id": "CUST-547",
+              "name": "Layla Diaz",
+              "email": "layla.diaz@example.com",
+              "tier": "Standard",
+              "address": {
+                "city": "New York",
+                "state": "NY",
+                "country": "USA",
+                "postal_code": "95217"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Adjustable Standing Desk",
+                "category": "Furniture",
+                "unit_price": 389.0,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "international",
+              "priority_customer",
+              "express_shipping"
+            ],
+            "payment": {
+              "method": "PayPal",
+              "transaction_id": "TXN-901081",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1048",
+            "order_date": "2025-001-21T10:30:00Z",
+            "status": "Delivered",
+            "total_amount": 39.99,
+            "customer": {
+              "customer_id": "CUST-548",
+              "name": "Isaac Parker",
+              "email": "isaac.parker@example.com",
+              "tier": "Platinum",
+              "address": {
+                "city": "San Francisco",
+                "state": "CA",
+                "country": "USA",
+                "postal_code": "95328"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "USB-C Multiport Adapter",
+                "category": "Accessories",
+                "unit_price": 39.99,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "priority_customer"
+            ],
+            "payment": {
+              "method": "Google Pay",
+              "transaction_id": "TXN-901104",
+              "is_paid": true
+            }
+          },
+          {
+            "_id": "ORD-1049",
+            "order_date": "2025-002-22T11:30:00Z",
+            "status": "Shipped",
+            "total_amount": 348.99,
+            "customer": {
+              "customer_id": "CUST-549",
+              "name": "Nora Cruz",
+              "email": "nora.cruz@example.com",
+              "tier": "Gold",
+              "address": {
+                "city": "Chicago",
+                "state": "IL",
+                "country": "USA",
+                "postal_code": "95439"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Organic Bamboo Bed Sheets",
+                "category": "Home & Kitchen",
+                "unit_price": 89.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Mechanical Gaming Keyboard",
+                "category": "Electronics",
+                "unit_price": 129.5,
+                "quantity": 2
+              }
+            ],
+            "tags": [
+              "express_shipping",
+              "gift_wrapped"
+            ],
+            "payment": {
+              "method": "Cash On Delivery",
+              "transaction_id": "TXN-901127",
+              "is_paid": false
+            }
+          },
+          {
+            "_id": "ORD-1050",
+            "order_date": "2025-003-23T12:30:00Z",
+            "status": "Processing",
+            "total_amount": 1426.99,
+            "customer": {
+              "customer_id": "CUST-550",
+              "name": "Levi Edwards",
+              "email": "levi.edwards@example.com",
+              "tier": "Silver",
+              "address": {
+                "city": "Miami",
+                "state": "FL",
+                "country": "USA",
+                "postal_code": "95550"
+              }
+            },
+            "items": [
+              {
+                "item_id": "ITM-100",
+                "product": "Wireless Noise-Canceling Headphones",
+                "category": "Electronics",
+                "unit_price": 199.99,
+                "quantity": 1
+              },
+              {
+                "item_id": "ITM-101",
+                "product": "Ultra-Wide 4K Monitor",
+                "category": "Electronics",
+                "unit_price": 499.0,
+                "quantity": 2
+              },
+              {
+                "item_id": "ITM-102",
+                "product": "Smart Fitness Watch",
+                "category": "Wearables",
+                "unit_price": 229.0,
+                "quantity": 1
+              }
+            ],
+            "tags": [
+              "gift_wrapped",
+              "fragile",
+              "bulk_discount"
+            ],
+            "payment": {
+              "method": "Apple Pay",
+              "transaction_id": "TXN-901150",
+              "is_paid": true
+            }
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.95,
+          "latency_ms": 2634.35,
+          "attempts": 3,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "ecommerce_store",
+          "db_name": "E-Commerce Store (NoSQL)",
+          "db_type": "nosql"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:11:11.404280+00:00"
+      }
+    ]
+  },
+  {
+    "id": "test_chat_nosql",
+    "title": "List top 3 customer names and th",
+    "created_at": "2026-09-02T17:03:13.834190+00:00",
+    "messages": [
+      {
+        "id": "1788368593867",
+        "role": "user",
+        "content": "List top 3 customer names and their city who bought Electronics",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:03:13.889707+00:00"
+      },
+      {
+        "id": "1788368599671",
+        "role": "assistant",
+        "content": "Found 1 matching documents from ecommerce_store.",
+        "sql": "db.ecommerce_store.aggregate([\n  { $match: { \"items.category\": \"Electronics\" } },\n  { $group: {\n      _id: {\n        customer_id: \"$customer.customer_id\",\n        name: \"$customer.name\",\n        city: \"$customer.address.city\"\n      },\n      totalSpent: { $sum: \"$total_amount\" }\n    }\n  },\n  { $sort: { totalSpent: -1 } },\n  { $limit: 3 },\n  { $project: { _id: 0, name: \"$_id.name\", city: \"$_id.city\" } }\n])",
+        "data": [
+          {
+            "_id": "{'customer_id': '$customer.customer_id', 'name': '$customer.name', 'city': '$customer.address.city'}",
+            "totalSpent": 18076.68
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.95,
+          "latency_ms": 5639.95,
+          "attempts": 3,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "ecommerce_store",
+          "db_name": "E-Commerce Store (NoSQL)",
+          "db_type": "nosql"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-02T17:03:19.685719+00:00"
+      }
+    ]
+  },
+  {
     "id": "1788276510507",
     "title": "how many doctor in each departme",
     "created_at": "2026-09-01T15:28:30.526047+00:00",

@@ -1,0 +1,2738 @@
+{
+  "orders": [
+    {
+      "_id": "ORD-1001",
+      "customer_id": "CUST-501",
+      "customer_name": "Sarah Jenkins",
+      "order_date": "2025-002-02T11:30:00Z",
+      "status": "Shipped",
+      "total_amount": 119.97,
+      "items": [
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900023",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1002",
+      "customer_id": "CUST-502",
+      "customer_name": "Michael Chang",
+      "order_date": "2025-003-03T12:30:00Z",
+      "status": "Processing",
+      "total_amount": 219.47,
+      "items": [
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "fragile",
+        "bulk_discount",
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900046",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1003",
+      "customer_id": "CUST-503",
+      "customer_name": "Emma Watson",
+      "order_date": "2025-001-04T13:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 499.0,
+      "items": [
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900069",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1004",
+      "customer_id": "CUST-504",
+      "customer_name": "David Miller",
+      "order_date": "2025-002-05T14:30:00Z",
+      "status": "Delivered",
+      "total_amount": 812.99,
+      "items": [
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "first_time_buyer",
+        "international"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900092",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1005",
+      "customer_id": "CUST-505",
+      "customer_name": "Olivia Taylor",
+      "order_date": "2025-003-06T15:30:00Z",
+      "status": "Delivered",
+      "total_amount": 154.96,
+      "items": [
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "international",
+        "priority_customer",
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900115",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1006",
+      "customer_id": "CUST-506",
+      "customer_name": "James Wilson",
+      "order_date": "2025-001-07T16:30:00Z",
+      "status": "Delivered",
+      "total_amount": 229.0,
+      "items": [
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900138",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1007",
+      "customer_id": "CUST-507",
+      "customer_name": "Sophia Anderson",
+      "order_date": "2025-002-08T17:30:00Z",
+      "status": "Shipped",
+      "total_amount": 788.98,
+      "items": [
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "express_shipping",
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900161",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1008",
+      "customer_id": "CUST-508",
+      "customer_name": "Liam Martinez",
+      "order_date": "2025-003-09T18:30:00Z",
+      "status": "Processing",
+      "total_amount": 174.96,
+      "items": [
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile",
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900184",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1009",
+      "customer_id": "CUST-509",
+      "customer_name": "Isabella Thomas",
+      "order_date": "2025-001-10T19:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 89.99,
+      "items": [
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "fragile"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900207",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1010",
+      "customer_id": "CUST-510",
+      "customer_name": "Lucas Brown",
+      "order_date": "2025-002-11T20:30:00Z",
+      "status": "Delivered",
+      "total_amount": 1197.99,
+      "items": [
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "bulk_discount",
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900230",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1011",
+      "customer_id": "CUST-511",
+      "customer_name": "Mia Garcia",
+      "order_date": "2025-003-12T21:30:00Z",
+      "status": "Delivered",
+      "total_amount": 508.97,
+      "items": [
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "first_time_buyer",
+        "international",
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900253",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1012",
+      "customer_id": "CUST-512",
+      "customer_name": "Benjamin Davis",
+      "order_date": "2025-001-13T10:30:00Z",
+      "status": "Delivered",
+      "total_amount": 129.5,
+      "items": [
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "international"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900276",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1013",
+      "customer_id": "CUST-513",
+      "customer_name": "Charlotte Rodriguez",
+      "order_date": "2025-002-14T11:30:00Z",
+      "status": "Shipped",
+      "total_amount": 957.0,
+      "items": [
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "priority_customer",
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900299",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1014",
+      "customer_id": "CUST-514",
+      "customer_name": "Henry Martinez",
+      "order_date": "2025-003-15T12:30:00Z",
+      "status": "Processing",
+      "total_amount": 1012.98,
+      "items": [
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "express_shipping",
+        "gift_wrapped",
+        "fragile"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900322",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1015",
+      "customer_id": "CUST-515",
+      "customer_name": "Amelia Hernandez",
+      "order_date": "2025-001-16T13:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 24.99,
+      "items": [
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900345",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1016",
+      "customer_id": "CUST-516",
+      "customer_name": "Alexander Lopez",
+      "order_date": "2025-002-17T14:30:00Z",
+      "status": "Delivered",
+      "total_amount": 408.98,
+      "items": [
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "fragile",
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900368",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1017",
+      "customer_id": "CUST-517",
+      "customer_name": "Harper Gonzalez",
+      "order_date": "2025-003-18T15:30:00Z",
+      "status": "Delivered",
+      "total_amount": 1287.98,
+      "items": [
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "bulk_discount",
+        "first_time_buyer",
+        "international"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900391",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1018",
+      "customer_id": "CUST-518",
+      "customer_name": "Daniel Perez",
+      "order_date": "2025-001-19T16:30:00Z",
+      "status": "Delivered",
+      "total_amount": 39.99,
+      "items": [
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900414",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1019",
+      "customer_id": "CUST-519",
+      "customer_name": "Evelyn Sanchez",
+      "order_date": "2025-002-20T17:30:00Z",
+      "status": "Shipped",
+      "total_amount": 348.99,
+      "items": [
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "international",
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900437",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1020",
+      "customer_id": "CUST-520",
+      "customer_name": "Matthew Clark",
+      "order_date": "2025-003-21T18:30:00Z",
+      "status": "Processing",
+      "total_amount": 1426.99,
+      "items": [
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "priority_customer",
+        "express_shipping",
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900460",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1021",
+      "customer_id": "CUST-521",
+      "customer_name": "Abigail Ramirez",
+      "order_date": "2025-001-22T19:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 49.99,
+      "items": [
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900483",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1022",
+      "customer_id": "CUST-522",
+      "customer_name": "Joseph Lewis",
+      "order_date": "2025-002-23T20:30:00Z",
+      "status": "Delivered",
+      "total_amount": 179.48,
+      "items": [
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900506",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1023",
+      "customer_id": "CUST-523",
+      "customer_name": "Emily Robinson",
+      "order_date": "2025-003-24T21:30:00Z",
+      "status": "Delivered",
+      "total_amount": 1046.99,
+      "items": [
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "fragile",
+        "bulk_discount",
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900529",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1024",
+      "customer_id": "CUST-524",
+      "customer_name": "Samuel Walker",
+      "order_date": "2025-001-25T10:30:00Z",
+      "status": "Delivered",
+      "total_amount": 34.99,
+      "items": [
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900552",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1025",
+      "customer_id": "CUST-525",
+      "customer_name": "Elizabeth Young",
+      "order_date": "2025-002-26T11:30:00Z",
+      "status": "Shipped",
+      "total_amount": 104.97,
+      "items": [
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "first_time_buyer",
+        "international"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900575",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1026",
+      "customer_id": "CUST-526",
+      "customer_name": "Sebastian Allen",
+      "order_date": "2025-003-27T12:30:00Z",
+      "status": "Processing",
+      "total_amount": 538.48,
+      "items": [
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "international",
+        "priority_customer",
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900598",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1027",
+      "customer_id": "CUST-527",
+      "customer_name": "Sofia King",
+      "order_date": "2025-001-28T13:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 389.0,
+      "items": [
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900621",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1028",
+      "customer_id": "CUST-528",
+      "customer_name": "David Wright",
+      "order_date": "2025-002-01T14:30:00Z",
+      "status": "Delivered",
+      "total_amount": 139.97,
+      "items": [
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "express_shipping",
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900644",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1029",
+      "customer_id": "CUST-529",
+      "customer_name": "Avery Scott",
+      "order_date": "2025-003-02T15:30:00Z",
+      "status": "Delivered",
+      "total_amount": 373.98,
+      "items": [
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile",
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900667",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1030",
+      "customer_id": "CUST-530",
+      "customer_name": "Carter Torres",
+      "order_date": "2025-001-03T16:30:00Z",
+      "status": "Delivered",
+      "total_amount": 199.99,
+      "items": [
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "fragile"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900690",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1031",
+      "customer_id": "CUST-531",
+      "customer_name": "Scarlett Nguyen",
+      "order_date": "2025-002-04T17:30:00Z",
+      "status": "Shipped",
+      "total_amount": 119.97,
+      "items": [
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "bulk_discount",
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900713",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1032",
+      "customer_id": "CUST-532",
+      "customer_name": "Jayden Hill",
+      "order_date": "2025-003-05T18:30:00Z",
+      "status": "Processing",
+      "total_amount": 219.47,
+      "items": [
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "first_time_buyer",
+        "international",
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900736",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1033",
+      "customer_id": "CUST-533",
+      "customer_name": "Grace Flores",
+      "order_date": "2025-001-06T19:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 499.0,
+      "items": [
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "international"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900759",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1034",
+      "customer_id": "CUST-534",
+      "customer_name": "John Green",
+      "order_date": "2025-002-07T20:30:00Z",
+      "status": "Delivered",
+      "total_amount": 812.99,
+      "items": [
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "priority_customer",
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900782",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1035",
+      "customer_id": "CUST-535",
+      "customer_name": "Chloe Adams",
+      "order_date": "2025-003-08T21:30:00Z",
+      "status": "Delivered",
+      "total_amount": 154.96,
+      "items": [
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "express_shipping",
+        "gift_wrapped",
+        "fragile"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900805",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1036",
+      "customer_id": "CUST-536",
+      "customer_name": "Luke Nelson",
+      "order_date": "2025-001-09T10:30:00Z",
+      "status": "Delivered",
+      "total_amount": 229.0,
+      "items": [
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900828",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1037",
+      "customer_id": "CUST-537",
+      "customer_name": "Victoria Baker",
+      "order_date": "2025-002-10T11:30:00Z",
+      "status": "Shipped",
+      "total_amount": 788.98,
+      "items": [
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "fragile",
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900851",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1038",
+      "customer_id": "CUST-538",
+      "customer_name": "Anthony Hall",
+      "order_date": "2025-003-11T12:30:00Z",
+      "status": "Processing",
+      "total_amount": 174.96,
+      "items": [
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "bulk_discount",
+        "first_time_buyer",
+        "international"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900874",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1039",
+      "customer_id": "CUST-539",
+      "customer_name": "Riley Rivera",
+      "order_date": "2025-001-12T13:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 89.99,
+      "items": [
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-900897",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1040",
+      "customer_id": "CUST-540",
+      "customer_name": "Dylan Campbell",
+      "order_date": "2025-002-13T14:30:00Z",
+      "status": "Delivered",
+      "total_amount": 1197.99,
+      "items": [
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "international",
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-900920",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1041",
+      "customer_id": "CUST-541",
+      "customer_name": "Aria Mitchell",
+      "order_date": "2025-003-14T15:30:00Z",
+      "status": "Delivered",
+      "total_amount": 508.97,
+      "items": [
+        {
+          "product_id": "PROD-102",
+          "product_name": "Ergonomic Desk Mat",
+          "category": "Office Supplies",
+          "unit_price": 49.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "priority_customer",
+        "express_shipping",
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-900943",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1042",
+      "customer_id": "CUST-542",
+      "customer_name": "Leo Roberts",
+      "order_date": "2025-001-15T16:30:00Z",
+      "status": "Delivered",
+      "total_amount": 129.5,
+      "items": [
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-900966",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1043",
+      "customer_id": "CUST-543",
+      "customer_name": "Zoey Carter",
+      "order_date": "2025-002-16T17:30:00Z",
+      "status": "Shipped",
+      "total_amount": 957.0,
+      "items": [
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-900989",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1044",
+      "customer_id": "CUST-544",
+      "customer_name": "Gabriel Phillips",
+      "order_date": "2025-003-17T18:30:00Z",
+      "status": "Processing",
+      "total_amount": 1012.98,
+      "items": [
+        {
+          "product_id": "PROD-105",
+          "product_name": "Ceramic Coffee Mug Set",
+          "category": "Home & Kitchen",
+          "unit_price": 34.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "fragile",
+        "bulk_discount",
+        "first_time_buyer"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-901012",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1045",
+      "customer_id": "CUST-545",
+      "customer_name": "Penelope Evans",
+      "order_date": "2025-001-18T19:30:00Z",
+      "status": "Cancelled",
+      "total_amount": 24.99,
+      "items": [
+        {
+          "product_id": "PROD-106",
+          "product_name": "Stainless Steel Water Bottle",
+          "category": "Sports & Outdoors",
+          "unit_price": 24.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-901035",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1046",
+      "customer_id": "CUST-546",
+      "customer_name": "Julian Turner",
+      "order_date": "2025-002-19T20:30:00Z",
+      "status": "Delivered",
+      "total_amount": 408.98,
+      "items": [
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "first_time_buyer",
+        "international"
+      ],
+      "payment": {
+        "method": "Credit Card",
+        "transaction_id": "TXN-901058",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1047",
+      "customer_id": "CUST-547",
+      "customer_name": "Layla Diaz",
+      "order_date": "2025-003-20T21:30:00Z",
+      "status": "Delivered",
+      "total_amount": 1287.98,
+      "items": [
+        {
+          "product_id": "PROD-108",
+          "product_name": "Adjustable Standing Desk",
+          "category": "Furniture",
+          "unit_price": 389.0,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "international",
+        "priority_customer",
+        "express_shipping"
+      ],
+      "payment": {
+        "method": "PayPal",
+        "transaction_id": "TXN-901081",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1048",
+      "customer_id": "CUST-548",
+      "customer_name": "Isaac Parker",
+      "order_date": "2025-001-21T10:30:00Z",
+      "status": "Delivered",
+      "total_amount": 39.99,
+      "items": [
+        {
+          "product_id": "PROD-109",
+          "product_name": "USB-C Multiport Adapter",
+          "category": "Accessories",
+          "unit_price": 39.99,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "priority_customer"
+      ],
+      "payment": {
+        "method": "Google Pay",
+        "transaction_id": "TXN-901104",
+        "is_paid": true
+      }
+    },
+    {
+      "_id": "ORD-1049",
+      "customer_id": "CUST-549",
+      "customer_name": "Nora Cruz",
+      "order_date": "2025-002-22T11:30:00Z",
+      "status": "Shipped",
+      "total_amount": 348.99,
+      "items": [
+        {
+          "product_id": "PROD-110",
+          "product_name": "Organic Bamboo Bed Sheets",
+          "category": "Home & Kitchen",
+          "unit_price": 89.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-103",
+          "product_name": "Mechanical Gaming Keyboard",
+          "category": "Electronics",
+          "unit_price": 129.5,
+          "quantity": 2
+        }
+      ],
+      "tags": [
+        "express_shipping",
+        "gift_wrapped"
+      ],
+      "payment": {
+        "method": "Cash On Delivery",
+        "transaction_id": "TXN-901127",
+        "is_paid": false
+      }
+    },
+    {
+      "_id": "ORD-1050",
+      "customer_id": "CUST-550",
+      "customer_name": "Levi Edwards",
+      "order_date": "2025-003-23T12:30:00Z",
+      "status": "Processing",
+      "total_amount": 1426.99,
+      "items": [
+        {
+          "product_id": "PROD-101",
+          "product_name": "Wireless Noise-Canceling Headphones",
+          "category": "Electronics",
+          "unit_price": 199.99,
+          "quantity": 1
+        },
+        {
+          "product_id": "PROD-104",
+          "product_name": "Ultra-Wide 4K Monitor",
+          "category": "Electronics",
+          "unit_price": 499.0,
+          "quantity": 2
+        },
+        {
+          "product_id": "PROD-107",
+          "product_name": "Smart Fitness Watch",
+          "category": "Wearables",
+          "unit_price": 229.0,
+          "quantity": 1
+        }
+      ],
+      "tags": [
+        "gift_wrapped",
+        "fragile",
+        "bulk_discount"
+      ],
+      "payment": {
+        "method": "Apple Pay",
+        "transaction_id": "TXN-901150",
+        "is_paid": true
+      }
+    }
+  ],
+  "customers": [
+    {
+      "_id": "CUST-501",
+      "name": "Sarah Jenkins",
+      "email": "sarah.jenkins@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "90111"
+      },
+      "joined_date": "2024-02-15"
+    },
+    {
+      "_id": "CUST-502",
+      "name": "Michael Chang",
+      "email": "michael.chang@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "90222"
+      },
+      "joined_date": "2024-03-15"
+    },
+    {
+      "_id": "CUST-503",
+      "name": "Emma Watson",
+      "email": "emma.watson@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "90333"
+      },
+      "joined_date": "2024-04-15"
+    },
+    {
+      "_id": "CUST-504",
+      "name": "David Miller",
+      "email": "david.miller@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "90444"
+      },
+      "joined_date": "2024-05-15"
+    },
+    {
+      "_id": "CUST-505",
+      "name": "Olivia Taylor",
+      "email": "olivia.taylor@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "90555"
+      },
+      "joined_date": "2024-06-15"
+    },
+    {
+      "_id": "CUST-506",
+      "name": "James Wilson",
+      "email": "james.wilson@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "London",
+        "state": "England",
+        "country": "UK",
+        "postal_code": "90666"
+      },
+      "joined_date": "2024-07-15"
+    },
+    {
+      "_id": "CUST-507",
+      "name": "Sophia Anderson",
+      "email": "sophia.anderson@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Toronto",
+        "state": "ON",
+        "country": "Canada",
+        "postal_code": "90777"
+      },
+      "joined_date": "2024-08-15"
+    },
+    {
+      "_id": "CUST-508",
+      "name": "Liam Martinez",
+      "email": "liam.martinez@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Berlin",
+        "state": "Berlin",
+        "country": "Germany",
+        "postal_code": "90888"
+      },
+      "joined_date": "2024-09-15"
+    },
+    {
+      "_id": "CUST-509",
+      "name": "Isabella Thomas",
+      "email": "isabella.thomas@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Austin",
+        "state": "TX",
+        "country": "USA",
+        "postal_code": "90999"
+      },
+      "joined_date": "2024-10-15"
+    },
+    {
+      "_id": "CUST-510",
+      "name": "Lucas Brown",
+      "email": "lucas.brown@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "91110"
+      },
+      "joined_date": "2024-11-15"
+    },
+    {
+      "_id": "CUST-511",
+      "name": "Mia Garcia",
+      "email": "mia.garcia@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "91221"
+      },
+      "joined_date": "2024-12-15"
+    },
+    {
+      "_id": "CUST-512",
+      "name": "Benjamin Davis",
+      "email": "benjamin.davis@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "91332"
+      },
+      "joined_date": "2024-01-15"
+    },
+    {
+      "_id": "CUST-513",
+      "name": "Charlotte Rodriguez",
+      "email": "charlotte.rodriguez@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "91443"
+      },
+      "joined_date": "2024-02-15"
+    },
+    {
+      "_id": "CUST-514",
+      "name": "Henry Martinez",
+      "email": "henry.martinez@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "91554"
+      },
+      "joined_date": "2024-03-15"
+    },
+    {
+      "_id": "CUST-515",
+      "name": "Amelia Hernandez",
+      "email": "amelia.hernandez@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "London",
+        "state": "England",
+        "country": "UK",
+        "postal_code": "91665"
+      },
+      "joined_date": "2024-04-15"
+    },
+    {
+      "_id": "CUST-516",
+      "name": "Alexander Lopez",
+      "email": "alexander.lopez@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Toronto",
+        "state": "ON",
+        "country": "Canada",
+        "postal_code": "91776"
+      },
+      "joined_date": "2024-05-15"
+    },
+    {
+      "_id": "CUST-517",
+      "name": "Harper Gonzalez",
+      "email": "harper.gonzalez@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Berlin",
+        "state": "Berlin",
+        "country": "Germany",
+        "postal_code": "91887"
+      },
+      "joined_date": "2024-06-15"
+    },
+    {
+      "_id": "CUST-518",
+      "name": "Daniel Perez",
+      "email": "daniel.perez@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Austin",
+        "state": "TX",
+        "country": "USA",
+        "postal_code": "91998"
+      },
+      "joined_date": "2024-07-15"
+    },
+    {
+      "_id": "CUST-519",
+      "name": "Evelyn Sanchez",
+      "email": "evelyn.sanchez@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "92109"
+      },
+      "joined_date": "2024-08-15"
+    },
+    {
+      "_id": "CUST-520",
+      "name": "Matthew Clark",
+      "email": "matthew.clark@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "92220"
+      },
+      "joined_date": "2024-09-15"
+    },
+    {
+      "_id": "CUST-521",
+      "name": "Abigail Ramirez",
+      "email": "abigail.ramirez@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "92331"
+      },
+      "joined_date": "2024-10-15"
+    },
+    {
+      "_id": "CUST-522",
+      "name": "Joseph Lewis",
+      "email": "joseph.lewis@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "92442"
+      },
+      "joined_date": "2024-11-15"
+    },
+    {
+      "_id": "CUST-523",
+      "name": "Emily Robinson",
+      "email": "emily.robinson@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "92553"
+      },
+      "joined_date": "2024-12-15"
+    },
+    {
+      "_id": "CUST-524",
+      "name": "Samuel Walker",
+      "email": "samuel.walker@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "London",
+        "state": "England",
+        "country": "UK",
+        "postal_code": "92664"
+      },
+      "joined_date": "2024-01-15"
+    },
+    {
+      "_id": "CUST-525",
+      "name": "Elizabeth Young",
+      "email": "elizabeth.young@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Toronto",
+        "state": "ON",
+        "country": "Canada",
+        "postal_code": "92775"
+      },
+      "joined_date": "2024-02-15"
+    },
+    {
+      "_id": "CUST-526",
+      "name": "Sebastian Allen",
+      "email": "sebastian.allen@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Berlin",
+        "state": "Berlin",
+        "country": "Germany",
+        "postal_code": "92886"
+      },
+      "joined_date": "2024-03-15"
+    },
+    {
+      "_id": "CUST-527",
+      "name": "Sofia King",
+      "email": "sofia.king@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Austin",
+        "state": "TX",
+        "country": "USA",
+        "postal_code": "92997"
+      },
+      "joined_date": "2024-04-15"
+    },
+    {
+      "_id": "CUST-528",
+      "name": "David Wright",
+      "email": "david.wright@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "93108"
+      },
+      "joined_date": "2024-05-15"
+    },
+    {
+      "_id": "CUST-529",
+      "name": "Avery Scott",
+      "email": "avery.scott@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "93219"
+      },
+      "joined_date": "2024-06-15"
+    },
+    {
+      "_id": "CUST-530",
+      "name": "Carter Torres",
+      "email": "carter.torres@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "93330"
+      },
+      "joined_date": "2024-07-15"
+    },
+    {
+      "_id": "CUST-531",
+      "name": "Scarlett Nguyen",
+      "email": "scarlett.nguyen@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "93441"
+      },
+      "joined_date": "2024-08-15"
+    },
+    {
+      "_id": "CUST-532",
+      "name": "Jayden Hill",
+      "email": "jayden.hill@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "93552"
+      },
+      "joined_date": "2024-09-15"
+    },
+    {
+      "_id": "CUST-533",
+      "name": "Grace Flores",
+      "email": "grace.flores@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "London",
+        "state": "England",
+        "country": "UK",
+        "postal_code": "93663"
+      },
+      "joined_date": "2024-10-15"
+    },
+    {
+      "_id": "CUST-534",
+      "name": "John Green",
+      "email": "john.green@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Toronto",
+        "state": "ON",
+        "country": "Canada",
+        "postal_code": "93774"
+      },
+      "joined_date": "2024-11-15"
+    },
+    {
+      "_id": "CUST-535",
+      "name": "Chloe Adams",
+      "email": "chloe.adams@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Berlin",
+        "state": "Berlin",
+        "country": "Germany",
+        "postal_code": "93885"
+      },
+      "joined_date": "2024-12-15"
+    },
+    {
+      "_id": "CUST-536",
+      "name": "Luke Nelson",
+      "email": "luke.nelson@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Austin",
+        "state": "TX",
+        "country": "USA",
+        "postal_code": "93996"
+      },
+      "joined_date": "2024-01-15"
+    },
+    {
+      "_id": "CUST-537",
+      "name": "Victoria Baker",
+      "email": "victoria.baker@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "94107"
+      },
+      "joined_date": "2024-02-15"
+    },
+    {
+      "_id": "CUST-538",
+      "name": "Anthony Hall",
+      "email": "anthony.hall@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "94218"
+      },
+      "joined_date": "2024-03-15"
+    },
+    {
+      "_id": "CUST-539",
+      "name": "Riley Rivera",
+      "email": "riley.rivera@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "94329"
+      },
+      "joined_date": "2024-04-15"
+    },
+    {
+      "_id": "CUST-540",
+      "name": "Dylan Campbell",
+      "email": "dylan.campbell@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "94440"
+      },
+      "joined_date": "2024-05-15"
+    },
+    {
+      "_id": "CUST-541",
+      "name": "Aria Mitchell",
+      "email": "aria.mitchell@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "94551"
+      },
+      "joined_date": "2024-06-15"
+    },
+    {
+      "_id": "CUST-542",
+      "name": "Leo Roberts",
+      "email": "leo.roberts@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "London",
+        "state": "England",
+        "country": "UK",
+        "postal_code": "94662"
+      },
+      "joined_date": "2024-07-15"
+    },
+    {
+      "_id": "CUST-543",
+      "name": "Zoey Carter",
+      "email": "zoey.carter@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "Toronto",
+        "state": "ON",
+        "country": "Canada",
+        "postal_code": "94773"
+      },
+      "joined_date": "2024-08-15"
+    },
+    {
+      "_id": "CUST-544",
+      "name": "Gabriel Phillips",
+      "email": "gabriel.phillips@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "Berlin",
+        "state": "Berlin",
+        "country": "Germany",
+        "postal_code": "94884"
+      },
+      "joined_date": "2024-09-15"
+    },
+    {
+      "_id": "CUST-545",
+      "name": "Penelope Evans",
+      "email": "penelope.evans@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Austin",
+        "state": "TX",
+        "country": "USA",
+        "postal_code": "94995"
+      },
+      "joined_date": "2024-10-15"
+    },
+    {
+      "_id": "CUST-546",
+      "name": "Julian Turner",
+      "email": "julian.turner@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Seattle",
+        "state": "WA",
+        "country": "USA",
+        "postal_code": "95106"
+      },
+      "joined_date": "2024-11-15"
+    },
+    {
+      "_id": "CUST-547",
+      "name": "Layla Diaz",
+      "email": "layla.diaz@example.com",
+      "tier": "Standard",
+      "address": {
+        "city": "New York",
+        "state": "NY",
+        "country": "USA",
+        "postal_code": "95217"
+      },
+      "joined_date": "2024-12-15"
+    },
+    {
+      "_id": "CUST-548",
+      "name": "Isaac Parker",
+      "email": "isaac.parker@example.com",
+      "tier": "Platinum",
+      "address": {
+        "city": "San Francisco",
+        "state": "CA",
+        "country": "USA",
+        "postal_code": "95328"
+      },
+      "joined_date": "2024-01-15"
+    },
+    {
+      "_id": "CUST-549",
+      "name": "Nora Cruz",
+      "email": "nora.cruz@example.com",
+      "tier": "Gold",
+      "address": {
+        "city": "Chicago",
+        "state": "IL",
+        "country": "USA",
+        "postal_code": "95439"
+      },
+      "joined_date": "2024-02-15"
+    },
+    {
+      "_id": "CUST-550",
+      "name": "Levi Edwards",
+      "email": "levi.edwards@example.com",
+      "tier": "Silver",
+      "address": {
+        "city": "Miami",
+        "state": "FL",
+        "country": "USA",
+        "postal_code": "95550"
+      },
+      "joined_date": "2024-03-15"
+    }
+  ],
+  "products": [
+    {
+      "_id": "PROD-101",
+      "name": "Wireless Noise-Canceling Headphones",
+      "category": "Electronics",
+      "unit_price": 199.99,
+      "stock_quantity": 45,
+      "tags": [
+        "audio",
+        "wireless",
+        "bluetooth"
+      ]
+    },
+    {
+      "_id": "PROD-102",
+      "name": "Ergonomic Desk Mat",
+      "category": "Office Supplies",
+      "unit_price": 49.99,
+      "stock_quantity": 120,
+      "tags": [
+        "desk",
+        "office",
+        "ergonomic"
+      ]
+    },
+    {
+      "_id": "PROD-103",
+      "name": "Mechanical Gaming Keyboard",
+      "category": "Electronics",
+      "unit_price": 129.5,
+      "stock_quantity": 60,
+      "tags": [
+        "gaming",
+        "rgb",
+        "mechanical"
+      ]
+    },
+    {
+      "_id": "PROD-104",
+      "name": "Ultra-Wide 4K Monitor",
+      "category": "Electronics",
+      "unit_price": 499.0,
+      "stock_quantity": 25,
+      "tags": [
+        "display",
+        "4k",
+        "monitor"
+      ]
+    },
+    {
+      "_id": "PROD-105",
+      "name": "Ceramic Coffee Mug Set",
+      "category": "Home & Kitchen",
+      "unit_price": 34.99,
+      "stock_quantity": 200,
+      "tags": [
+        "kitchen",
+        "ceramic",
+        "coffee"
+      ]
+    },
+    {
+      "_id": "PROD-106",
+      "name": "Stainless Steel Water Bottle",
+      "category": "Sports & Outdoors",
+      "unit_price": 24.99,
+      "stock_quantity": 150,
+      "tags": [
+        "bottle",
+        "sports",
+        "outdoor"
+      ]
+    },
+    {
+      "_id": "PROD-107",
+      "name": "Smart Fitness Watch",
+      "category": "Wearables",
+      "unit_price": 229.0,
+      "stock_quantity": 40,
+      "tags": [
+        "fitness",
+        "smartwatch",
+        "tracker"
+      ]
+    },
+    {
+      "_id": "PROD-108",
+      "name": "Adjustable Standing Desk",
+      "category": "Furniture",
+      "unit_price": 389.0,
+      "stock_quantity": 15,
+      "tags": [
+        "desk",
+        "standing",
+        "furniture"
+      ]
+    },
+    {
+      "_id": "PROD-109",
+      "name": "USB-C Multiport Adapter",
+      "category": "Accessories",
+      "unit_price": 39.99,
+      "stock_quantity": 300,
+      "tags": [
+        "usb-c",
+        "dongle",
+        "adapter"
+      ]
+    },
+    {
+      "_id": "PROD-110",
+      "name": "Organic Bamboo Bed Sheets",
+      "category": "Home & Kitchen",
+      "unit_price": 89.99,
+      "stock_quantity": 80,
+      "tags": [
+        "bedding",
+        "organic",
+        "bamboo"
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "_id": "REV-201",
+      "product_id": "PROD-102",
+      "product_name": "Ergonomic Desk Mat",
+      "customer_id": "CUST-502",
+      "customer_name": "Michael Chang",
+      "rating": 4,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-02"
+    },
+    {
+      "_id": "REV-202",
+      "product_id": "PROD-103",
+      "product_name": "Mechanical Gaming Keyboard",
+      "customer_id": "CUST-503",
+      "customer_name": "Emma Watson",
+      "rating": 5,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-03"
+    },
+    {
+      "_id": "REV-203",
+      "product_id": "PROD-104",
+      "product_name": "Ultra-Wide 4K Monitor",
+      "customer_id": "CUST-504",
+      "customer_name": "David Miller",
+      "rating": 3,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-04"
+    },
+    {
+      "_id": "REV-204",
+      "product_id": "PROD-105",
+      "product_name": "Ceramic Coffee Mug Set",
+      "customer_id": "CUST-505",
+      "customer_name": "Olivia Taylor",
+      "rating": 4,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-05"
+    },
+    {
+      "_id": "REV-205",
+      "product_id": "PROD-106",
+      "product_name": "Stainless Steel Water Bottle",
+      "customer_id": "CUST-506",
+      "customer_name": "James Wilson",
+      "rating": 5,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-06"
+    },
+    {
+      "_id": "REV-206",
+      "product_id": "PROD-107",
+      "product_name": "Smart Fitness Watch",
+      "customer_id": "CUST-507",
+      "customer_name": "Sophia Anderson",
+      "rating": 3,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-07"
+    },
+    {
+      "_id": "REV-207",
+      "product_id": "PROD-108",
+      "product_name": "Adjustable Standing Desk",
+      "customer_id": "CUST-508",
+      "customer_name": "Liam Martinez",
+      "rating": 4,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-08"
+    },
+    {
+      "_id": "REV-208",
+      "product_id": "PROD-109",
+      "product_name": "USB-C Multiport Adapter",
+      "customer_id": "CUST-509",
+      "customer_name": "Isabella Thomas",
+      "rating": 5,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-09"
+    },
+    {
+      "_id": "REV-209",
+      "product_id": "PROD-110",
+      "product_name": "Organic Bamboo Bed Sheets",
+      "customer_id": "CUST-510",
+      "customer_name": "Lucas Brown",
+      "rating": 3,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-10"
+    },
+    {
+      "_id": "REV-210",
+      "product_id": "PROD-101",
+      "product_name": "Wireless Noise-Canceling Headphones",
+      "customer_id": "CUST-511",
+      "customer_name": "Mia Garcia",
+      "rating": 4,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-11"
+    },
+    {
+      "_id": "REV-211",
+      "product_id": "PROD-102",
+      "product_name": "Ergonomic Desk Mat",
+      "customer_id": "CUST-512",
+      "customer_name": "Benjamin Davis",
+      "rating": 5,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-12"
+    },
+    {
+      "_id": "REV-212",
+      "product_id": "PROD-103",
+      "product_name": "Mechanical Gaming Keyboard",
+      "customer_id": "CUST-513",
+      "customer_name": "Charlotte Rodriguez",
+      "rating": 3,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-13"
+    },
+    {
+      "_id": "REV-213",
+      "product_id": "PROD-104",
+      "product_name": "Ultra-Wide 4K Monitor",
+      "customer_id": "CUST-514",
+      "customer_name": "Henry Martinez",
+      "rating": 4,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-14"
+    },
+    {
+      "_id": "REV-214",
+      "product_id": "PROD-105",
+      "product_name": "Ceramic Coffee Mug Set",
+      "customer_id": "CUST-515",
+      "customer_name": "Amelia Hernandez",
+      "rating": 5,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-15"
+    },
+    {
+      "_id": "REV-215",
+      "product_id": "PROD-106",
+      "product_name": "Stainless Steel Water Bottle",
+      "customer_id": "CUST-516",
+      "customer_name": "Alexander Lopez",
+      "rating": 3,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-16"
+    },
+    {
+      "_id": "REV-216",
+      "product_id": "PROD-107",
+      "product_name": "Smart Fitness Watch",
+      "customer_id": "CUST-517",
+      "customer_name": "Harper Gonzalez",
+      "rating": 4,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-17"
+    },
+    {
+      "_id": "REV-217",
+      "product_id": "PROD-108",
+      "product_name": "Adjustable Standing Desk",
+      "customer_id": "CUST-518",
+      "customer_name": "Daniel Perez",
+      "rating": 5,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-18"
+    },
+    {
+      "_id": "REV-218",
+      "product_id": "PROD-109",
+      "product_name": "USB-C Multiport Adapter",
+      "customer_id": "CUST-519",
+      "customer_name": "Evelyn Sanchez",
+      "rating": 3,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-19"
+    },
+    {
+      "_id": "REV-219",
+      "product_id": "PROD-110",
+      "product_name": "Organic Bamboo Bed Sheets",
+      "customer_id": "CUST-520",
+      "customer_name": "Matthew Clark",
+      "rating": 4,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-20"
+    },
+    {
+      "_id": "REV-220",
+      "product_id": "PROD-101",
+      "product_name": "Wireless Noise-Canceling Headphones",
+      "customer_id": "CUST-521",
+      "customer_name": "Abigail Ramirez",
+      "rating": 5,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-21"
+    },
+    {
+      "_id": "REV-221",
+      "product_id": "PROD-102",
+      "product_name": "Ergonomic Desk Mat",
+      "customer_id": "CUST-522",
+      "customer_name": "Joseph Lewis",
+      "rating": 3,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-22"
+    },
+    {
+      "_id": "REV-222",
+      "product_id": "PROD-103",
+      "product_name": "Mechanical Gaming Keyboard",
+      "customer_id": "CUST-523",
+      "customer_name": "Emily Robinson",
+      "rating": 4,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-23"
+    },
+    {
+      "_id": "REV-223",
+      "product_id": "PROD-104",
+      "product_name": "Ultra-Wide 4K Monitor",
+      "customer_id": "CUST-524",
+      "customer_name": "Samuel Walker",
+      "rating": 5,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-24"
+    },
+    {
+      "_id": "REV-224",
+      "product_id": "PROD-105",
+      "product_name": "Ceramic Coffee Mug Set",
+      "customer_id": "CUST-525",
+      "customer_name": "Elizabeth Young",
+      "rating": 3,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-25"
+    },
+    {
+      "_id": "REV-225",
+      "product_id": "PROD-106",
+      "product_name": "Stainless Steel Water Bottle",
+      "customer_id": "CUST-526",
+      "customer_name": "Sebastian Allen",
+      "rating": 4,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-01"
+    },
+    {
+      "_id": "REV-226",
+      "product_id": "PROD-107",
+      "product_name": "Smart Fitness Watch",
+      "customer_id": "CUST-527",
+      "customer_name": "Sofia King",
+      "rating": 5,
+      "comment": "Very satisfied with the build quality.",
+      "created_at": "2025-01-02"
+    },
+    {
+      "_id": "REV-227",
+      "product_id": "PROD-108",
+      "product_name": "Adjustable Standing Desk",
+      "customer_id": "CUST-528",
+      "customer_name": "David Wright",
+      "rating": 3,
+      "comment": "Decent product for the price.",
+      "created_at": "2025-01-03"
+    },
+    {
+      "_id": "REV-228",
+      "product_id": "PROD-109",
+      "product_name": "USB-C Multiport Adapter",
+      "customer_id": "CUST-529",
+      "customer_name": "Avery Scott",
+      "rating": 4,
+      "comment": "Fast shipping and great packaging.",
+      "created_at": "2025-01-04"
+    },
+    {
+      "_id": "REV-229",
+      "product_id": "PROD-110",
+      "product_name": "Organic Bamboo Bed Sheets",
+      "customer_id": "CUST-530",
+      "customer_name": "Carter Torres",
+      "rating": 5,
+      "comment": "Could be slightly better.",
+      "created_at": "2025-01-05"
+    },
+    {
+      "_id": "REV-230",
+      "product_id": "PROD-101",
+      "product_name": "Wireless Noise-Canceling Headphones",
+      "customer_id": "CUST-531",
+      "customer_name": "Scarlett Nguyen",
+      "rating": 3,
+      "comment": "Outstanding quality, exceeded my expectations!",
+      "created_at": "2025-01-06"
+    }
+  ]
+}
