@@ -24,9 +24,9 @@ class DatabaseRegistry:
 
     def _init_registry(self):
         """Initializes the databases registry file with default Chinook database if not exists."""
-        if not self.registry_file.exists():
+        if self.registry_file.exists() == False:
             default_dbs = []
-            if DEFAULT_CHINOOK.exists():
+            if DEFAULT_CHINOOK.exists() == True:
                 table_count = self._count_tables(DEFAULT_CHINOOK)
                 default_dbs.append({
                     "id": "chinook",
@@ -43,7 +43,7 @@ class DatabaseRegistry:
         try:
             with open(self.registry_file, "r", encoding="utf-8") as f:
                 content = f.read().strip()
-                if not content:
+                if content == "":
                     return []
                 return json.loads(content)
         except (json.JSONDecodeError, OSError):
@@ -114,7 +114,7 @@ class DatabaseRegistry:
         dbs = self._read_registry()
         target = next((d for d in dbs if d["id"] == db_id), None)
 
-        if not target or target.get("is_default"):
+        if target == None or target.get("is_default") == True:
             return False
 
         # Remove physical file if in uploads

@@ -221,6 +221,75 @@
         },
         "status": "SUCCESS",
         "timestamp": "2026-09-01T15:45:54.452393+00:00"
+      },
+      {
+        "id": "1788279685735",
+        "role": "user",
+        "content": "Show me the top 5 records from the Appointments table.",
+        "sql": null,
+        "data": null,
+        "telemetry": null,
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T16:21:25.747221+00:00"
+      },
+      {
+        "id": "1788279688270",
+        "role": "assistant",
+        "content": "Here are the first five appointments from the Appointments table: 1) AppointmentID 1 – Patient 1 with Doctor 1 on 2025-02-10 09:00, Status: Completed, Reason: Routine ECG Checkup. 2) AppointmentID 2 – Patient 2 with Doctor 3 on 2025-02-10 10:30, Status: Completed, Reason: Annual Child Checkup. 3) AppointmentID 3 – Patient 3 with Doctor 4 on 2025-02-11 11:00, Status: Completed, Reason: Knee Joint Pain. 4) AppointmentID 4 – Patient 4 with Doctor 5 on 2025-02-12 14:00, Status: Scheduled, Reason: Skin Allergy Consultation. 5) AppointmentID 5 – Patient 5 with Doctor 2 on 2025-02-14 15:30, Status: Scheduled, Reason: Migraine Evaluation.",
+        "sql": "SELECT * FROM Appointments LIMIT 5;",
+        "data": [
+          {
+            "AppointmentID": 1,
+            "PatientID": 1,
+            "DoctorID": 1,
+            "AppointmentDate": "2025-02-10 09:00",
+            "Status": "Completed",
+            "ReasonForVisit": "Routine ECG Checkup"
+          },
+          {
+            "AppointmentID": 2,
+            "PatientID": 2,
+            "DoctorID": 3,
+            "AppointmentDate": "2025-02-10 10:30",
+            "Status": "Completed",
+            "ReasonForVisit": "Annual Child Checkup"
+          },
+          {
+            "AppointmentID": 3,
+            "PatientID": 3,
+            "DoctorID": 4,
+            "AppointmentDate": "2025-02-11 11:00",
+            "Status": "Completed",
+            "ReasonForVisit": "Knee Joint Pain"
+          },
+          {
+            "AppointmentID": 4,
+            "PatientID": 4,
+            "DoctorID": 5,
+            "AppointmentDate": "2025-02-12 14:00",
+            "Status": "Scheduled",
+            "ReasonForVisit": "Skin Allergy Consultation"
+          },
+          {
+            "AppointmentID": 5,
+            "PatientID": 5,
+            "DoctorID": 2,
+            "AppointmentDate": "2025-02-14 15:30",
+            "Status": "Scheduled",
+            "ReasonForVisit": "Migraine Evaluation"
+          }
+        ],
+        "telemetry": {
+          "confidence_score": 0.98,
+          "latency_ms": 2442,
+          "attempts": 1,
+          "status": "SUCCESS",
+          "error": null,
+          "db_id": "healthcare_patients_1788275477",
+          "db_name": "Healthcare patients"
+        },
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T16:21:28.281532+00:00"
       }
     ]
   },

@@ -19,7 +19,7 @@ class ChatStorage:
 
     def _init_storage(self):
         """Initializes the JSON file if it does not already exist."""
-        if not self.file_path.exists():
+        if self.file_path.exists() == False:
             self._write_data([])
 
     def _read_data(self) -> List[Dict[str, Any]]:
@@ -27,7 +27,7 @@ class ChatStorage:
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 content = f.read().strip()
-                if not content:
+                if content == "":
                     return []
                 return json.loads(content)
         except (json.JSONDecodeError, OSError):
@@ -98,7 +98,7 @@ class ChatStorage:
         chats = self._read_data()
         target_chat = next((c for c in chats if c["id"] == chat_id), None)
 
-        if not target_chat:
+        if target_chat == None:
             # Auto-create chat if not found
             target_chat = {
                 "id": chat_id,
