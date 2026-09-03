@@ -17,7 +17,10 @@ import {
   Search,
   Maximize2,
   Minimize2,
-  FolderPlus
+  FolderPlus,
+  Network,
+  Key,
+  Link as LinkIcon
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -33,7 +36,8 @@ export default function Sidebar({
   isDark,
   onToggleTheme,
   isOpen,
-  onClose
+  onClose,
+  onOpenSchemaMap
 }) {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'schema'
   // Multi-table expansion state (Set of table names currently expanded)
@@ -319,6 +323,17 @@ export default function Sidebar({
               </div>
             </div>
 
+            {/* View Schema Map / Relationships Button */}
+            {onOpenSchemaMap && (
+              <button
+                onClick={onOpenSchemaMap}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+              >
+                <Network className="w-3.5 h-3.5" />
+                <span>View Schema Map (ER)</span>
+              </button>
+            )}
+
             {filteredTables.length === 0 ? (
               <div className="text-xs text-slate-500 text-center py-6">
                 {searchQuery ? `No tables or columns match "${searchQuery}"` : "Connecting to database..."}
@@ -350,7 +365,7 @@ export default function Sidebar({
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[10px] text-slate-400 font-mono">
-                          {t.cols.length} cols
+                          {t.cols ? t.cols.length : (t.columns ? t.columns.length : 0)} cols
                         </span>
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
                       </div>
@@ -360,22 +375,58 @@ export default function Sidebar({
                     {isExpanded && (
                       <div className="p-2.5 border-t border-slate-800/40 space-y-1.5">
                         <ul className="space-y-1 text-xs">
-                          {t.cols.map((col, idx) => {
-                            const isMatched = searchQuery && col.toLowerCase().includes(searchQuery.toLowerCase());
-                            return (
-                              <li 
-                                key={idx} 
-                                className={`flex items-center gap-2 py-0.5 px-1 rounded ${
-                                  isMatched ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : ''
-                                }`}
-                              >
-                                <span className={`w-1 h-1 rounded-full shrink-0 ${isMatched ? 'bg-indigo-400' : 'bg-slate-500'}`} />
-                                <code className={`font-mono text-[10px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                                  {col}
-                                </code>
-                              </li>
-                            );
-                          })}
+                          {t.columns && t.columns.length > 0 ? (
+                            t.columns.map((c, idx) => {
+                              const isMatched = searchQuery && (c.name.toLowerCase().includes(searchQuery.toLowerCase()) || (c.fk_to_table && c.fk_to_table.toLowerCase().includes(searchQuery.toLowerCase())));
+                              return (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center justify-between py-0.5 px-1 rounded ${
+                                    isMatched ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1.5 truncate">
+                                    {c.is_pk ? (
+                                      <Key className="w-3 h-3 text-amber-400 shrink-0" title="Primary Key" />
+                                    ) : c.is_fk ? (
+                                      <LinkIcon className="w-3 h-3 text-indigo-400 shrink-0" title="Foreign Key" />
+                                    ) : (
+                                      <span className="w-1 h-1 rounded-full bg-slate-500 shrink-0 mx-1" />
+                                    )}
+                                    <span className={`font-mono text-[10px] truncate ${c.is_pk ? 'text-amber-300 font-bold' : c.is_fk ? 'text-indigo-300 font-semibold' : isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                      {c.name}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-1 shrink-0 text-[9px] font-mono">
+                                    <span className="text-slate-500">{c.type}</span>
+                                    {c.is_fk && c.fk_to_table && (
+                                      <span className="px-1 py-0.1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                        ➔ {c.fk_to_table}
+                                      </span>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })
+                          ) : (
+                            t.cols.map((col, idx) => {
+                              const isMatched = searchQuery && col.toLowerCase().includes(searchQuery.toLowerCase());
+                              return (
+                                <li 
+                                  key={idx} 
+                                  className={`flex items-center gap-2 py-0.5 px-1 rounded ${
+                                    isMatched ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : ''
+                                  }`}
+                                >
+                                  <span className={`w-1 h-1 rounded-full shrink-0 ${isMatched ? 'bg-indigo-400' : 'bg-slate-500'}`} />
+                                  <code className={`font-mono text-[10px] ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    {col}
+                                  </code>
+                                </li>
+                              );
+                            })
+                          )}
                         </ul>
 
                         <button

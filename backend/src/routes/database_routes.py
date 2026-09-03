@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, Query
 from controllers.database_controller import DatabaseController
 
@@ -13,10 +14,11 @@ def get_databases():
 @router.post("/databases/upload")
 async def upload_database(
     file: UploadFile = File(...),
-    name: str = Form(...)
+    name: str = Form(...),
+    type: Optional[str] = Form(default=None)
 ):
-    """Uploads a custom SQLite database file and registers it with a user-specified name."""
-    return DatabaseController.upload_database(file=file, name=name)
+    """Uploads a custom SQL (.db) or NoSQL (.json) file and registers it with validation."""
+    return DatabaseController.upload_database(file=file, name=name, dataset_type=type)
 
 
 @router.delete("/databases/{db_id}")

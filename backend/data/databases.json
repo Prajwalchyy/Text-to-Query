@@ -9,15 +9,6 @@
     "created_at": "2026-09-01T14:43:16.521604+00:00"
   },
   {
-    "id": "healthcare_patients_1788275477",
-    "name": "Healthcare patients",
-    "filename": "healthcare_patients.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\uploads\\healthcare_patients.db",
-    "table_count": 5,
-    "is_default": false,
-    "created_at": "2026-09-01T15:11:17.553613+00:00"
-  },
-  {
     "id": "ecommerce_store",
     "name": "E-Commerce Store (NoSQL)",
     "type": "nosql",
@@ -26,5 +17,15 @@
     "doc_count": 50,
     "is_default": true,
     "created_at": "2026-09-02T17:00:42.386418+00:00"
+  },
+  {
+    "id": "northwind_ecommerce_1788434279",
+    "name": "Northwind ecommerce",
+    "type": "sql",
+    "filename": "northwind_ecommerce.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\uploads\\northwind_ecommerce.db",
+    "table_count": 6,
+    "is_default": false,
+    "created_at": "2026-09-03T11:17:59.915049+00:00"
   }
 ]

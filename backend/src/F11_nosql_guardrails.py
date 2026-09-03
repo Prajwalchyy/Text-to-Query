@@ -39,11 +39,31 @@ class NoSQLGuardrail:
         col_match = re.search(r"db\.([a-zA-Z0-9_-]+)\.", clean)
         target_collection = col_match.group(1) if col_match else None
 
-        if available_collections != None and target_collection != None:
-            # Case-insensitive collection matching
-            matched = next((c for c in available_collections if c.lower() == target_collection.lower()), None)
-            if matched != None:
-                target_collection = matched
+        if available_collections != None:
+            if target_collection != None:
+                # Check case-insensitive match
+                matched = next((c for c in available_collections if c.lower() == target_collection.lower()), None)
+                if matched != None:
+                    target_collection = matched
+                else:
+                    # If target collection is the database name or unknown, fallback to first collection
+                    target_collection = available_collections[0] if len(available_collections) > 0 else target_collection
+            elif len(available_collections) > 0:
+                target_collection = available_collections[0]
+
+        # Extract chained .limit(N) and .sort(...)
+        limit_match = re.search(r"\.limit\s*\(\s*(\d+)\s*\)", clean)
+        limit_val = int(limit_match.group(1)) if limit_match else None
+
+        sort_match = re.search(r"\.sort\s*\(\s*(\{.*\})\s*\)", clean)
+        sort_val = None
+        if sort_match:
+            try:
+                sort_json = sort_match.group(1).replace("'", '"')
+                sort_json = re.sub(r'([{\s,])([a-zA-Z0-9_$]+)\s*:', r'\1"\2":', sort_json)
+                sort_val = json.loads(sort_json)
+            except Exception:
+                pass
 
         # Handle db.<collection>.aggregate([ ... ])
         agg_match = re.search(r"db\.[a-zA-Z0-9_-]+\.aggregate\s*\(\s*(\[.*\])\s*\)", clean, re.DOTALL)
@@ -62,20 +82,31 @@ class NoSQLGuardrail:
                     return False, f"Invalid MongoDB aggregation pipeline JSON: {str(e)}", None, target_collection
 
         # Handle db.<collection>.find({ ... })
-        find_match = re.search(r"db\.[a-zA-Z0-9_-]+\.find\s*\(\s*(\{.*\})\s*\)", clean, re.DOTALL)
+        find_match = re.search(r"db\.[a-zA-Z0-9_-]+\.find\s*\(\s*(\{.*?\})\s*\)", clean, re.DOTALL)
         if find_match:
             json_str = find_match.group(1)
             try:
-                payload = json.loads(json_str)
-                return True, None, payload, target_collection
-            except json.JSONDecodeError as e:
+                filter_obj = json.loads(json_str)
+            except json.JSONDecodeError:
                 fixed_json = re.sub(r'([{\s,])([a-zA-Z0-9_$]+)\s*:', r'\1"\2":', json_str)
                 fixed_json = fixed_json.replace("'", '"')
                 try:
-                    payload = json.loads(fixed_json)
-                    return True, None, payload, target_collection
-                except Exception:
+                    filter_obj = json.loads(fixed_json)
+                except Exception as e:
                     return False, f"Invalid MongoDB find() filter JSON: {str(e)}", None, target_collection
+
+            # Convert find + sort + limit to equivalent aggregation pipeline if sort or limit exists
+            if limit_val != None or sort_val != None:
+                pipeline = []
+                if filter_obj and len(filter_obj) > 0:
+                    pipeline.append({"$match": filter_obj})
+                if sort_val:
+                    pipeline.append({"$sort": sort_val})
+                if limit_val:
+                    pipeline.append({"$limit": limit_val})
+                return True, None, pipeline, target_collection
+
+            return True, None, filter_obj, target_collection
 
         # Handle raw JSON list or dict directly
         if clean.startswith("[") or clean.startswith("{"):

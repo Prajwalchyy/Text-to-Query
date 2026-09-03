@@ -33,7 +33,7 @@ export default function ChatInput({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-4">
+    <div className="w-full max-w-5xl xl:max-w-6xl mx-auto px-4 pb-4">
       {/* Floating Prompt Bar */}
       <form onSubmit={handleSubmit} className="relative">
         <div className={`flex items-center rounded-2xl border transition-all p-2 shadow-lg ${

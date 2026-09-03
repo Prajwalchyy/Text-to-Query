@@ -20,7 +20,7 @@ export default function DataTable({ data, isDark }) {
   };
 
   return (
-    <div className="mt-3">
+    <div className="mt-3 w-full max-w-full overflow-hidden">
       {/* Collapsible toggle header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -32,17 +32,17 @@ export default function DataTable({ data, isDark }) {
       >
         <span className="flex items-center gap-2">
           <TableIcon className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Query Results ({data.length} {data.length === 1 ? 'record' : 'records'})</span>
+          <span>Query Results ({data.length} {data.length === 1 ? 'record' : 'records'}, {columns.length} columns)</span>
         </span>
         {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
       </button>
 
-      {/* Table Body with Localized Container Scrolling */}
+      {/* Table Body with Localized Container Scrolling (Horizontal & Vertical) */}
       {isExpanded && (
-        <div className={`mt-2 border rounded-xl overflow-hidden max-h-64 overflow-y-auto overflow-x-auto custom-scrollbar ${
+        <div className={`mt-2 border rounded-xl overflow-x-auto overflow-y-auto max-h-60 custom-scrollbar w-full max-w-full ${
           isDark ? 'border-slate-800 bg-slate-950/40' : 'border-slate-200 bg-white'
         }`}>
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="text-left text-xs border-collapse min-w-full">
             <thead className={`sticky top-0 uppercase tracking-wider font-semibold border-b z-10 ${
               isDark 
                 ? 'bg-slate-900 text-slate-300 border-slate-800' 
@@ -50,7 +50,13 @@ export default function DataTable({ data, isDark }) {
             }`}>
               <tr>
                 {columns.map((col) => (
-                  <th key={col} className="px-4 py-2.5 whitespace-nowrap">{col}</th>
+                  <th 
+                    key={col} 
+                    className="px-3.5 py-2.5 whitespace-nowrap min-w-[120px] max-w-[200px] truncate text-[11px]"
+                    title={col}
+                  >
+                    {col}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -59,11 +65,15 @@ export default function DataTable({ data, isDark }) {
                 <tr key={rIdx} className={isDark ? 'hover:bg-slate-800/30 transition-colors' : 'hover:bg-slate-50 transition-colors'}>
                   {columns.map((col, cIdx) => {
                     const formatted = formatCellValue(row[col]);
-                    const isLongJson = typeof row[col] === 'object' && row[col] !== null;
+                    const isObj = typeof row[col] === 'object' && row[col] !== null;
                     return (
-                      <td key={cIdx} className={`px-4 py-2.5 font-mono text-xs whitespace-nowrap ${
-                        isDark ? 'text-slate-300' : 'text-slate-700'
-                      } ${isLongJson ? 'max-w-xs truncate' : ''}`} title={isLongJson ? formatted : undefined}>
+                      <td 
+                        key={cIdx} 
+                        className={`px-3.5 py-2 font-mono text-xs whitespace-nowrap min-w-[120px] max-w-[200px] truncate ${
+                          isDark ? 'text-slate-300' : 'text-slate-700'
+                        } ${isObj ? 'text-amber-300/90' : ''}`} 
+                        title={formatted}
+                      >
                         {formatted}
                       </td>
                     );

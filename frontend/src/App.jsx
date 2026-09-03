@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown } from 'lucide-react';
+import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown, Network } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import UploadDbModal from './components/UploadDbModal';
+import SchemaMapModal from './components/SchemaMapModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -18,17 +19,22 @@ export default function App() {
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  // Chat sessions state (Loaded and saved directly via FastAPI Backend)
+  // URL Parameters Helper
+  const getUrlParam = (key) => new URLSearchParams(window.location.search).get(key);
+
+  // Chat sessions state
   const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatId, setActiveChatId] = useState(() => getUrlParam("chat") || null);
 
   // Multi-Database states
   const [databases, setDatabases] = useState([]);
-  const [selectedDbId, setSelectedDbId] = useState("chinook");
+  const [selectedDbId, setSelectedDbId] = useState(() => getUrlParam("db") || "chinook");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  // Schema states
+  // Schema & Relationship states
   const [tables, setTables] = useState([]);
+  const [relationships, setRelationships] = useState([]);
+  const [schemaModalOpen, setSchemaModalOpen] = useState(false);
   const [prefilledPrompt, setPrefilledPrompt] = useState('');
 
   // Execution states
@@ -42,6 +48,42 @@ export default function App() {
     loadChatsFromBackend();
     loadDatabases();
   }, []);
+
+  // 2. Browser Back/Forward navigation listener (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const chatParam = params.get("chat");
+      const dbParam = params.get("db");
+      if (chatParam) setActiveChatId(chatParam);
+      if (dbParam) setSelectedDbId(dbParam);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // 3. Keep URL Parameters synchronized with current active chat & database
+  useEffect(() => {
+    if (!activeChatId && !selectedDbId) return;
+
+    const params = new URLSearchParams(window.location.search);
+    let changed = false;
+
+    if (activeChatId && params.get("chat") !== activeChatId) {
+      params.set("chat", activeChatId);
+      changed = true;
+    }
+    if (selectedDbId && params.get("db") !== selectedDbId) {
+      params.set("db", selectedDbId);
+      changed = true;
+    }
+
+    if (changed) {
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.pushState({ chat: activeChatId, db: selectedDbId }, '', newUrl);
+    }
+  }, [activeChatId, selectedDbId]);
 
   // When selected database changes, reload schema for that database
   useEffect(() => {
@@ -58,7 +100,12 @@ export default function App() {
         setApiOnline(true);
         if (data.chats && data.chats.length > 0) {
           setChats(data.chats);
-          setActiveChatId(data.chats[0].id);
+          const initialChatParam = getUrlParam("chat");
+          if (initialChatParam && data.chats.some(c => c.id === initialChatParam)) {
+            setActiveChatId(initialChatParam);
+          } else {
+            setActiveChatId(data.chats[0].id);
+          }
         } else {
           await createInitialChat();
         }
@@ -77,7 +124,10 @@ export default function App() {
         const data = await res.json();
         setDatabases(data.databases || []);
         if (data.databases && data.databases.length > 0) {
-          if (!data.databases.some(d => d.id === selectedDbId)) {
+          const initialDbParam = getUrlParam("db");
+          if (initialDbParam && data.databases.some(d => d.id === initialDbParam)) {
+            setSelectedDbId(initialDbParam);
+          } else if (!data.databases.some(d => d.id === selectedDbId)) {
             setSelectedDbId(data.databases[0].id);
           }
         }
@@ -93,6 +143,7 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setTables(data.tables || []);
+        setRelationships(data.relationships || []);
       }
     } catch (e) {
       console.error("Failed to load schema for db:", dbId, e);
@@ -119,7 +170,7 @@ export default function App() {
 
   // Active chat session object
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0] || { messages: [] };
-  const currentDb = databases.find(d => d.id === selectedDbId) || { name: "Chinook (Music)", id: "chinook" };
+  const currentDb = databases.find(d => d.id === selectedDbId) || { name: "Chinook", id: selectedDbId || "chinook", type: (selectedDbId === 'ecommerce_store' ? 'nosql' : 'sql') };
 
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -307,6 +358,7 @@ export default function App() {
         tables={tables}
         onSelectPrompt={handleSelectPrompt}
         onOpenUpload={() => setUploadModalOpen(true)}
+        onOpenSchemaMap={() => setSchemaModalOpen(true)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
         isOpen={mobileMenuOpen}
@@ -322,6 +374,17 @@ export default function App() {
         onDeleteDatabase={handleDeleteDatabase}
         isDark={isDark}
         apiBaseUrl={API_BASE_URL}
+      />
+
+      {/* Schema Relationships & ER Map Modal */}
+      <SchemaMapModal
+        isOpen={schemaModalOpen}
+        onClose={() => setSchemaModalOpen(false)}
+        dbName={currentDb.name}
+        dbType={currentDb.type || 'sql'}
+        tables={tables}
+        relationships={relationships}
+        isDark={isDark}
       />
 
       {/* Main Chat Area */}
@@ -362,24 +425,58 @@ export default function App() {
                   className="bg-transparent py-1.5 pl-2 pr-7 text-xs font-medium focus:outline-none appearance-none cursor-pointer"
                   title="Switch data source for this chat"
                 >
-                  {databases.map((db) => {
-                    const isNoSql = db.type === 'nosql';
-                    return (
-                      <option 
-                        key={db.id} 
-                        value={db.id}
-                        className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
-                      >
-                        {isNoSql ? `📄 ${db.name} (${db.doc_count || 0} docs)` : `🗄️ ${db.name} (${db.table_count || 0} tables)`}
-                      </option>
-                    );
-                  })}
-                  <option value="__upload_new__" className="text-indigo-400 font-semibold">
-                    + Upload New Data Source...
-                  </option>
+                  {/* Category 1: Relational SQL */}
+                  {databases.some(d => d.type !== 'nosql') && (
+                    <optgroup label="── 🗄️ SQL Relational Databases ──" className={isDark ? 'bg-slate-900 text-indigo-400 font-bold' : 'bg-slate-100 text-indigo-600 font-bold'}>
+                      {databases.filter(d => d.type !== 'nosql').map((db) => (
+                        <option 
+                          key={db.id} 
+                          value={db.id}
+                          className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
+                        >
+                          🗄️ {db.name} ({db.table_count || 0} tables)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {/* Category 2: NoSQL Document */}
+                  {databases.some(d => d.type === 'nosql') && (
+                    <optgroup label="── 📄 NoSQL Document Databases ──" className={isDark ? 'bg-slate-900 text-amber-400 font-bold' : 'bg-slate-100 text-amber-600 font-bold'}>
+                      {databases.filter(d => d.type === 'nosql').map((db) => (
+                        <option 
+                          key={db.id} 
+                          value={db.id}
+                          className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
+                        >
+                          📄 {db.name} ({db.doc_count || 0} docs)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  <optgroup label="── ➕ Action ──" className={isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-100 text-slate-600'}>
+                    <option value="__upload_new__" className="text-indigo-400 font-semibold">
+                      + Upload New Data Source...
+                    </option>
+                  </optgroup>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 pointer-events-none" />
               </div>
+
+              {/* 🗺️ PROMINENT "SCHEMA MAP" BUTTON */}
+              <button
+                onClick={() => setSchemaModalOpen(true)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  currentDb.type === 'nosql'
+                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
+                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
+                }`}
+                title="View database schema & relationships map"
+              >
+                <Network className="w-3.5 h-3.5" />
+                <span>Schema Map</span>
+              </button>
 
               {/* ➕ CLEAR, PROMINENT "UPLOAD DATA" BUTTON */}
               <button
@@ -418,7 +515,7 @@ export default function App() {
 
         {/* Messages Stream Container */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-3xl mx-auto w-full">
+          <div className="max-w-5xl xl:max-w-6xl mx-auto w-full">
             {/* Empty State Welcome Screen */}
             {(!activeChat?.messages || activeChat.messages.length === 0) && (
               <div className="py-14 text-center animate-fadeIn">

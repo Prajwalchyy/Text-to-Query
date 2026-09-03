@@ -2,6 +2,7 @@ import React from 'react';
 import { User, Sparkles, Database } from 'lucide-react';
 import SqlCodeBlock from './SqlCodeBlock';
 import DataTable from './DataTable';
+import JsonDocumentViewer from './JsonDocumentViewer';
 import DetailsPopover from './DetailsPopover';
 
 export default function ChatMessage({ message, isDark }) {
@@ -10,7 +11,7 @@ export default function ChatMessage({ message, isDark }) {
   if (isUser) {
     return (
       <div className="flex justify-end mb-6 w-full animate-fadeIn">
-        <div className="flex items-start gap-3 max-w-2xl">
+        <div className="flex items-start gap-3 max-w-3xl">
           <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
             isDark 
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
@@ -32,6 +33,15 @@ export default function ChatMessage({ message, isDark }) {
   const hasSql = Boolean(message.sql);
   const hasData = Boolean(message.data && message.data.length > 0);
 
+  const isNoSql = Boolean(
+    message.telemetry?.db_type === 'nosql' ||
+    (message.sql && (
+      message.sql.trim().startsWith("db.") || 
+      message.sql.trim().startsWith("[") || 
+      message.sql.trim().startsWith("{")
+    ))
+  );
+
   // Combine telemetry with message error details if needed
   const telemetryData = {
     ...message.telemetry,
@@ -42,7 +52,7 @@ export default function ChatMessage({ message, isDark }) {
   // AI Assistant Message (Clean Query + Data Output)
   return (
     <div className="flex justify-start mb-6 w-full animate-fadeIn">
-      <div className="flex items-start gap-3 max-w-3xl w-full">
+      <div className="flex items-start gap-3 max-w-5xl xl:max-w-6xl w-full min-w-0">
         <div className={`p-2 rounded-xl shrink-0 mt-1 ${
           isDark 
             ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400' 
@@ -51,7 +61,7 @@ export default function ChatMessage({ message, isDark }) {
           <Sparkles className="w-4 h-4" />
         </div>
 
-        <div className={`flex-1 p-5 rounded-2xl border transition-colors shadow-sm ${
+        <div className={`flex-1 min-w-0 p-5 rounded-2xl border transition-colors shadow-sm overflow-hidden ${
           isDark 
             ? 'bg-slate-900/60 border-slate-800/90 text-slate-200' 
             : 'bg-white border-slate-200/90 text-slate-800'
@@ -59,28 +69,36 @@ export default function ChatMessage({ message, isDark }) {
           {/* Database Source Badge */}
           {dbName && (
             <div className="flex items-center gap-1.5 mb-2.5">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+                isNoSql 
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                  : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+              }`}>
                 <Database className="w-3 h-3" />
-                <span>{dbName}</span>
+                <span>{dbName} {isNoSql ? '(NoSQL)' : ''}</span>
               </span>
             </div>
           )}
 
-          {/* Conversational text fallback (only shown if no SQL/data exists, like a simple greeting) */}
+          {/* Conversational text fallback */}
           {!hasSql && !hasData && (
             <div className="text-sm leading-relaxed mb-2">
               <p className="whitespace-pre-wrap">{message.content}</p>
             </div>
           )}
 
-          {/* 1. Generated SQL Query */}
+          {/* 1. Generated SQL / MQL Query Block */}
           {hasSql && (
             <SqlCodeBlock sql={message.sql} isDark={isDark} />
           )}
 
-          {/* 2. Direct Result Data Table */}
+          {/* 2. Direct Result Data Output: JSON Document Viewer for NoSQL, Data Table for SQL */}
           {hasData && (
-            <DataTable data={message.data} isDark={isDark} />
+            isNoSql ? (
+              <JsonDocumentViewer data={message.data} isDark={isDark} />
+            ) : (
+              <DataTable data={message.data} isDark={isDark} />
+            )
           )}
 
           {/* 3. Technical Details Popover (Includes Guardrail reason and Latency) */}
