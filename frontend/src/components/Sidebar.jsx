@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   MessageSquare, 
@@ -12,15 +12,16 @@ import {
   Sparkles, 
   Table as TableIcon, 
   ChevronDown, 
-  ChevronRight,
-  Layers,
-  Search,
-  Maximize2,
-  Minimize2,
-  FolderPlus,
-  Network,
-  Key,
-  Link as LinkIcon
+  ChevronRight, 
+  Layers, 
+  Search, 
+  Maximize2, 
+  Minimize2, 
+  FolderPlus, 
+  Network, 
+  Key, 
+  Link as LinkIcon,
+  PanelLeftClose
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -37,9 +38,15 @@ export default function Sidebar({
   onToggleTheme,
   isOpen,
   onClose,
-  onOpenSchemaMap
+  onOpenSchemaMap,
+  width = 280,
+  onWidthChange,
+  isCollapsed = false,
+  onToggleCollapse
 }) {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'schema'
+  // Drag resizing state
+  const [isResizing, setIsResizing] = useState(false);
   // Multi-table expansion state (Set of table names currently expanded)
   const [expandedTables, setExpandedTables] = useState(() => new Set(tables.length > 0 ? [tables[0].name] : []));
   const [editingChatId, setEditingChatId] = useState(null);
@@ -85,6 +92,36 @@ export default function Sidebar({
     setEditingChatId(null);
   };
 
+  // Drag Resizer Handlers
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e) => {
+      const newWidth = Math.min(500, Math.max(220, e.clientX));
+      if (onWidthChange) onWidthChange(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, onWidthChange]);
+
+  const handleDoubleClickResizer = () => {
+    if (onWidthChange) onWidthChange(280);
+  };
+
   // Filter tables and columns by search query
   const filteredTables = tables.filter((t) => {
     if (!searchQuery.trim()) return true;
@@ -96,21 +133,48 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 w-72 flex flex-col transition-all duration-300 md:static md:translate-x-0 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+      style={{
+        width: isCollapsed ? 0 : `${width}px`
+      }}
+      className={`fixed inset-y-0 left-0 z-40 flex flex-col relative md:static ${
+        isResizing ? 'transition-none select-none' : 'transition-[width] duration-200 ease-in-out'
+      } ${
+        isCollapsed ? 'w-0 overflow-hidden border-r-0 pointer-events-none md:pointer-events-none' : ''
+      } ${
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       } ${
         isDark ? 'bg-slate-900 border-r border-slate-800 text-slate-200' : 'bg-slate-50 border-r border-slate-200 text-slate-800'
       }`}
     >
       {/* Top Header & App Branding */}
-      <div className="p-4 border-b border-slate-700/40">
-        <div className="flex items-center gap-2.5 mb-3 px-1">
-          <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-indigo-400">
-            <Sparkles className="w-5 h-5" />
+      <div className="p-3.5 border-b border-slate-700/40 shrink-0">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-indigo-400">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold tracking-tight">SQL Assistant</h1>
+              <p className="text-[10px] text-slate-400">Enterprise Database AI</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight">SQL Assistant</h1>
-            <p className="text-[10px] text-slate-400">Enterprise Database AI</p>
+
+          {/* Desktop Collapse & Mobile Close Actions */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggleCollapse}
+              className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Collapse Sidebar (Ctrl+B)"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg md:hidden text-slate-400 hover:text-slate-200 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -151,17 +215,6 @@ export default function Sidebar({
           >
             <Plus className="w-4 h-4" />
             <span>New Conversation</span>
-          </button>
-        )}
-
-        {/* Upload Database Action (Only visible on Tables tab) */}
-        {activeTab === 'schema' && onOpenUpload && (
-          <button
-            onClick={onOpenUpload}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-all shadow-sm shadow-indigo-600/30 cursor-pointer"
-          >
-            <FolderPlus className="w-4 h-4" />
-            <span>+ Upload Custom Database</span>
           </button>
         )}
       </div>
@@ -484,6 +537,20 @@ export default function Sidebar({
           )}
         </button>
       </div>
+
+      {/* ↔️ DRAGGABLE RESIZER HANDLE (RIGHT EDGE) */}
+      {!isCollapsed && (
+        <div
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClickResizer}
+          className={`hidden md:block absolute top-0 -right-1 w-2 h-full cursor-col-resize hover:bg-indigo-500/60 transition-colors z-50 group ${
+            isResizing ? 'bg-indigo-500 w-2.5' : ''
+          }`}
+          title="Drag to resize sidebar width · Double-click to reset (280px)"
+        >
+          <div className="w-full h-full opacity-0 group-hover:opacity-100 bg-indigo-500/40" />
+        </div>
+      )}
     </aside>
   );
 }

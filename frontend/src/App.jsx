@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown, Network } from 'lucide-react';
+import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown, Network, PanelLeftOpen } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import UploadDbModal from './components/UploadDbModal';
 import SchemaMapModal from './components/SchemaMapModal';
+import DatabaseSelectorPopover from './components/DatabaseSelectorPopover';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -42,6 +43,39 @@ export default function App() {
   const [apiOnline, setApiOnline] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Sidebar customizable width (220px to 500px) with localStorage persistence
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem("sidebar_width");
+    return saved ? Math.min(500, Math.max(220, parseInt(saved, 10))) : 280;
+  });
+
+  // Sidebar collapse state with localStorage persistence
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem("sidebar_collapsed");
+    return saved === "true";
+  });
+
+  // Persist sidebar preferences
+  useEffect(() => {
+    localStorage.setItem("sidebar_width", sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar_collapsed", isSidebarCollapsed.toString());
+  }, [isSidebarCollapsed]);
+
+  // Global Ctrl+B hotkey to toggle sidebar collapse
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsSidebarCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // 1. Initial Load: Fetch chats, databases, and schema
   useEffect(() => {
@@ -357,12 +391,15 @@ export default function App() {
         onRenameChat={handleRenameChat}
         tables={tables}
         onSelectPrompt={handleSelectPrompt}
-        onOpenUpload={() => setUploadModalOpen(true)}
         onOpenSchemaMap={() => setSchemaModalOpen(true)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
+        width={sidebarWidth}
+        onWidthChange={setSidebarWidth}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
       />
 
       {/* Manage & Upload Databases Modal */}
@@ -393,13 +430,26 @@ export default function App() {
         <header className={`h-14 px-4 flex items-center justify-between border-b shrink-0 backdrop-blur-md ${
           isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white/70 border-slate-200'
         }`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 rounded-lg md:hidden text-slate-400 hover:text-slate-200 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
+
+            {/* Desktop Re-Open Sidebar Toggle Button (Only visible when collapsed) */}
+            {isSidebarCollapsed && (
+              <button
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="hidden md:flex items-center gap-1.5 py-1 px-2.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-slate-700/60 transition-all cursor-pointer text-xs font-semibold shadow-xs"
+                title="Open Sidebar (Ctrl+B)"
+              >
+                <PanelLeftOpen className="w-4 h-4 text-indigo-400" />
+                <span className="text-[11px]">Sidebar</span>
+              </button>
+            )}
 
             <span className="font-semibold text-xs tracking-wide">
               {activeChat?.title || "New Conversation"}
@@ -409,60 +459,13 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             {/* 🗄️ PROMINENT DATABASE SELECTOR & UPLOAD CONTROLS */}
             <div className="flex items-center gap-2">
-              <div className={`relative flex items-center rounded-xl border text-xs ${
-                isDark ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'
-              }`}>
-                <Database className="w-3.5 h-3.5 ml-2.5 text-indigo-400 shrink-0" />
-                <select
-                  value={selectedDbId}
-                  onChange={(e) => {
-                    if (e.target.value === '__upload_new__') {
-                      setUploadModalOpen(true);
-                    } else {
-                      setSelectedDbId(e.target.value);
-                    }
-                  }}
-                  className="bg-transparent py-1.5 pl-2 pr-7 text-xs font-medium focus:outline-none appearance-none cursor-pointer"
-                  title="Switch data source for this chat"
-                >
-                  {/* Category 1: Relational SQL */}
-                  {databases.some(d => d.type !== 'nosql') && (
-                    <optgroup label="── 🗄️ SQL Relational Databases ──" className={isDark ? 'bg-slate-900 text-indigo-400 font-bold' : 'bg-slate-100 text-indigo-600 font-bold'}>
-                      {databases.filter(d => d.type !== 'nosql').map((db) => (
-                        <option 
-                          key={db.id} 
-                          value={db.id}
-                          className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
-                        >
-                          🗄️ {db.name} ({db.table_count || 0} tables)
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-
-                  {/* Category 2: NoSQL Document */}
-                  {databases.some(d => d.type === 'nosql') && (
-                    <optgroup label="── 📄 NoSQL Document Databases ──" className={isDark ? 'bg-slate-900 text-amber-400 font-bold' : 'bg-slate-100 text-amber-600 font-bold'}>
-                      {databases.filter(d => d.type === 'nosql').map((db) => (
-                        <option 
-                          key={db.id} 
-                          value={db.id}
-                          className={isDark ? 'bg-slate-900 text-slate-200' : 'bg-white text-slate-800'}
-                        >
-                          📄 {db.name} ({db.doc_count || 0} docs)
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-
-                  <optgroup label="── ➕ Action ──" className={isDark ? 'bg-slate-900 text-slate-400' : 'bg-slate-100 text-slate-600'}>
-                    <option value="__upload_new__" className="text-indigo-400 font-semibold">
-                      + Upload New Data Source...
-                    </option>
-                  </optgroup>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2 text-slate-400 pointer-events-none" />
-              </div>
+              <DatabaseSelectorPopover
+                databases={databases}
+                selectedDbId={selectedDbId}
+                onSelectDb={(dbId) => setSelectedDbId(dbId)}
+                onOpenUpload={() => setUploadModalOpen(true)}
+                isDark={isDark}
+              />
 
               {/* 🗺️ PROMINENT "SCHEMA MAP" BUTTON */}
               <button
@@ -476,16 +479,6 @@ export default function App() {
               >
                 <Network className="w-3.5 h-3.5" />
                 <span>Schema Map</span>
-              </button>
-
-              {/* ➕ CLEAR, PROMINENT "UPLOAD DATA" BUTTON */}
-              <button
-                onClick={() => setUploadModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs shadow-indigo-600/30 transition-all cursor-pointer"
-                title="Manage or upload SQLite (.db) or NoSQL (.json) datasets"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Upload DB</span>
               </button>
             </div>
 

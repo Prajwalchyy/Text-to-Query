@@ -25,7 +25,10 @@ backend/
 │   ├── chinook.db                   # System Default SQL Database (Locked/Permanent)
 │   ├── nosql_default/
 │   │   └── ecommerce_store.json     # System Default NoSQL Database (4 Collections, Locked)
-│   └── uploads/                     # User-uploaded custom .db and .json files
+│   ├── relational/                  # 🗄️ Uploaded Relational SQL Databases (.db, .sqlite, .sqlite3, .sql)
+│   ├── nosql/                       # 📄 Uploaded NoSQL Document Collections (.json, .jsonl)
+│   ├── csv/                         # 📊 Uploaded CSV Datasets (.csv) [Ready for Phase 3]
+│   └── excel/                       # 📈 Uploaded Excel Spreadsheets (.xlsx, .xls) [Ready for Phase 2]
 │
 └── src/
     ├── F00_imports.py               # Shared SDK imports & environment loaders
@@ -66,6 +69,7 @@ frontend/src/
 │   ├── DataTable.jsx                # SQL result table with horizontal/vertical bounds & custom scrollbars
 │   ├── JsonDocumentViewer.jsx       # Collapsible interactive JSON tree viewer with syntax colors
 │   ├── SchemaMapModal.jsx           # Draggable Visual ER Diagram canvas with live stretching SVG connector lines
+│   ├── DatabaseSelectorPopover.jsx  # Floating popover modal with categorized datasets, search, & active checkmarks
 │   ├── UploadDbModal.jsx            # Multi-format dataset manager (.db, .sqlite, .json, .jsonl)
 │   └── DetailsPopover.jsx           # Diagnostic telemetry, confidence score, latency, guardrail errors
 └── index.css                        # Tailwind v4 base styles and sleek .custom-scrollbar utilities
@@ -76,9 +80,9 @@ frontend/src/
 ## 🚀 4. Key Implemented Features
 
 ### 🗄️ A. Multi-Model Data Support (SQL & NoSQL in Same Chat)
-* **SQL Relational Engine:** Queries `.db`/`.sqlite` files, introspects tables/columns, generates SQL, validates with `sqlglot` AST.
-* **NoSQL Document Engine:** Queries multi-collection `.json` files (`ecommerce_store.json`), introspects nested fields (`customer.address.city`), generates MongoDB MQL (`db.collection.aggregate()`, `db.collection.find()`), and executes in-memory.
-* **Connected NoSQL Collections:** `ecommerce_store.json` contains 4 interconnected collections: `orders` (50 docs), `customers` (50 docs), `products` (10 docs), and `reviews` (30 docs).
+* **SQL Relational Engine:** Queries `.db`, `.sqlite`, `.sqlite3`, `.s3db`, `.sl3`, and **`.sql` scripts/dumps** (automatically executes SQL DDL/DML into an active SQLite database). Introspects tables/columns, generates SQL, validates with `sqlglot` AST.
+* **NoSQL Document Engine:** Queries `.json`, `.jsonl`, and **MongoDB Binary `.bson` files** (automatically decodes BSON streams, serializing ObjectIds and timestamps). Introspects nested fields, generates MongoDB MQL (`db.collection.aggregate()`, `db.collection.find()`), and executes in-memory.
+* **Connected NoSQL Collections:** `ecommerce_store.json` contains 4 streamlined collections with strictly 5–6 fields max: `customers` (30 docs), `products` (12 docs), `orders` (40 docs), and `reviews` (25 docs).
 
 ### 🛡️ B. Defense-in-Depth Safety
 * **SQL:** Blocks destructive keywords (`DROP`, `DELETE`, `UPDATE`, `ALTER`, `TRUNCATE`, `GRANT`) and verifies tables against real-time metadata.
@@ -97,6 +101,7 @@ frontend/src/
   * NoSQL queries render the **JSON Document Viewer** (individual collapsible document cards with syntax highlighting).
 * **Expanded Viewport:** Wide layout (`max-w-5xl xl:max-w-6xl`) eliminates wasted desktop margins.
 * **Searchable Left Sidebar:** Real-time filter across tables and columns with independent multi-table expansion (`Set`).
+* **Resizable & Collapsible Sidebar:** Freeform horizontal drag-handle on the right edge (220px to 500px, double-click to reset), 1-click total collapse to 0px (`PanelLeftClose`), top navbar reopen button (`PanelLeftOpen`), `Ctrl+B` global keyboard shortcut, and `localStorage` persistence.
 
 ---
 

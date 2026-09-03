@@ -24,12 +24,66 @@ class NoSQLEngine:
         self.collections: Dict[str, List[Dict[str, Any]]] = {}
         self._load_database()
 
+    @staticmethod
+    def _normalize_bson_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+        """Converts BSON specific types (ObjectId, datetime, bytes) to JSON-serializable primitives."""
+        normalized = {}
+        for k, v in doc.items():
+            if hasattr(v, '__str__') and type(v).__name__ == 'ObjectId':
+                normalized[k] = str(v)
+            elif hasattr(v, 'isoformat'):
+                normalized[k] = v.isoformat()
+            elif isinstance(v, bytes):
+                normalized[k] = v.hex()
+            elif isinstance(v, dict):
+                normalized[k] = NoSQLEngine._normalize_bson_doc(v)
+            elif isinstance(v, list):
+                normalized[k] = [NoSQLEngine._normalize_bson_doc(item) if isinstance(item, dict) else (str(item) if hasattr(item, '__str__') and type(item).__name__ == 'ObjectId' else item) for item in v]
+            else:
+                normalized[k] = v
+        return normalized
+
     def _load_database(self):
-        """Loads and parses JSON collections from disk."""
+        """Loads and parses JSON, JSONL, or BSON collections from disk."""
         if self.file_path.exists() == False:
             self.collections = {}
             return
 
+        ext = self.file_path.suffix.lower()
+
+        # 1. Native MongoDB BSON Format (.bson)
+        if ext == ".bson":
+            try:
+                import bson
+                with open(self.file_path, "rb") as f:
+                    raw_bytes = f.read()
+                    if len(raw_bytes) == 0:
+                        self.collections = {}
+                        return
+                    docs = bson.decode_all(raw_bytes)
+                    safe_docs = [self._normalize_bson_doc(d) for d in docs]
+                    col_name = self.file_path.stem
+                    self.collections = {col_name: safe_docs}
+            except Exception:
+                self.collections = {}
+            return
+
+        # 2. JSON Lines Format (.jsonl)
+        if ext == ".jsonl":
+            try:
+                docs = []
+                with open(self.file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line_str = line.strip()
+                        if line_str != "":
+                            docs.append(json.loads(line_str))
+                col_name = self.file_path.stem
+                self.collections = {col_name: docs}
+            except Exception:
+                self.collections = {}
+            return
+
+        # 3. Standard JSON Format (.json)
         try:
             with open(self.file_path, "r", encoding="utf-8") as f:
                 content = f.read().strip()

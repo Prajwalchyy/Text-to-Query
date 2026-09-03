@@ -36,19 +36,19 @@ export default function UploadDbModal({
 
     setErrorMsg(null);
     const fileName = selected.name.toLowerCase();
-    const isSqlFile = fileName.endsWith('.db') || fileName.endsWith('.sqlite') || fileName.endsWith('.sqlite3');
-    const isNoSqlFile = fileName.endsWith('.json') || fileName.endsWith('.jsonl');
+    const isSqlFile = fileName.endsWith('.db') || fileName.endsWith('.sqlite') || fileName.endsWith('.sqlite3') || fileName.endsWith('.s3db') || fileName.endsWith('.sl3') || fileName.endsWith('.sql');
+    const isNoSqlFile = fileName.endsWith('.json') || fileName.endsWith('.jsonl') || fileName.endsWith('.bson');
 
     // Strict validation against user's selected type
     if (selectedType === 'sql' && !isSqlFile) {
-      setErrorMsg(`Invalid file type for SQL Database! You selected "${selected.name}", but SQL requires a .db or .sqlite file.`);
+      setErrorMsg(`Invalid file type for SQL Database! You selected "${selected.name}", but SQL requires a .db, .sqlite, or .sql script file.`);
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (selectedType === 'nosql' && !isNoSqlFile) {
-      setErrorMsg(`Invalid file type for NoSQL Database! You selected "${selected.name}", but NoSQL requires a .json or .jsonl document file.`);
+      setErrorMsg(`Invalid file type for NoSQL Database! You selected "${selected.name}", but NoSQL requires a .json, .jsonl, or .bson (MongoDB) document file.`);
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
@@ -57,7 +57,7 @@ export default function UploadDbModal({
     setFile(selected);
     // Auto-populate default name from filename if empty
     if (!dbName.trim()) {
-      const cleanName = selected.name.replace(/\.(db|sqlite|sqlite3|json|jsonl)$/i, '').replace(/[_-]/g, ' ');
+      const cleanName = selected.name.replace(/\.(db|sqlite|sqlite3|s3db|sl3|sql|json|jsonl|bson)$/i, '').replace(/[_-]/g, ' ');
       setDbName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
     }
   };
@@ -298,7 +298,7 @@ export default function UploadDbModal({
               <Database className="w-4 h-4 text-indigo-400" />
               <div className="text-left">
                 <div className="text-xs font-bold">SQL Database</div>
-                <div className="text-[10px] text-slate-400 font-normal">.db, .sqlite, .sqlite3</div>
+                <div className="text-[10px] text-slate-400 font-normal">.db, .sqlite, .sql scripts</div>
               </div>
             </button>
 
@@ -314,7 +314,7 @@ export default function UploadDbModal({
               <FileJson className="w-4 h-4 text-amber-400" />
               <div className="text-left">
                 <div className="text-xs font-bold">NoSQL Document</div>
-                <div className="text-[10px] text-slate-400 font-normal">.json, .jsonl</div>
+                <div className="text-[10px] text-slate-400 font-normal">.json, .jsonl, .bson (MongoDB)</div>
               </div>
             </button>
           </div>
@@ -323,7 +323,7 @@ export default function UploadDbModal({
             {/* 2. File Picker */}
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
-                2. Choose {selectedType === 'sql' ? 'SQL (.db)' : 'NoSQL (.json)'} File
+                2. Choose {selectedType === 'sql' ? 'SQL (.db / .sqlite / .sql)' : 'NoSQL (.json / .bson)'} File
               </span>
               <div 
                 onClick={() => fileInputRef.current?.click()}
@@ -336,7 +336,7 @@ export default function UploadDbModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={selectedType === 'sql' ? '.db,.sqlite,.sqlite3' : '.json,.jsonl'}
+                  accept={selectedType === 'sql' ? '.db,.sqlite,.sqlite3,.s3db,.sl3,.sql' : '.json,.jsonl,.bson'}
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -353,10 +353,12 @@ export default function UploadDbModal({
                       <FileJson className="w-5 h-5 mx-auto mb-1 text-amber-400" />
                     )}
                     <p className="text-xs font-medium">
-                      Click to select {selectedType === 'sql' ? 'SQLite (.db, .sqlite)' : 'NoSQL JSON (.json, .jsonl)'} file
+                      Click to browse or drag and drop
                     </p>
-                    <p className="text-[10px] text-slate-400">
-                      {selectedType === 'sql' ? 'Strictly accepts .db, .sqlite, .sqlite3' : 'Strictly accepts .json, .jsonl'}
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {selectedType === 'sql' 
+                        ? 'Supports SQLite (.db, .sqlite, .sqlite3) & SQL Scripts (.sql)' 
+                        : 'Supports JSON (.json, .jsonl) & MongoDB BSON (.bson)'}
                     </p>
                   </div>
                 )}

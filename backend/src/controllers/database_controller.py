@@ -6,7 +6,14 @@ from F01_db_engine import DatabaseEngine
 from F06_pipeline import TextToSQLPipeline
 from F09_nosql_engine import NoSQLEngine
 from F12_nosql_pipeline import TextToNoSQLPipeline
-from F08_database_registry import DatabaseRegistry, UPLOADS_DIR
+from F08_database_registry import (
+    DatabaseRegistry, 
+    get_upload_dir_for_type, 
+    RELATIONAL_DIR, 
+    NOSQL_DIR, 
+    CSV_DIR, 
+    EXCEL_DIR
+)
 
 # Initialize database registry
 db_registry = DatabaseRegistry()
@@ -67,28 +74,42 @@ class DatabaseController:
 
         # Strict validation against requested dataset_type
         if dataset_type == "sql":
-            if file_ext not in [".db", ".sqlite", ".sqlite3"]:
+            if file_ext not in [".db", ".sqlite", ".sqlite3", ".s3db", ".sl3", ".sql"]:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Invalid file type for SQL Database: '{file.filename}'. Expected a .db, .sqlite, or .sqlite3 file."
+                    detail=f"Invalid file type for SQL Database: '{file.filename}'. Expected .db, .sqlite, .sqlite3, .s3db, .sl3, or .sql file."
                 )
         elif dataset_type == "nosql":
-            if file_ext not in [".json", ".jsonl"]:
+            if file_ext not in [".json", ".jsonl", ".bson"]:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Invalid file type for NoSQL Database: '{file.filename}'. Expected a .json or .jsonl document file."
+                    detail=f"Invalid file type for NoSQL Database: '{file.filename}'. Expected .json, .jsonl, or .bson document file."
+                )
+        elif dataset_type == "csv":
+            if file_ext not in [".csv"]:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Invalid file type for CSV: '{file.filename}'. Expected a .csv file."
+                )
+        elif dataset_type == "excel":
+            if file_ext not in [".xlsx", ".xls"]:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Invalid file type for Excel: '{file.filename}'. Expected a .xlsx or .xls spreadsheet file."
                 )
         else:
-            allowed_exts = (".db", ".sqlite", ".sqlite3", ".json", ".jsonl")
+            allowed_exts = (".db", ".sqlite", ".sqlite3", ".s3db", ".sl3", ".sql", ".json", ".jsonl", ".bson", ".csv", ".xlsx", ".xls")
             if file.filename.lower().endswith(allowed_exts) == False:
-                raise HTTPException(status_code=400, detail="Only .db, .sqlite, .json, or .jsonl files are allowed.")
+                raise HTTPException(status_code=400, detail="Unsupported file format.")
 
-        target_path = UPLOADS_DIR / file.filename
+        # Save to dedicated categorized directory (data/relational, data/nosql, data/csv, data/excel)
+        target_dir = get_upload_dir_for_type(dataset_type, file_ext)
+        target_path = target_dir / file.filename
 
         # If a file with the same name exists, append counter suffix
         counter = 1
         while target_path.exists() == True:
-            target_path = UPLOADS_DIR / f"{Path(file.filename).stem}_{counter}{Path(file.filename).suffix}"
+            target_path = target_dir / f"{Path(file.filename).stem}_{counter}{Path(file.filename).suffix}"
             counter += 1
 
         try:

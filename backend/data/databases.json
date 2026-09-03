@@ -2,6 +2,7 @@
   {
     "id": "chinook",
     "name": "Chinook (Music)",
+    "type": "sql",
     "filename": "chinook.db",
     "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\chinook.db",
     "table_count": 11,
@@ -23,7 +24,7 @@
     "name": "Northwind ecommerce",
     "type": "sql",
     "filename": "northwind_ecommerce.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\uploads\\northwind_ecommerce.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\relational\\northwind_ecommerce.db",
     "table_count": 6,
     "is_default": false,
     "created_at": "2026-09-03T11:17:59.915049+00:00"
