@@ -23,13 +23,15 @@ export default function DatabaseSelectorPopover({
   // Active database object
   const currentDb = useMemo(() => {
     return databases.find(d => d.id === selectedDbId) || databases[0] || { 
-      name: "Select Database", 
+      name: "Select Data Source", 
       type: "sql", 
       table_count: 0 
     };
   }, [databases, selectedDbId]);
 
   const isCurrentNoSql = currentDb.type === 'nosql';
+  const isCurrentSpreadsheet = currentDb.type === 'csv' || currentDb.type === 'excel';
+  const isCurrentExcel = currentDb.type === 'excel';
 
   // Filter databases by search query
   const filteredDbs = useMemo(() => {
@@ -41,8 +43,9 @@ export default function DatabaseSelectorPopover({
     );
   }, [databases, searchQuery]);
 
-  const sqlDatabases = filteredDbs.filter(d => d.type !== 'nosql');
+  const sqlDatabases = filteredDbs.filter(d => d.type === 'sql' || (!d.type && !['nosql', 'csv', 'excel'].includes(d.type)));
   const noSqlDatabases = filteredDbs.filter(d => d.type === 'nosql');
+  const spreadsheetDatabases = filteredDbs.filter(d => d.type === 'csv' || d.type === 'excel');
 
   // Handle outside click to close
   useEffect(() => {
@@ -124,11 +127,15 @@ export default function DatabaseSelectorPopover({
       >
         {/* Type Icon */}
         <div className={`p-1 rounded-lg ${
-          isCurrentNoSql 
-            ? 'bg-amber-500/15 text-amber-400' 
-            : 'bg-indigo-500/15 text-indigo-400'
+          isCurrentSpreadsheet
+            ? 'bg-emerald-500/15 text-emerald-400'
+            : isCurrentNoSql 
+              ? 'bg-amber-500/15 text-amber-400' 
+              : 'bg-indigo-500/15 text-indigo-400'
         }`}>
-          {isCurrentNoSql ? (
+          {isCurrentSpreadsheet ? (
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+          ) : isCurrentNoSql ? (
             <FileJson className="w-3.5 h-3.5" />
           ) : (
             <Database className="w-3.5 h-3.5" />
@@ -139,11 +146,17 @@ export default function DatabaseSelectorPopover({
         <div className="flex items-center gap-1.5 text-left truncate max-w-[170px] sm:max-w-[210px]">
           <span className="truncate">{currentDb.name}</span>
           <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono shrink-0 ${
-            isCurrentNoSql 
-              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
-              : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+            isCurrentSpreadsheet
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              : isCurrentNoSql 
+                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
           }`}>
-            {isCurrentNoSql ? `${currentDb.doc_count || 0} docs` : `${currentDb.table_count || 0} tables`}
+            {isCurrentSpreadsheet
+              ? (isCurrentExcel ? `${currentDb.sheet_count || 1} sheets` : `${currentDb.row_count || 0} rows`)
+              : isCurrentNoSql 
+                ? `${currentDb.doc_count || 0} docs` 
+                : `${currentDb.table_count || 0} tables`}
           </span>
         </div>
 
@@ -182,7 +195,7 @@ export default function DatabaseSelectorPopover({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search databases by name..."
+                placeholder="Search data sources by name..."
                 className={`w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border focus:outline-none focus:border-indigo-500 transition-colors ${
                   isDark 
                     ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500' 
@@ -227,9 +240,16 @@ export default function DatabaseSelectorPopover({
                             <Database className="w-3.5 h-3.5" />
                           </div>
                           <div className="truncate">
-                            <p className="text-xs font-semibold truncate group-hover:text-indigo-400 transition-colors">
-                              {db.name}
-                            </p>
+                            <div className="flex items-center gap-1.5 truncate">
+                              <p className="text-xs font-semibold truncate group-hover:text-indigo-400 transition-colors">
+                                {db.name}
+                              </p>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.table_count || 0} tables · SQLite
                             </p>
@@ -316,9 +336,16 @@ export default function DatabaseSelectorPopover({
                             <FileJson className="w-3.5 h-3.5" />
                           </div>
                           <div className="truncate">
-                            <p className="text-xs font-semibold truncate group-hover:text-amber-400 transition-colors">
-                              {db.name}
-                            </p>
+                            <div className="flex items-center gap-1.5 truncate">
+                              <p className="text-xs font-semibold truncate group-hover:text-amber-400 transition-colors">
+                                {db.name}
+                              </p>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.doc_count || 0} documents · JSON
                             </p>
@@ -374,26 +401,106 @@ export default function DatabaseSelectorPopover({
 
             {filteredDbs.length === 0 && (
               <div className="py-6 text-center text-xs text-slate-400">
-                No databases matching "{searchQuery}"
+                No data sources matching "{searchQuery}"
               </div>
             )}
 
-            {/* Section 3: Coming Soon Expansion Formats */}
-            <div className="pt-2 border-t border-slate-800/40 px-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">
-                Coming Soon (Roadmap)
-              </span>
-              <div className="grid grid-cols-2 gap-1.5 opacity-60 text-[10px]">
-                <div className="flex items-center gap-1.5 p-1.5 rounded-lg border border-dashed border-slate-700 bg-slate-800/20">
-                  <FileSpreadsheet className="w-3 h-3 text-emerald-400" />
-                  <span>Excel (.xlsx)</span>
+            {/* Section 3: Spreadsheets & Formulas (CSV & Excel) */}
+            {spreadsheetDatabases.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  <FileSpreadsheet className="w-3 h-3" />
+                  <span>Spreadsheets & Formulas ({spreadsheetDatabases.length})</span>
                 </div>
-                <div className="flex items-center gap-1.5 p-1.5 rounded-lg border border-dashed border-slate-700 bg-slate-800/20">
-                  <Table2 className="w-3 h-3 text-cyan-400" />
-                  <span>CSV Tables</span>
+                <div className="space-y-1 mt-0.5">
+                  {spreadsheetDatabases.map((db) => {
+                    const isSelected = db.id === selectedDbId;
+                    const isExcel = db.type === 'excel';
+                    return (
+                      <button
+                        key={db.id}
+                        onClick={() => handleSelect(db.id)}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer group ${
+                          isSelected
+                            ? isDark 
+                              ? 'bg-emerald-500/20 border border-emerald-500/40 text-white shadow-xs' 
+                              : 'bg-emerald-50 border border-emerald-200 text-emerald-950 shadow-xs'
+                            : isDark 
+                              ? 'hover:bg-slate-800/60 text-slate-300 hover:text-white border border-transparent' 
+                              : 'hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 truncate pr-2">
+                          <div className={`p-1.5 rounded-lg shrink-0 ${
+                            isSelected 
+                              ? 'bg-emerald-500 text-white' 
+                              : isDark ? 'bg-slate-800 text-emerald-400' : 'bg-slate-100 text-emerald-600'
+                          }`}>
+                            <FileSpreadsheet className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="truncate">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <p className="text-xs font-semibold truncate group-hover:text-emerald-400 transition-colors">
+                                {db.name}
+                              </p>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
+                              <Layers className="w-3 h-3" /> {isExcel ? `${db.sheet_count || 1} sheets · Excel Formula` : `${db.row_count || 0} rows · Pandas`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isSelected && (
+                            <div className="p-1 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+
+                          {/* Delete custom Spreadsheet */}
+                          {!db.is_default && (
+                            <div className="shrink-0 flex items-center ml-1" onClick={(e) => e.stopPropagation()}>
+                              {confirmDeleteId === db.id ? (
+                                <div className="flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-lg border border-rose-500/40 animate-fadeIn">
+                                  <button
+                                    onClick={(e) => handleDelete(e, db.id, db.name)}
+                                    disabled={deletingId === db.id}
+                                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
+                                    title="Confirm Delete"
+                                  >
+                                    {deletingId === db.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : "Delete"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                    className="p-0.5 text-slate-400 hover:text-white cursor-pointer"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(db.id); }}
+                                  className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer opacity-40 hover:opacity-100"
+                                  title={`Delete "${db.name}"`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* POPOVER FOOTER: UPLOAD NEW ACTION */}

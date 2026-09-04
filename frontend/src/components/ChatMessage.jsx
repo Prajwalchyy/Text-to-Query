@@ -1,18 +1,66 @@
-import React from 'react';
-import { User, Sparkles, Database, AlertCircle, Lightbulb, ArrowRight, Inbox } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Sparkles, Database, AlertCircle, Lightbulb, ArrowRight, Inbox, Copy, Check, CornerDownLeft, Target, FileSpreadsheet, FileJson } from 'lucide-react';
 import SqlCodeBlock from './SqlCodeBlock';
 import DataTable from './DataTable';
 import JsonDocumentViewer from './JsonDocumentViewer';
 import DetailsPopover from './DetailsPopover';
 
-export default function ChatMessage({ message, isDark, onSelectPrompt }) {
-  const [activeSubIndex, setActiveSubIndex] = React.useState(0);
+export default function ChatMessage({ message, isDark, onSelectPrompt, onReusePrompt }) {
+  const [activeSubIndex, setActiveSubIndex] = useState(0);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
   const isUser = message.role === 'user';
+
+  const handleCopyPrompt = (e) => {
+    e.stopPropagation();
+    if (!message.content) return;
+    navigator.clipboard.writeText(message.content);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 2000);
+  };
 
   if (isUser) {
     return (
-      <div className="flex justify-end mb-6 w-full animate-fadeIn">
-        <div className="flex items-start gap-3 max-w-3xl">
+      <div className="flex justify-end mb-6 w-full animate-fadeIn group">
+        <div className="flex items-start gap-2.5 max-w-3xl">
+          {/* Quick Action Buttons on Hover */}
+          <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-1 self-center shrink-0">
+            {/* Copy Prompt Button */}
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                isDark
+                  ? 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border-slate-700/60 shadow-xs'
+                  : 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border-slate-200 shadow-xs'
+              }`}
+              title={copiedPrompt ? "Copied!" : "Copy prompt text"}
+              aria-label="Copy prompt"
+            >
+              {copiedPrompt ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {/* Reuse / Edit Prompt in input box */}
+            {onReusePrompt && (
+              <button
+                type="button"
+                onClick={() => onReusePrompt(message.content)}
+                className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                  isDark
+                    ? 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border-slate-700/60 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 border-slate-200 shadow-xs'
+                }`}
+                title="Edit or reuse prompt"
+                aria-label="Reuse prompt"
+              >
+                <CornerDownLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
             isDark 
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' 
@@ -40,12 +88,18 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
 
   const currentSql = currentSub ? currentSub.sql : message.sql;
   const currentData = currentSub ? currentSub.data : message.data;
+  const currentTitle = currentSub?.title || message.title || message.sub_queries?.[0]?.title || null;
+  const codeType = currentSub?.code_type || message.code_type || message.telemetry?.code_type || null;
 
   const dbName = message.telemetry?.db_name || message.db_name;
   const hasSql = Boolean(currentSql);
   const hasData = Boolean(currentData && currentData.length > 0);
 
-  const isNoSql = Boolean(
+  const isExcel = codeType === 'excel_formula' || message.telemetry?.db_type === 'excel' || (currentSql && currentSql.trim().startsWith('='));
+  const isPandas = codeType === 'pandas' || message.telemetry?.db_type === 'csv' || (!isExcel && currentSql && (currentSql.includes('result_df') || currentSql.startsWith('df[') || currentSql.includes('df.')));
+  const isSpreadsheet = isExcel || isPandas;
+
+  const isNoSql = !isSpreadsheet && Boolean(
     message.telemetry?.db_type === 'nosql' ||
     (currentSql && (
       currentSql.trim().startsWith("db.") || 
@@ -80,18 +134,35 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
             ? 'bg-slate-900/60 border-slate-800/90 text-slate-200' 
             : 'bg-white border-slate-200/90 text-slate-800'
         }`}>
-          {/* Database Source Badge */}
+          {/* Data Source Badge */}
           {dbName && (
             <div className="flex items-center gap-1.5 mb-2.5">
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-medium border ${
                 isOutOfDomain
                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : isNoSql 
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-                    : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                  : isExcel
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : isPandas
+                      ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                      : isNoSql 
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                        : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
               }`}>
-                <Database className="w-3 h-3" />
-                <span>{dbName} {isNoSql ? '(NoSQL)' : ''}</span>
+                {isSpreadsheet ? (
+                  <FileSpreadsheet className={`w-3 h-3 ${isExcel ? 'text-emerald-400' : 'text-cyan-400'}`} />
+                ) : isNoSql ? (
+                  <FileJson className="w-3 h-3 text-amber-400" />
+                ) : (
+                  <Database className="w-3 h-3 text-indigo-400" />
+                )}
+                <span>
+                  {dbName} {
+                    isExcel ? '(Excel Workbook)' :
+                    isPandas ? '(CSV Dataset)' :
+                    isNoSql ? '(NoSQL Store)' :
+                    '(SQL Database)'
+                  }
+                </span>
               </span>
             </div>
           )}
@@ -147,7 +218,7 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
                   }`}>
                     <div className="text-[11px] font-bold text-indigo-400 mb-2 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                      <span>Available in {dbName || 'Database'}:</span>
+                      <span>Available in {dbName || 'Data Source'}:</span>
                     </div>
                     <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto custom-scrollbar">
                       {availableTables.map((tbl, i) => (
@@ -168,7 +239,7 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
                 <div className="pt-2">
                   <div className="text-xs font-semibold text-slate-400 mb-2 flex items-center gap-1.5">
                     <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Try asking questions related to this database:</span>
+                    <span>Try asking questions related to this dataset:</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     {suggestedQuestions.map((q, idx) => (
@@ -228,7 +299,9 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
                           }`}>
                             {idx + 1}
                           </span>
-                          <span className="truncate max-w-[220px]">{sub.title || `Query ${idx + 1}`}</span>
+                          <span className="truncate max-w-[260px] sm:max-w-[340px]" title={sub.title || `Query ${idx + 1}`}>
+                            {sub.title || `Query ${idx + 1}`}
+                          </span>
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
                             isSelected ? 'bg-indigo-700/80 text-white' : 'bg-slate-700/40 text-slate-400'
                           }`}>
@@ -241,9 +314,30 @@ export default function ChatMessage({ message, isDark, onSelectPrompt }) {
                 </div>
               )}
 
-              {/* 1. Generated SQL / MQL Query Block */}
+              {/* Query Objective / Intent Summary Banner (Shows clean business intent for messy/rambling prompts) */}
+              {hasSql && currentTitle && (
+                <div className={`mb-3 p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
+                  isDark
+                    ? 'bg-slate-800/60 border-slate-700/80 text-slate-200'
+                    : 'bg-indigo-50/70 border-indigo-100 text-indigo-950'
+                }`}>
+                  <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                    isDark ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'
+                  }`}>
+                    <Target className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-indigo-400 mb-0.5">
+                      {subQueries && subQueries.length > 1 ? `Part ${activeSubIndex + 1} Objective` : 'Query Objective'}
+                    </div>
+                    <p className="text-xs font-semibold leading-relaxed break-words">{currentTitle}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 1. Generated SQL / MQL / Python / Excel Formula Block */}
               {hasSql && (
-                <SqlCodeBlock sql={currentSql} isDark={isDark} />
+                <SqlCodeBlock sql={currentSql} isDark={isDark} codeType={codeType} />
               )}
 
               {/* 2. Direct Result Data Output: JSON Document Viewer for NoSQL, Data Table for SQL, or 0 Records Found */}

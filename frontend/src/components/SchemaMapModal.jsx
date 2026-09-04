@@ -196,6 +196,9 @@ export default function SchemaMapModal({
 
   if (!isOpen) return null;
 
+  const isExcel = dbType === 'excel';
+  const isCsv = dbType === 'csv';
+  const isSpreadsheet = isExcel || isCsv;
   const isNoSql = dbType === 'nosql';
   const activeFocusTable = selectedTable || hoveredTable;
 
@@ -210,23 +213,35 @@ export default function SchemaMapModal({
         }`}>
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl border ${
-              isNoSql 
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400'
+              isExcel
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : isCsv
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'
+                  : isNoSql 
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+                    : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400'
             }`}>
               <Network className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold">Visual Database Schema & ER Diagram</h3>
+                <h3 className="text-base font-bold">Data Architecture & Schema Map</h3>
                 <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase ${
-                  isNoSql ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20'
+                  isExcel
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                    : isCsv
+                      ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20'
+                      : isNoSql 
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20' 
+                        : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20'
                 }`}>
-                  {isNoSql ? 'NoSQL Document Store' : 'Relational SQL'}
+                  {isExcel ? 'Excel Workbook' : isCsv ? 'CSV Tabular Dataset' : isNoSql ? 'NoSQL Document Store' : 'Relational SQL Database'}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Database: <strong className="text-indigo-400">{dbName}</strong> ({tables.length} {isNoSql ? 'collections' : 'tables'}, {relationships.length} relationships)
+                Data Source: <strong className="text-indigo-400">{dbName}</strong> ({tables.length} {
+                  isExcel ? 'worksheets' : isNoSql ? 'collections' : 'tables'
+                }, {relationships.length} relationships)
               </p>
             </div>
           </div>

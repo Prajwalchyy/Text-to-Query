@@ -493,11 +493,13 @@ export default function App() {
               <button
                 onClick={() => setSchemaModalOpen(true)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  currentDb.type === 'nosql'
-                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
+                  currentDb.type === 'excel' || currentDb.type === 'csv'
+                    ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                    : currentDb.type === 'nosql'
+                      ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
+                      : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
                 }`}
-                title="View database schema & relationships map"
+                title="View data architecture & schema map"
               >
                 <Network className="w-3.5 h-3.5" />
                 <span>Schema Map</span>
@@ -539,8 +541,10 @@ export default function App() {
                 </div>
                 <h2 className="text-xl font-bold mb-1.5">What can I query for you today?</h2>
                 <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-4">
-                  Currently querying: <strong className="text-indigo-400">{currentDb.name}</strong> ({tables.length} tables).
-                  You can inspect tables in the left sidebar or upload your own SQLite file.
+                  Currently querying: <strong className="text-indigo-400">{currentDb.name}</strong> ({tables.length} {
+                    currentDb.type === 'excel' ? 'worksheets' : currentDb.type === 'nosql' ? 'collections' : 'tables'
+                  }).
+                  You can inspect schema in the left sidebar or connect your own data sources.
                 </p>
               </div>
             )}
@@ -552,6 +556,7 @@ export default function App() {
                 message={msg} 
                 isDark={isDark} 
                 onSelectPrompt={handleSendMessage}
+                onReusePrompt={handleSelectPrompt}
               />
             ))}
 
@@ -561,7 +566,14 @@ export default function App() {
                 <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
                   <Sparkles className="w-4 h-4 animate-spin" />
                 </div>
-                <span>Analyzing {currentDb.name} schema, applying guardrails & generating SQL...</span>
+                <span>
+                  Analyzing {currentDb.name} schema, applying guardrails & generating {
+                    currentDb.type === 'excel' ? 'Excel formulas' :
+                    currentDb.type === 'csv' ? 'Python / Pandas code' :
+                    currentDb.type === 'nosql' ? 'MongoDB queries' :
+                    'SQL query'
+                  }...
+                </span>
               </div>
             )}
 

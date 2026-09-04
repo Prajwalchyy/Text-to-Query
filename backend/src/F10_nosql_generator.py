@@ -44,30 +44,29 @@ DATABASE SCHEMAS & SAMPLE DOCUMENTS:
 {schemas_context}
 
 RULES & CONSTRAINTS:
-1. Always output either a MongoDB aggregation pipeline:
-   db.<collection_name>.aggregate([ ... ])
-   OR a standard find filter:
-   db.<collection_name>.find({{ ... }})
-   (Replace <collection_name> with the correct collection such as 'orders', 'customers', 'products', etc.)
+1. OUTPUT FORMAT:
+   - For standard single-question requests: Output a strict JSON object without markdown fences containing a concise title and the raw MQL query:
+     {{
+       "title": "Top Products Ranked by Sales Volume",
+       "mql": "db.products.find({{ ... }})"
+     }}
+   - For compound or multi-part questions requiring separate reports: Output a strict JSON array of objects without markdown fences:
+     [
+       {{"title": "1. All Customers", "mql": "db.customers.find({{ ... }})"}},
+       {{"title": "2. Total Orders by Category", "mql": "db.orders.aggregate([ ... ])"}}
+     ]
+   - (If raw JavaScript query starting with db.<collection> is generated without JSON, it will be handled as fallback).
 2. Use valid dot-notation for nested fields (e.g. "address.city", "items.category").
 3. For array filtering or matching items, use standard MongoDB operators ($elemMatch, $in, $eq, $gt, etc.).
 4. For aggregations ($group, $sum, $avg, $min, $max), ensure field references have a leading '$' (e.g. "$total_amount").
-5. Do NOT include Markdown formatting like ```javascript or ```json, return ONLY the raw JavaScript query starting with db.<collection>.
+5. Do NOT include Markdown formatting like ```javascript or ```json, return ONLY the raw JSON or raw JavaScript query starting with db.<collection>.
 6. NEVER generate destructive mutations ($drop, $deleteMany, $deleteOne, $updateMany, $out). Strictly Read-Only queries.
 7. MULTI-TURN CONVERSATION & PRONOUN RESOLUTION:
    - When a "PREVIOUS CONVERSATION CONTEXT" block is provided, use it to understand what the user is referring to.
    - If the current question uses coreferences or pronouns (e.g. "their", "them", "those", "that product", "the first one"), resolve them from previous queries.
    - If the user asks to refine or modify the previous query (e.g. "now sort by price", "filter for only Platinum tier"), adapt the previous MQL pipeline/filter.
    - If the user asks an unrelated new question, ignore previous context and generate a clean standalone query.
-8. COMPOUND & MULTI-PART QUESTIONS (DECOMPOSITION):
-   - If the user asks multiple distinct sub-questions or bullet points requiring separate data reports:
-     Output a strict JSON array of objects without markdown fences:
-     [
-       {{"title": "1. Sub-question Title", "mql": "db.<collection>.find(...)"}},
-       {{"title": "2. Sub-question Title", "mql": "db.<collection>.aggregate(...)"}}
-     ]
-    - Otherwise, for standard single-question requests, output ONLY the single raw JavaScript query starting with db.<collection>.
-9. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
+8. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
    - Carefully verify if the requested entities or collections physically exist in this database.
    - If the user question references concepts or collections completely absent from this database (e.g. asking for music tracks, albums, hospital records on an e-commerce database, or general chit-chat):
      DO NOT force an unrelated query.
@@ -142,12 +141,18 @@ RULES & CONSTRAINTS:
             elif cleaned.lower().startswith("javascript") or cleaned.lower().startswith("mongodb"):
                 cleaned = re.sub(r"^(?:javascript|mongodb)\s*", "", cleaned, flags=re.IGNORECASE).strip()
 
-        # 1. Check if output is an out-of-domain rejection JSON object
+        # 1. Check if output is a JSON object
         if cleaned.startswith("{") and cleaned.endswith("}"):
             try:
                 parsed = json.loads(cleaned)
-                if isinstance(parsed, dict) and parsed.get("is_relevant") is False:
-                    return parsed
+                if isinstance(parsed, dict):
+                    if parsed.get("is_relevant") is False:
+                        return parsed
+                    elif "mql" in parsed or "query" in parsed or "sql" in parsed:
+                        mql_str = (parsed.get("mql") or parsed.get("query") or parsed.get("sql") or "").strip()
+                        title_str = parsed.get("title") or "Query Objective"
+                        if mql_str:
+                            return [{"title": title_str, "mql": mql_str}]
             except Exception:
                 pass
 
@@ -170,5 +175,5 @@ RULES & CONSTRAINTS:
                 pass
 
         # 3. Fallback to single MQL query
-        return [{"title": "Query 1", "mql": cleaned}]
+        return [{"title": "Query Objective", "mql": cleaned}]
 

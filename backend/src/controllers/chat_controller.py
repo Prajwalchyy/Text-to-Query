@@ -123,15 +123,22 @@ class ChatController:
                 "db_id": db_id,
                 "db_name": db_info.get("name", "Default"),
                 "db_type": db_info.get("type", "sql"),
+                "code_type": result.get("code_type", "excel_formula" if db_info.get("type") == "excel" else "pandas" if db_info.get("type") == "csv" else "sql"),
                 "needed_tables": result.get("needed_tables", []),
                 "available_tables": result.get("available_tables", []),
                 "suggested_questions": result.get("suggested_questions", [])
             }
 
+            resolved_title = result.get("title") or (
+                result.get("sub_queries", [{}])[0].get("title") 
+                if result.get("sub_queries") else None
+            )
+
             chat_storage.add_message(
                 chat_id=chat_id,
                 message_id=ai_msg_id,
                 role="assistant",
+                title=resolved_title,
                 content=result.get("summary", ""),
                 sql=result.get("final_sql"),
                 data=result.get("data"),
@@ -146,6 +153,7 @@ class ChatController:
             return {
                 "id": ai_msg_id,
                 "role": "assistant",
+                "title": resolved_title,
                 "content": result.get("summary", ""),
                 "sql": result.get("final_sql"),
                 "data": result.get("data"),
@@ -156,7 +164,8 @@ class ChatController:
                 "available_tables": result.get("available_tables", []),
                 "suggested_questions": result.get("suggested_questions", []),
                 "db_name": db_info.get("name", "Default"),
-                "db_type": db_info.get("type", "sql")
+                "db_type": db_info.get("type", "sql"),
+                "code_type": result.get("code_type", "excel_formula" if db_info.get("type") == "excel" else "pandas" if db_info.get("type") == "csv" else "sql")
             }
 
         except Exception as e:

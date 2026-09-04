@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Terminal, Copy, Check, FileJson } from 'lucide-react';
+import { Terminal, Copy, Check, FileJson, FileSpreadsheet } from 'lucide-react';
 
-export default function SqlCodeBlock({ sql, isDark }) {
+export default function SqlCodeBlock({ sql, isDark, codeType }) {
   const [copied, setCopied] = useState(false);
 
   if (!sql) return null;
 
-  const isNoSql = sql.trim().startsWith("db.") || sql.trim().startsWith("[") || sql.trim().startsWith("{");
+  const trimmed = sql.trim();
+  const isExcelFormula = codeType === 'excel_formula' || trimmed.startsWith('=');
+  const isPandas = codeType === 'pandas' || (!isExcelFormula && (trimmed.includes('result_df') || trimmed.startsWith('df[') || trimmed.includes('df.')));
+  const isNoSql = codeType === 'nosql' || (!isExcelFormula && !isPandas && (trimmed.startsWith('db.') || trimmed.startsWith('[') || trimmed.startsWith('{')));
 
   const handleCopy = () => {
     navigator.clipboard.writeText(sql);
@@ -21,7 +24,17 @@ export default function SqlCodeBlock({ sql, isDark }) {
       {/* Top Bar with Language Dialect Badge & Copy Button */}
       <div className="flex items-center justify-between px-4 py-2 bg-slate-900/90 border-b border-slate-800 text-xs font-mono">
         <span className="flex items-center gap-1.5 font-semibold text-[11px]">
-          {isNoSql ? (
+          {isExcelFormula ? (
+            <>
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-emerald-300 font-bold tracking-wide">Excel Formula</span>
+            </>
+          ) : isPandas ? (
+            <>
+              <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-cyan-300">Python / Pandas</span>
+            </>
+          ) : isNoSql ? (
             <>
               <FileJson className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-amber-300">MongoDB MQL</span>
@@ -36,7 +49,8 @@ export default function SqlCodeBlock({ sql, isDark }) {
         <button
           onClick={handleCopy}
           className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer text-[11px]"
-          aria-label="Copy query"
+          aria-label="Copy query or formula"
+          title={isExcelFormula ? "Copy Excel Formula to Clipboard" : "Copy code"}
         >
           {copied ? (
             <>
@@ -52,10 +66,16 @@ export default function SqlCodeBlock({ sql, isDark }) {
         </button>
       </div>
 
-      {/* Code Area with Local Container Scrolling */}
+      {/* Code / Formula Area with Local Container Scrolling */}
       <div className="p-4 max-h-56 overflow-y-auto overflow-x-auto custom-scrollbar">
-        <pre className={`font-mono text-xs whitespace-pre-wrap break-words leading-relaxed m-0 selection:bg-emerald-950 selection:text-emerald-200 ${
-          isNoSql ? 'text-amber-300' : 'text-emerald-400'
+        <pre className={`font-mono text-xs whitespace-pre-wrap break-words leading-relaxed m-0 ${
+          isExcelFormula 
+            ? 'text-emerald-300 font-bold selection:bg-emerald-800 selection:text-white' 
+            : isPandas 
+              ? 'text-cyan-300 selection:bg-cyan-950 selection:text-cyan-200'
+              : isNoSql 
+                ? 'text-amber-300 selection:bg-amber-950 selection:text-amber-200' 
+                : 'text-emerald-400 selection:bg-emerald-950 selection:text-emerald-200'
         }`}>
           {sql}
         </pre>

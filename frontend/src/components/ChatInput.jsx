@@ -62,7 +62,7 @@ export default function ChatInput({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about your database (e.g. Total sales by country, Top 5 products)..."
+            placeholder="Ask anything about your data (SQL queries, NoSQL aggregations, Pandas filters, Excel formulas)..."
             style={{ minHeight: '38px', maxHeight: '220px' }}
             className={`w-full px-3 py-2 text-sm resize-none bg-transparent focus:outline-none custom-scrollbar leading-relaxed ${
               isDark ? 'text-slate-100 placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
@@ -80,7 +80,7 @@ export default function ChatInput({
           </button>
         </div>
         <div className="flex items-center justify-between px-1 text-[10px] text-slate-400 mt-2">
-          <span>Natural Language to SQL • AST & Keyword Guardrails • SQLite Local Execution</span>
+          <span>Multi-Engine Data Intelligence • SQL, NoSQL & Spreadsheets • AST Sandboxed Guardrails</span>
           {isMultiLine && (
             <span className="font-mono text-indigo-400/90 font-medium">
               Shift + Enter for new line • Enter to send

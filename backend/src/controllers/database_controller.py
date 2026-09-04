@@ -2,6 +2,7 @@ import json
 import shutil
 import sqlite3
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 from fastapi import HTTPException, UploadFile
@@ -9,6 +10,8 @@ from F01_db_engine import DatabaseEngine
 from F06_pipeline import TextToSQLPipeline
 from F09_nosql_engine import NoSQLEngine
 from F12_nosql_pipeline import TextToNoSQLPipeline
+from F13_spreadsheet_engine import SpreadsheetEngine
+from F16_spreadsheet_pipeline import TextToSpreadsheetPipeline
 from F08_database_registry import (
     DatabaseRegistry, 
     TableConflictError,
@@ -23,8 +26,8 @@ from F08_database_registry import (
 # Initialize database registry
 db_registry = DatabaseRegistry()
 
-# Pipeline Cache for fast switching between multiple SQL/NoSQL sources
-_pipeline_cache: Dict[str, Union[TextToSQLPipeline, TextToNoSQLPipeline]] = {}
+# Pipeline Cache for fast switching between multiple SQL/NoSQL/Spreadsheet sources
+_pipeline_cache: Dict[str, Union[TextToSQLPipeline, TextToNoSQLPipeline, TextToSpreadsheetPipeline]] = {}
 
 
 class DatabaseController:
@@ -47,12 +50,16 @@ class DatabaseController:
             raise HTTPException(status_code=404, detail=f"Data source '{db_id}' not found.")
 
         db_path = Path(db_info["path"]).resolve()
-        cache_key = f"{db_info.get('type', 'sql')}:{str(db_path)}"
+        db_type = db_info.get("type", "sql")
+        cache_key = f"{db_type}:{str(db_path)}"
 
         if cache_key not in _pipeline_cache:
-            if db_info.get("type") == "nosql":
+            if db_type == "nosql":
                 nosql_engine = NoSQLEngine(file_path=str(db_path))
                 _pipeline_cache[cache_key] = TextToNoSQLPipeline(engine=nosql_engine)
+            elif db_type in ["csv", "excel"]:
+                spreadsheet_engine = SpreadsheetEngine(file_path=str(db_path), file_type=db_type)
+                _pipeline_cache[cache_key] = TextToSpreadsheetPipeline(engine=spreadsheet_engine)
             else:
                 sql_engine = DatabaseEngine(uri=f"sqlite:///{db_path.as_posix()}")
                 _pipeline_cache[cache_key] = TextToSQLPipeline(db_engine=sql_engine)
@@ -73,12 +80,13 @@ class DatabaseController:
         files: Optional[List[UploadFile]] = None,
         name: str = "",
         dataset_type: Optional[str] = None,
-        mode: str = "full"
+        mode: str = "full",
+        group_name: Optional[str] = None
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Validates, saves, and registers custom datasets.
         Supports:
-        1. Full Database Mode (mode='full'): 1 file or bulk multi-file import registering independent databases.
+        1. Full Database Mode (mode='full'): 1 file (single/) or bulk multi-file import (multiple/<group>/).
         2. Merge Mode (mode='merge'): Merging multiple SQL table scripts (.sql) into 1 SQLite DB,
            OR merging multiple NoSQL collection files (.json, .bson) into 1 multi-collection NoSQL store.
         """
@@ -108,7 +116,7 @@ class DatabaseController:
                             detail=f"In Multiple Tables (Merge) mode, SQL only accepts .sql table scripts. Received '{f.filename}'."
                         )
 
-                target_dir = get_upload_dir_for_type("sql", ".db")
+                target_dir = get_upload_dir_for_type("sql", ".db", upload_mode="single")
                 clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip().lower())
                 target_db_path = target_dir / f"{clean_name}.db"
 
@@ -131,14 +139,15 @@ class DatabaseController:
                     registered = db_registry.register_database(
                         name=name,
                         file_path=target_db_path,
-                        filename=target_db_path.name
+                        filename=target_db_path.name,
+                        upload_mode="single"
                     )
                     return registered
                 except Exception as e:
                     if conn != None:
                         try:
                             conn.close()
-                        except Exception:
+                        except:
                             pass
                     if target_db_path.exists() == True:
                         target_db_path.unlink()
@@ -155,7 +164,7 @@ class DatabaseController:
                         )
 
                 from F09_nosql_engine import NoSQLEngine
-                target_dir = get_upload_dir_for_type("nosql", ".json")
+                target_dir = get_upload_dir_for_type("nosql", ".json", upload_mode="single")
                 clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip().lower())
                 target_json_path = target_dir / f"{clean_name}.json"
 
@@ -172,7 +181,8 @@ class DatabaseController:
                     registered = db_registry.register_database(
                         name=name,
                         file_path=target_json_path,
-                        filename=target_json_path.name
+                        filename=target_json_path.name,
+                        upload_mode="single"
                     )
                     return registered
                 except Exception as e:
@@ -183,9 +193,9 @@ class DatabaseController:
                 raise HTTPException(status_code=400, detail="Merge mode only supports SQL or NoSQL datasets.")
 
         # =========================================================================
-        # BRANCH B: FULL DATABASE MODE (Single Upload OR Multi-File Bulk Import)
+        # BRANCH B: FULL DATABASE MODE (Single Upload OR Multi-File Bulk/Group Import)
         # =========================================================================
-        # B1: Single Full Database
+        # B1: Single Full Dataset (Saved into single/ folder)
         if len(file_list) == 1:
             single_file = file_list[0]
             if name.strip() == "":
@@ -205,8 +215,28 @@ class DatabaseController:
                         status_code=400, 
                         detail=f"Invalid file type for NoSQL Database: '{single_file.filename}'. Expected .json, .jsonl, or .bson document file."
                     )
+            elif dataset_type in ["csv", "excel", "spreadsheet"]:
+                if file_ext not in [".csv", ".xlsx", ".xls"]:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Invalid file type for Spreadsheet: '{single_file.filename}'. Expected .csv, .xlsx, or .xls file."
+                    )
+            else:
+                if file_ext == ".csv":
+                    dataset_type = "csv"
+                elif file_ext in [".xlsx", ".xls"]:
+                    dataset_type = "excel"
+                elif file_ext in [".json", ".jsonl", ".bson"]:
+                    dataset_type = "nosql"
+                elif file_ext in [".db", ".sqlite", ".sqlite3", ".s3db", ".sl3", ".sql"]:
+                    dataset_type = "sql"
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Unsupported file type: '{single_file.filename}'."
+                    )
 
-            target_dir = get_upload_dir_for_type(dataset_type, file_ext)
+            target_dir = get_upload_dir_for_type(dataset_type, file_ext, upload_mode="single")
             target_path = target_dir / single_file.filename
 
             counter = 1
@@ -221,7 +251,8 @@ class DatabaseController:
                 registered = db_registry.register_database(
                     name=name,
                     file_path=target_path,
-                    filename=target_path.name
+                    filename=target_path.name,
+                    upload_mode="single"
                 )
                 return registered
             except ValueError as ve:
@@ -233,7 +264,13 @@ class DatabaseController:
                     target_path.unlink()
                 raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
-        # B2: Multi-File Bulk Import (Multiple Full Databases)
+        # B2: Multi-File Bulk/Group Import (Saved into multiple/<group_folder>/)
+        effective_group_name = (group_name or name or "Batch Upload").strip()
+        timestamp = int(datetime.now(timezone.utc).timestamp())
+        clean_group_slug = re.sub(r'[^a-zA-Z0-9_]', '_', effective_group_name.lower())
+        group_id = f"group_{clean_group_slug}_{timestamp}"
+        group_folder = f"{clean_group_slug}_{timestamp}"
+
         bulk_registered = []
         for f in file_list:
             file_ext = Path(f.filename).suffix.lower()
@@ -243,8 +280,15 @@ class DatabaseController:
                 continue
             if dataset_type == "nosql" and file_ext not in [".json", ".jsonl", ".bson"]:
                 continue
+            if dataset_type in ["csv", "excel", "spreadsheet"] and file_ext not in [".csv", ".xlsx", ".xls"]:
+                continue
 
-            target_dir = get_upload_dir_for_type(dataset_type, file_ext)
+            target_dir = get_upload_dir_for_type(
+                dataset_type, 
+                file_ext, 
+                upload_mode="multiple", 
+                group_folder=group_folder
+            )
             target_path = target_dir / f.filename
 
             counter = 1
@@ -259,7 +303,10 @@ class DatabaseController:
                 reg = db_registry.register_database(
                     name=derived_name,
                     file_path=target_path,
-                    filename=target_path.name
+                    filename=target_path.name,
+                    upload_mode="multiple",
+                    group_name=effective_group_name,
+                    group_id=group_id
                 )
                 bulk_registered.append(reg)
             except Exception as e:
@@ -272,7 +319,7 @@ class DatabaseController:
         return {
             "success": True,
             "databases": bulk_registered,
-            "message": f"{len(bulk_registered)} databases successfully imported!"
+            "message": f"{len(bulk_registered)} data sources successfully imported into group '{effective_group_name}'!"
         }
 
     @staticmethod
@@ -375,7 +422,42 @@ class DatabaseController:
         """
         try:
             db_info = db_registry.get_database(db_id)
-            if db_info != None and db_info.get("type") == "nosql":
+            db_type = db_info.get("type", "sql") if db_info else "sql"
+            if db_type in ["csv", "excel"]:
+                pipeline = DatabaseController.get_pipeline(db_id)
+                engine = pipeline.engine
+                schema_tables = []
+                for sheet_name, df in engine.dfs.items():
+                    col_details = []
+                    col_strings = []
+                    for i, col in enumerate(df.columns):
+                        dtype = str(df[col].dtype)
+                        is_pk = (i == 0 and ("id" in str(col).lower()))
+                        badge = " 🔑 PK" if is_pk else ""
+                        display_str = f"{col} ({dtype}){badge}"
+                        col_strings.append(display_str)
+                        col_details.append({
+                            "name": str(col),
+                            "type": dtype,
+                            "is_pk": is_pk,
+                            "is_fk": False,
+                            "fk_to_table": None,
+                            "fk_to_col": None,
+                            "display": display_str
+                        })
+                    schema_tables.append({
+                        "name": sheet_name,
+                        "cols": col_strings,
+                        "columns": col_details,
+                        "count": len(df)
+                    })
+                return {
+                    "db_id": db_id,
+                    "type": db_type,
+                    "tables": schema_tables,
+                    "relationships": []
+                }
+            elif db_info != None and db_info.get("type") == "nosql":
                 # NoSQL Multi-Collection Schema & Relationship Introspection
                 pipeline = DatabaseController.get_pipeline(db_id)
                 relationships = pipeline.engine.get_all_relationships()

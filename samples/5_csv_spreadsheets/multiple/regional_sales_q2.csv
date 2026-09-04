@@ -1,0 +1,7 @@
+Transaction_ID,Date,Region,Sales_Rep,Category,Units_Sold,Unit_Price,Total_Revenue
+TXN-2001,2026-04-12,East,Carol Danvers,Office Supplies,50,19.0,950.0
+TXN-2002,2026-04-28,West,Dave Miller,Electronics,18,210.0,3780.0
+TXN-2003,2026-05-14,North,Alice Walker,Electronics,14,260.0,3640.0
+TXN-2004,2026-05-29,South,Bob Vance,Furniture,6,510.0,3060.0
+TXN-2005,2026-06-08,East,Carol Danvers,Furniture,8,450.0,3600.0
+TXN-2006,2026-06-22,South,Bob Vance,Office Supplies,60,15.0,900.0

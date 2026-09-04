@@ -1,0 +1,34 @@
+[
+  {
+    "course_id": "C501",
+    "title": "Mastering Text-to-SQL & LLM Agents",
+    "category": "Artificial Intelligence",
+    "price_usd": 149.99,
+    "instructor": "Dr. Aris Thorne",
+    "rating": 4.9
+  },
+  {
+    "course_id": "C502",
+    "title": "Fullstack FastAPI & Modern React 19",
+    "category": "Web Development",
+    "price_usd": 89.99,
+    "instructor": "Maya Lin",
+    "rating": 4.8
+  },
+  {
+    "course_id": "C503",
+    "title": "MongoDB Aggregation Pipeline Architecture",
+    "category": "Database Engineering",
+    "price_usd": 119.99,
+    "instructor": "Vikram Patel",
+    "rating": 4.7
+  },
+  {
+    "course_id": "C504",
+    "title": "Cloud Infrastructure & Zero Downtime Deployments",
+    "category": "DevOps & Cloud",
+    "price_usd": 99.99,
+    "instructor": "David Kim",
+    "rating": 4.6
+  }
+]

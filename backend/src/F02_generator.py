@@ -39,9 +39,21 @@ Database Schema:
 {schema}
 
 Strict Rules:
-1. Return ONLY the raw SQL query.
-2. Do NOT wrap the query in markdown backticks (no ```sql or ```).
-3. Do NOT provide explanations, commentary, or conversational text.
+1. OUTPUT FORMAT:
+   - For standard single-question requests: Output a strict JSON object without markdown fences containing a concise, exact title summarizing what the query does, and the raw SQL:
+     {{
+       "title": "Top Customers Ranked by Total Spending",
+       "sql": "SELECT ...;"
+     }}
+   - For compound or multi-part questions requiring separate reports (e.g. "1. List all customers, 2. Total orders per customer"):
+     Output a strict JSON array of objects without markdown fences:
+     [
+       {{"title": "1. All Customers", "sql": "SELECT ...;"}},
+       {{"title": "2. Total Orders Per Customer", "sql": "SELECT ...;"}}
+     ]
+   - (If raw SQL without JSON is ever generated, it will be handled as fallback).
+2. Do NOT wrap queries in markdown backticks (no ```sql or ```).
+3. Do NOT provide explanations, commentary, or conversational text outside the JSON.
 4. Only use tables and columns defined in the schema above.
 5. Use proper SQLite syntax and correct JOIN conditions.
 6. When asked to find BOTH highest and lowest (or top and bottom) records in a single query, use UNION ALL combining two subqueries formatted strictly as:
@@ -55,15 +67,7 @@ Strict Rules:
    - If the current question contains pronouns or coreferences (e.g. "their", "them", "those", "that customer", "the first one", "the same ones"), resolve them using the prior questions and generated SQL.
    - If the current question refines, filters, or sorts the previous result (e.g. "now sort by date", "filter for only 2024", "include their email too"), modify the previous SQL query appropriately.
    - If the question is an independent, new topic, ignore previous context and generate a clean standalone query.
-9. COMPOUND & MULTI-PART QUESTIONS (DECOMPOSITION):
-   - If the user asks multiple distinct sub-questions or bullet points requiring separate data reports (e.g. "1. List all customers, 2. Total orders per customer, 3. Low orders"):
-     Output a strict JSON array of objects without markdown fences, where each object has:
-     [
-       {{"title": "1. All Customers", "sql": "SELECT ...;"}},
-       {{"title": "2. Total Orders Per Customer", "sql": "SELECT ...;"}}
-     ]
-    - Otherwise, for standard single-question requests, output ONLY the single raw SQL query.
-10. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
+9. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
     - Carefully check if the entities, tables, or business concepts requested by the user physically exist in the Database Schema above.
     - If the user asks about concepts or tables completely absent from this schema (e.g. asking for e-commerce products, shopping cart, shipping, or inventory when connected to a music database; or asking for hospital patients on a sales database; or general chit-chat):
       DO NOT force an unrelated query.
@@ -87,7 +91,7 @@ Strict Rules:
         """
         Parses generator output into a structured list of query tasks:
         [{"title": "...", "sql": "..."}], or an out-of-domain rejection dict.
-        Handles single raw SQL queries, JSON arrays for compound prompts,
+        Handles single raw SQL queries, JSON objects, JSON arrays for compound prompts,
         and JSON objects for out-of-domain schema mismatch rejections.
         """
         cleaned = raw_output.strip()
@@ -100,12 +104,18 @@ Strict Rules:
             elif cleaned.lower().startswith("sql"):
                 cleaned = cleaned[3:].strip()
 
-        # 1. Check if output is an out-of-domain rejection JSON object
+        # 1. Check if output is a JSON object (out-of-domain rejection OR structured single query)
         if cleaned.startswith("{") and cleaned.endswith("}"):
             try:
                 parsed = json.loads(cleaned)
-                if isinstance(parsed, dict) and parsed.get("is_relevant") is False:
-                    return parsed
+                if isinstance(parsed, dict):
+                    if parsed.get("is_relevant") is False:
+                        return parsed
+                    elif "sql" in parsed or "query" in parsed:
+                        sql_str = (parsed.get("sql") or parsed.get("query") or "").strip()
+                        title_str = parsed.get("title") or "Query Objective"
+                        if sql_str:
+                            return [{"title": title_str, "sql": sql_str}]
             except Exception:
                 pass
 
@@ -126,7 +136,7 @@ Strict Rules:
                 pass
 
         # 3. Fallback to single SQL query
-        return [{"title": "Query 1", "sql": cleaned}]
+        return [{"title": "Query Objective", "sql": cleaned}]
 
     def generate_sql(self, question: str, conversation_history: Optional[List[Dict[str, Any]]] = None) -> str:
         """sql generate by llm with optional multi-turn conversation memory"""

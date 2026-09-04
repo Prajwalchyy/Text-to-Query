@@ -154,8 +154,8 @@ export default function Sidebar({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold tracking-tight">SQL Assistant</h1>
-              <p className="text-[10px] text-slate-400">Enterprise Database AI</p>
+              <h1 className="text-sm font-bold tracking-tight">OmniData AI</h1>
+              <p className="text-[10px] text-slate-400">Multi-Engine Data Intelligence</p>
             </div>
           </div>
 
@@ -203,7 +203,7 @@ export default function Sidebar({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Tables ({tables.length})</span>
+            <span>Data Schema ({tables.length})</span>
           </button>
         </div>
 
@@ -336,7 +336,7 @@ export default function Sidebar({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tables or columns..."
+                placeholder="Search tables, sheets or fields..."
                 className={`w-full pl-8 pr-3 py-1.5 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
                   isDark ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
                 }`}
@@ -354,7 +354,7 @@ export default function Sidebar({
             {/* Quick Actions Header: Table Count + Expand/Collapse All */}
             <div className="flex items-center justify-between px-1 text-[10px]">
               <span className="font-semibold text-slate-400 uppercase tracking-wider">
-                {searchQuery ? `Matches (${filteredTables.length})` : `Tables (${tables.length})`}
+                {searchQuery ? `Matches (${filteredTables.length})` : `Entities (${tables.length})`}
               </span>
               
               <div className="flex items-center gap-2">
@@ -389,7 +389,7 @@ export default function Sidebar({
 
             {filteredTables.length === 0 ? (
               <div className="text-xs text-slate-500 text-center py-6">
-                {searchQuery ? `No tables or columns match "${searchQuery}"` : "Connecting to database..."}
+                {searchQuery ? `No tables, sheets or fields match "${searchQuery}"` : "Connecting to data source..."}
               </div>
             ) : (
               filteredTables.map((t) => {
@@ -508,7 +508,7 @@ export default function Sidebar({
       <div className={`p-4 border-t ${isDark ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-200 bg-white/40'}`}>
         <div className="flex items-center justify-between mb-3 px-1 text-xs">
           <span className="flex items-center gap-1.5 text-slate-400">
-            <Database className="w-3.5 h-3.5 text-indigo-400" /> System Status
+            <Layers className="w-3.5 h-3.5 text-indigo-400" /> System Status
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
             Active

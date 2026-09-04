@@ -1,0 +1,799 @@
+{
+  "customers": [
+    {
+      "_id": "CUST-101",
+      "name": "Daniel Smith",
+      "email": "daniel.smith1@example.com",
+      "city": "Austin",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-102",
+      "name": "John Thomas",
+      "email": "john.thomas2@example.com",
+      "city": "Chicago",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-103",
+      "name": "Michael Brown",
+      "email": "michael.brown3@example.com",
+      "city": "Seattle",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-104",
+      "name": "Robert Smith",
+      "email": "robert.smith4@example.com",
+      "city": "Denver",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-105",
+      "name": "Emily Wilson",
+      "email": "emily.wilson5@example.com",
+      "city": "Seattle",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-106",
+      "name": "Isabella Brown",
+      "email": "isabella.brown6@example.com",
+      "city": "Miami",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-107",
+      "name": "Emma Taylor",
+      "email": "emma.taylor7@example.com",
+      "city": "New York",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-108",
+      "name": "Emma Thomas",
+      "email": "emma.thomas8@example.com",
+      "city": "New York",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-109",
+      "name": "Sarah Miller",
+      "email": "sarah.miller9@example.com",
+      "city": "New York",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-110",
+      "name": "Olivia Miller",
+      "email": "olivia.miller10@example.com",
+      "city": "Austin",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-111",
+      "name": "Daniel Thomas",
+      "email": "daniel.thomas11@example.com",
+      "city": "Miami",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-112",
+      "name": "Daniel Anderson",
+      "email": "daniel.anderson12@example.com",
+      "city": "Miami",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-113",
+      "name": "David Johnson",
+      "email": "david.johnson13@example.com",
+      "city": "Seattle",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-114",
+      "name": "Robert Johnson",
+      "email": "robert.johnson14@example.com",
+      "city": "Boston",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-115",
+      "name": "Sophia Brown",
+      "email": "sophia.brown15@example.com",
+      "city": "Miami",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-116",
+      "name": "David Johnson",
+      "email": "david.johnson16@example.com",
+      "city": "Denver",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-117",
+      "name": "Olivia Miller",
+      "email": "olivia.miller17@example.com",
+      "city": "Denver",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-118",
+      "name": "Emma Miller",
+      "email": "emma.miller18@example.com",
+      "city": "New York",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-119",
+      "name": "Robert Thomas",
+      "email": "robert.thomas19@example.com",
+      "city": "Miami",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-120",
+      "name": "James Brown",
+      "email": "james.brown20@example.com",
+      "city": "Seattle",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-121",
+      "name": "Jessica Miller",
+      "email": "jessica.miller21@example.com",
+      "city": "Seattle",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-122",
+      "name": "Jessica Brown",
+      "email": "jessica.brown22@example.com",
+      "city": "Boston",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-123",
+      "name": "Emily Brown",
+      "email": "emily.brown23@example.com",
+      "city": "Denver",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-124",
+      "name": "Daniel Davis",
+      "email": "daniel.davis24@example.com",
+      "city": "Boston",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-125",
+      "name": "Sophia Brown",
+      "email": "sophia.brown25@example.com",
+      "city": "San Francisco",
+      "tier": "Silver"
+    },
+    {
+      "_id": "CUST-126",
+      "name": "Robert Taylor",
+      "email": "robert.taylor26@example.com",
+      "city": "Seattle",
+      "tier": "Standard"
+    },
+    {
+      "_id": "CUST-127",
+      "name": "William Miller",
+      "email": "william.miller27@example.com",
+      "city": "Austin",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-128",
+      "name": "William Johnson",
+      "email": "william.johnson28@example.com",
+      "city": "San Francisco",
+      "tier": "Gold"
+    },
+    {
+      "_id": "CUST-129",
+      "name": "Isabella Miller",
+      "email": "isabella.miller29@example.com",
+      "city": "Austin",
+      "tier": "Platinum"
+    },
+    {
+      "_id": "CUST-130",
+      "name": "Emily Wilson",
+      "email": "emily.wilson30@example.com",
+      "city": "San Francisco",
+      "tier": "Platinum"
+    }
+  ],
+  "products": [
+    {
+      "_id": "PROD-201",
+      "name": "Wireless Noise-Canceling Headphones",
+      "category": "Electronics",
+      "price": 199.99,
+      "stock": 45
+    },
+    {
+      "_id": "PROD-202",
+      "name": "Mechanical Gaming Keyboard",
+      "category": "Electronics",
+      "price": 129.5,
+      "stock": 30
+    },
+    {
+      "_id": "PROD-203",
+      "name": "Ergonomic Desk Mat",
+      "category": "Office",
+      "price": 34.99,
+      "stock": 120
+    },
+    {
+      "_id": "PROD-204",
+      "name": "4K Ultra-HD Monitor",
+      "category": "Electronics",
+      "price": 349.0,
+      "stock": 20
+    },
+    {
+      "_id": "PROD-205",
+      "name": "USB-C Fast Charging Hub",
+      "category": "Accessories",
+      "price": 49.99,
+      "stock": 85
+    },
+    {
+      "_id": "PROD-206",
+      "name": "Wireless Vertical Mouse",
+      "category": "Electronics",
+      "price": 69.99,
+      "stock": 60
+    },
+    {
+      "_id": "PROD-207",
+      "name": "Adjustable Laptop Stand",
+      "category": "Office",
+      "price": 39.99,
+      "stock": 90
+    },
+    {
+      "_id": "PROD-208",
+      "name": "Smart Fitness Watch",
+      "category": "Electronics",
+      "price": 179.99,
+      "stock": 40
+    },
+    {
+      "_id": "PROD-209",
+      "name": "Leather Executive Notebook",
+      "category": "Office",
+      "price": 24.5,
+      "stock": 150
+    },
+    {
+      "_id": "PROD-210",
+      "name": "Noise-Isolating Earbuds",
+      "category": "Electronics",
+      "price": 89.99,
+      "stock": 75
+    },
+    {
+      "_id": "PROD-211",
+      "name": "Portable Bluetooth Speaker",
+      "category": "Electronics",
+      "price": 59.99,
+      "stock": 55
+    },
+    {
+      "_id": "PROD-212",
+      "name": "LED Desk Reading Lamp",
+      "category": "Office",
+      "price": 45.0,
+      "stock": 65
+    }
+  ],
+  "orders": [
+    {
+      "_id": "ORD-1001",
+      "customer_id": "CUST-110",
+      "product_id": "PROD-208",
+      "quantity": 3,
+      "total_amount": 539.97,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1002",
+      "customer_id": "CUST-105",
+      "product_id": "PROD-207",
+      "quantity": 2,
+      "total_amount": 79.98,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1003",
+      "customer_id": "CUST-107",
+      "product_id": "PROD-202",
+      "quantity": 2,
+      "total_amount": 259.0,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1004",
+      "customer_id": "CUST-117",
+      "product_id": "PROD-201",
+      "quantity": 2,
+      "total_amount": 399.98,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1005",
+      "customer_id": "CUST-121",
+      "product_id": "PROD-205",
+      "quantity": 3,
+      "total_amount": 149.97,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1006",
+      "customer_id": "CUST-128",
+      "product_id": "PROD-209",
+      "quantity": 3,
+      "total_amount": 73.5,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1007",
+      "customer_id": "CUST-129",
+      "product_id": "PROD-207",
+      "quantity": 1,
+      "total_amount": 39.99,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1008",
+      "customer_id": "CUST-106",
+      "product_id": "PROD-205",
+      "quantity": 2,
+      "total_amount": 99.98,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1009",
+      "customer_id": "CUST-112",
+      "product_id": "PROD-202",
+      "quantity": 2,
+      "total_amount": 259.0,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1010",
+      "customer_id": "CUST-107",
+      "product_id": "PROD-204",
+      "quantity": 3,
+      "total_amount": 1047.0,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1011",
+      "customer_id": "CUST-105",
+      "product_id": "PROD-205",
+      "quantity": 1,
+      "total_amount": 49.99,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1012",
+      "customer_id": "CUST-121",
+      "product_id": "PROD-202",
+      "quantity": 1,
+      "total_amount": 129.5,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1013",
+      "customer_id": "CUST-108",
+      "product_id": "PROD-211",
+      "quantity": 1,
+      "total_amount": 59.99,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1014",
+      "customer_id": "CUST-127",
+      "product_id": "PROD-205",
+      "quantity": 2,
+      "total_amount": 99.98,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1015",
+      "customer_id": "CUST-125",
+      "product_id": "PROD-212",
+      "quantity": 1,
+      "total_amount": 45.0,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1016",
+      "customer_id": "CUST-119",
+      "product_id": "PROD-212",
+      "quantity": 2,
+      "total_amount": 90.0,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1017",
+      "customer_id": "CUST-116",
+      "product_id": "PROD-209",
+      "quantity": 3,
+      "total_amount": 73.5,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1018",
+      "customer_id": "CUST-119",
+      "product_id": "PROD-210",
+      "quantity": 3,
+      "total_amount": 269.97,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1019",
+      "customer_id": "CUST-129",
+      "product_id": "PROD-210",
+      "quantity": 2,
+      "total_amount": 179.98,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1020",
+      "customer_id": "CUST-116",
+      "product_id": "PROD-201",
+      "quantity": 3,
+      "total_amount": 599.97,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1021",
+      "customer_id": "CUST-121",
+      "product_id": "PROD-205",
+      "quantity": 3,
+      "total_amount": 149.97,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1022",
+      "customer_id": "CUST-113",
+      "product_id": "PROD-208",
+      "quantity": 3,
+      "total_amount": 539.97,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1023",
+      "customer_id": "CUST-104",
+      "product_id": "PROD-212",
+      "quantity": 2,
+      "total_amount": 90.0,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1024",
+      "customer_id": "CUST-125",
+      "product_id": "PROD-206",
+      "quantity": 3,
+      "total_amount": 209.97,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1025",
+      "customer_id": "CUST-113",
+      "product_id": "PROD-212",
+      "quantity": 3,
+      "total_amount": 135.0,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1026",
+      "customer_id": "CUST-103",
+      "product_id": "PROD-203",
+      "quantity": 3,
+      "total_amount": 104.97,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1027",
+      "customer_id": "CUST-104",
+      "product_id": "PROD-201",
+      "quantity": 3,
+      "total_amount": 599.97,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1028",
+      "customer_id": "CUST-126",
+      "product_id": "PROD-205",
+      "quantity": 2,
+      "total_amount": 99.98,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1029",
+      "customer_id": "CUST-109",
+      "product_id": "PROD-201",
+      "quantity": 1,
+      "total_amount": 199.99,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1030",
+      "customer_id": "CUST-112",
+      "product_id": "PROD-205",
+      "quantity": 3,
+      "total_amount": 149.97,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1031",
+      "customer_id": "CUST-113",
+      "product_id": "PROD-204",
+      "quantity": 1,
+      "total_amount": 349.0,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1032",
+      "customer_id": "CUST-119",
+      "product_id": "PROD-203",
+      "quantity": 2,
+      "total_amount": 69.98,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1033",
+      "customer_id": "CUST-107",
+      "product_id": "PROD-205",
+      "quantity": 1,
+      "total_amount": 49.99,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1034",
+      "customer_id": "CUST-105",
+      "product_id": "PROD-207",
+      "quantity": 3,
+      "total_amount": 119.97,
+      "status": "Cancelled"
+    },
+    {
+      "_id": "ORD-1035",
+      "customer_id": "CUST-112",
+      "product_id": "PROD-208",
+      "quantity": 2,
+      "total_amount": 359.98,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1036",
+      "customer_id": "CUST-114",
+      "product_id": "PROD-203",
+      "quantity": 1,
+      "total_amount": 34.99,
+      "status": "Shipped"
+    },
+    {
+      "_id": "ORD-1037",
+      "customer_id": "CUST-109",
+      "product_id": "PROD-205",
+      "quantity": 3,
+      "total_amount": 149.97,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1038",
+      "customer_id": "CUST-109",
+      "product_id": "PROD-203",
+      "quantity": 3,
+      "total_amount": 104.97,
+      "status": "Processing"
+    },
+    {
+      "_id": "ORD-1039",
+      "customer_id": "CUST-106",
+      "product_id": "PROD-207",
+      "quantity": 3,
+      "total_amount": 119.97,
+      "status": "Delivered"
+    },
+    {
+      "_id": "ORD-1040",
+      "customer_id": "CUST-110",
+      "product_id": "PROD-212",
+      "quantity": 1,
+      "total_amount": 45.0,
+      "status": "Shipped"
+    }
+  ],
+  "reviews": [
+    {
+      "_id": "REV-501",
+      "product_id": "PROD-211",
+      "customer_id": "CUST-104",
+      "rating": 3,
+      "comment": "Solid performance and nice design."
+    },
+    {
+      "_id": "REV-502",
+      "product_id": "PROD-210",
+      "customer_id": "CUST-117",
+      "rating": 4,
+      "comment": "Works great, very satisfied with this purchase."
+    },
+    {
+      "_id": "REV-503",
+      "product_id": "PROD-203",
+      "customer_id": "CUST-116",
+      "rating": 5,
+      "comment": "Solid performance and nice design."
+    },
+    {
+      "_id": "REV-504",
+      "product_id": "PROD-203",
+      "customer_id": "CUST-101",
+      "rating": 4,
+      "comment": "Works great, very satisfied with this purchase."
+    },
+    {
+      "_id": "REV-505",
+      "product_id": "PROD-211",
+      "customer_id": "CUST-105",
+      "rating": 5,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    },
+    {
+      "_id": "REV-506",
+      "product_id": "PROD-210",
+      "customer_id": "CUST-108",
+      "rating": 4,
+      "comment": "Decent product, build quality could be slightly better."
+    },
+    {
+      "_id": "REV-507",
+      "product_id": "PROD-203",
+      "customer_id": "CUST-129",
+      "rating": 5,
+      "comment": "Average experience, works as advertised."
+    },
+    {
+      "_id": "REV-508",
+      "product_id": "PROD-205",
+      "customer_id": "CUST-127",
+      "rating": 3,
+      "comment": "Great value for money, fast delivery."
+    },
+    {
+      "_id": "REV-509",
+      "product_id": "PROD-209",
+      "customer_id": "CUST-127",
+      "rating": 4,
+      "comment": "Works great, very satisfied with this purchase."
+    },
+    {
+      "_id": "REV-510",
+      "product_id": "PROD-204",
+      "customer_id": "CUST-109",
+      "rating": 4,
+      "comment": "Solid performance and nice design."
+    },
+    {
+      "_id": "REV-511",
+      "product_id": "PROD-204",
+      "customer_id": "CUST-104",
+      "rating": 5,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    },
+    {
+      "_id": "REV-512",
+      "product_id": "PROD-211",
+      "customer_id": "CUST-129",
+      "rating": 5,
+      "comment": "Solid performance and nice design."
+    },
+    {
+      "_id": "REV-513",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-111",
+      "rating": 3,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    },
+    {
+      "_id": "REV-514",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-102",
+      "rating": 4,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    },
+    {
+      "_id": "REV-515",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-115",
+      "rating": 3,
+      "comment": "Highly recommended, five stars!"
+    },
+    {
+      "_id": "REV-516",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-114",
+      "rating": 5,
+      "comment": "Average experience, works as advertised."
+    },
+    {
+      "_id": "REV-517",
+      "product_id": "PROD-204",
+      "customer_id": "CUST-118",
+      "rating": 5,
+      "comment": "Average experience, works as advertised."
+    },
+    {
+      "_id": "REV-518",
+      "product_id": "PROD-209",
+      "customer_id": "CUST-102",
+      "rating": 5,
+      "comment": "Works great, very satisfied with this purchase."
+    },
+    {
+      "_id": "REV-519",
+      "product_id": "PROD-209",
+      "customer_id": "CUST-123",
+      "rating": 5,
+      "comment": "Great value for money, fast delivery."
+    },
+    {
+      "_id": "REV-520",
+      "product_id": "PROD-209",
+      "customer_id": "CUST-107",
+      "rating": 5,
+      "comment": "Solid performance and nice design."
+    },
+    {
+      "_id": "REV-521",
+      "product_id": "PROD-206",
+      "customer_id": "CUST-119",
+      "rating": 5,
+      "comment": "Great value for money, fast delivery."
+    },
+    {
+      "_id": "REV-522",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-128",
+      "rating": 5,
+      "comment": "Average experience, works as advertised."
+    },
+    {
+      "_id": "REV-523",
+      "product_id": "PROD-209",
+      "customer_id": "CUST-113",
+      "rating": 5,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    },
+    {
+      "_id": "REV-524",
+      "product_id": "PROD-204",
+      "customer_id": "CUST-109",
+      "rating": 4,
+      "comment": "Average experience, works as advertised."
+    },
+    {
+      "_id": "REV-525",
+      "product_id": "PROD-201",
+      "customer_id": "CUST-110",
+      "rating": 4,
+      "comment": "Outstanding quality, exceeded my expectations!"
+    }
+  ]
+}

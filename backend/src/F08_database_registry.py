@@ -16,27 +16,38 @@ MANAGED_UPLOAD_DIRS = [RELATIONAL_DIR, NOSQL_DIR, CSV_DIR, EXCEL_DIR, UPLOADS_DI
 REGISTRY_FILE = DATA_DIR / "databases.json"
 DEFAULT_CHINOOK = DATA_DIR / "chinook.db"
 DEFAULT_NOSQL = DATA_DIR / "nosql_default" / "ecommerce_store.json"
+DEFAULT_CSV = CSV_DIR / "sales_performance.csv"
+DEFAULT_EXCEL = EXCEL_DIR / "financial_budget.xlsx"
 
 
-def get_upload_dir_for_type(dataset_type: Optional[str] = None, file_ext: str = "") -> Path:
+def get_upload_dir_for_type(
+    dataset_type: Optional[str] = None, 
+    file_ext: str = "",
+    upload_mode: str = "single",
+    group_folder: str = ""
+) -> Path:
     """
     Returns the appropriate categorized storage directory under data/:
-    - 'sql' (.db, .sqlite, .sqlite3, .sql) -> data/relational
-    - 'nosql' (.json, .jsonl) -> data/nosql
-    - 'csv' (.csv) -> data/csv
-    - 'excel' (.xlsx, .xls) -> data/excel
+    - Single upload: data/{type}/single/
+    - Multiple/group upload: data/{type}/multiple/{group_folder}/
     """
     ext = file_ext.lower()
     if dataset_type == "sql" or ext in [".db", ".sqlite", ".sqlite3", ".sql"]:
-        target = RELATIONAL_DIR
+        base_dir = RELATIONAL_DIR
     elif dataset_type == "nosql" or ext in [".json", ".jsonl"]:
-        target = NOSQL_DIR
+        base_dir = NOSQL_DIR
     elif dataset_type == "csv" or ext == ".csv":
-        target = CSV_DIR
+        base_dir = CSV_DIR
     elif dataset_type == "excel" or ext in [".xlsx", ".xls"]:
-        target = EXCEL_DIR
+        base_dir = EXCEL_DIR
     else:
-        target = RELATIONAL_DIR
+        base_dir = RELATIONAL_DIR
+
+    if upload_mode == "multiple" and group_folder.strip() != "":
+        clean_folder = re.sub(r'[^a-zA-Z0-9_\-]', '_', group_folder.strip().lower())
+        target = base_dir / "multiple" / clean_folder
+    else:
+        target = base_dir / "single"
 
     target.mkdir(parents=True, exist_ok=True)
     return target
@@ -104,6 +115,40 @@ class DatabaseRegistry:
             })
             updated = True
 
+        # 3. Default CSV Sales Performance
+        if "sales_performance" not in existing_ids and DEFAULT_CSV.exists() == True:
+            row_count = self._count_csv_rows(DEFAULT_CSV)
+            dbs.append({
+                "id": "sales_performance",
+                "name": "Sales Performance (CSV)",
+                "type": "csv",
+                "filename": "sales_performance.csv",
+                "path": str(DEFAULT_CSV.resolve()),
+                "row_count": row_count,
+                "table_count": 1,
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            updated = True
+
+        # 4. Default Excel Financial Budget
+        if "financial_budget" not in existing_ids and DEFAULT_EXCEL.exists() == True:
+            sheet_info = self._inspect_excel_sheets(DEFAULT_EXCEL)
+            dbs.append({
+                "id": "financial_budget",
+                "name": "Financial Budget (Excel)",
+                "type": "excel",
+                "filename": "financial_budget.xlsx",
+                "path": str(DEFAULT_EXCEL.resolve()),
+                "sheet_count": len(sheet_info.get("sheets", [])),
+                "sheets": sheet_info.get("sheets", []),
+                "table_count": len(sheet_info.get("sheets", [])),
+                "row_count": sheet_info.get("total_rows", 0),
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            updated = True
+
         if updated == True or self.registry_file.exists() == False:
             self._write_registry(dbs)
 
@@ -120,6 +165,34 @@ class DatabaseRegistry:
     def _write_registry(self, data: List[Dict[str, Any]]) -> None:
         with open(self.registry_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+
+    def _count_csv_rows(self, csv_path: Path) -> int:
+        """Counts data rows in a CSV file (excluding header)."""
+        try:
+            with open(csv_path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = [line for line in f if line.strip()]
+                return max(0, len(lines) - 1)
+        except Exception:
+            return 0
+
+    def _inspect_excel_sheets(self, excel_path: Path) -> Dict[str, Any]:
+        """Inspects sheet names and estimated row counts for an Excel workbook."""
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(excel_path, read_only=True)
+            sheets = wb.sheetnames
+            total_rows = 0
+            sheet_details = []
+            for name in sheets:
+                ws = wb[name]
+                r = ws.max_row or 0
+                data_rows = max(0, r - 1)
+                total_rows += data_rows
+                sheet_details.append({"name": name, "rows": data_rows})
+            wb.close()
+            return {"sheets": sheets, "total_rows": total_rows, "sheet_details": sheet_details}
+        except Exception:
+            return {"sheets": [], "total_rows": 0, "sheet_details": []}
 
     def _count_tables(self, db_path: Path) -> int:
         """Counts user tables in an SQLite file."""
@@ -169,16 +242,61 @@ class DatabaseRegistry:
         dbs = self._read_registry()
         return next((d for d in dbs if d["id"] == db_id), None)
 
-    def register_database(self, name: str, file_path: Path, filename: str) -> Dict[str, Any]:
+    def register_database(
+        self, 
+        name: str, 
+        file_path: Path, 
+        filename: str,
+        upload_mode: str = "single",
+        group_name: Optional[str] = None,
+        group_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
-        Validates uploaded file (.db/.sqlite/.s3db/.sl3/.sql for SQL, or .json/.jsonl/.bson for NoSQL)
-        and registers it with user-specified custom name and type tag.
+        Validates uploaded file (.db/.sqlite/.s3db/.sl3/.sql for SQL, .json/.jsonl/.bson for NoSQL, or .csv/.xlsx)
+        and registers it with custom name, type tag, and group tracking metadata.
         """
-        is_nosql = filename.lower().endswith((".json", ".jsonl", ".bson"))
+        ext = filename.lower()
+        is_csv = ext.endswith(".csv")
+        is_excel = ext.endswith((".xlsx", ".xls"))
+        is_nosql = ext.endswith((".json", ".jsonl", ".bson"))
         clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip().lower())
         db_id = f"{clean_name}_{int(datetime.now(timezone.utc).timestamp())}"
 
-        if is_nosql == True:
+        if is_csv:
+            row_count = self._count_csv_rows(file_path)
+            new_entry = {
+                "id": db_id,
+                "name": name.strip(),
+                "type": "csv",
+                "filename": filename,
+                "path": str(file_path.resolve()),
+                "upload_mode": upload_mode,
+                "group_name": group_name,
+                "group_id": group_id,
+                "row_count": row_count,
+                "table_count": 1,
+                "is_default": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        elif is_excel:
+            sheet_info = self._inspect_excel_sheets(file_path)
+            new_entry = {
+                "id": db_id,
+                "name": name.strip(),
+                "type": "excel",
+                "filename": filename,
+                "path": str(file_path.resolve()),
+                "upload_mode": upload_mode,
+                "group_name": group_name,
+                "group_id": group_id,
+                "sheet_count": len(sheet_info.get("sheets", [])),
+                "sheets": sheet_info.get("sheets", []),
+                "table_count": len(sheet_info.get("sheets", [])),
+                "row_count": sheet_info.get("total_rows", 0),
+                "is_default": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        elif is_nosql == True:
             # Validate JSON / BSON format
             doc_count = self._count_json_docs(file_path)
             if doc_count == 0:
@@ -190,6 +308,9 @@ class DatabaseRegistry:
                 "type": "nosql",
                 "filename": filename,
                 "path": str(file_path.resolve()),
+                "upload_mode": upload_mode,
+                "group_name": group_name,
+                "group_id": group_id,
                 "doc_count": doc_count,
                 "is_default": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
@@ -230,6 +351,9 @@ class DatabaseRegistry:
                 "type": "sql",
                 "filename": file_path.name,
                 "path": str(file_path.resolve()),
+                "upload_mode": upload_mode,
+                "group_name": group_name,
+                "group_id": group_id,
                 "table_count": table_count,
                 "is_default": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
@@ -252,7 +376,15 @@ class DatabaseRegistry:
         file_path = Path(target["path"])
         if file_path.exists() == True and any(d in file_path.parents for d in MANAGED_UPLOAD_DIRS):
             try:
+                parent_dir = file_path.parent
                 file_path.unlink()
+                # Clean up multiple/group directory if now empty
+                if parent_dir.name != "single" and "multiple" in [p.name for p in parent_dir.parents]:
+                    try:
+                        if not any(parent_dir.iterdir()):
+                            parent_dir.rmdir()
+                    except OSError:
+                        pass
             except OSError:
                 pass
 

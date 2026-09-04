@@ -87,8 +87,10 @@ class TextToSQLPipeline:
                 }
 
             eval_result = self.evaluator.evaluate(user_question, final_sql, data_or_error)
+            single_title = query_items[0].get("title", "Query Objective") if query_items else "Query Objective"
             return {
                 "question": user_question,
+                "title": single_title,
                 "status": "SUCCESS",
                 "final_sql": final_sql,
                 "data": data_or_error,
@@ -98,7 +100,7 @@ class TextToSQLPipeline:
                 "attempts": attempts,
                 "latency_ms": latency_ms,
                 "sub_queries": [{
-                    "title": query_items[0].get("title", "Result"),
+                    "title": single_title,
                     "sql": final_sql,
                     "data": data_or_error,
                     "status": "SUCCESS"

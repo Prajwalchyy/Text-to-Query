@@ -93,8 +93,10 @@ class TextToNoSQLPipeline:
                     )
                     latency = round((time.time() - start_time) * 1000, 2)
                     col_display = target_col if target_col else "database"
+                    single_title = query_items[0].get("title", "Query Objective") if query_items else "Query Objective"
                     return {
                         "status": "SUCCESS",
+                        "title": single_title,
                         "final_query": single_mql,
                         "final_sql": single_mql,
                         "data": data,
@@ -104,7 +106,7 @@ class TextToNoSQLPipeline:
                         "error": None,
                         "summary": f"Found {len(data)} matching records from {col_display}.",
                         "sub_queries": [{
-                            "title": query_items[0].get("title", "Result") if query_items else "Result",
+                            "title": single_title,
                             "sql": single_mql,
                             "data": data,
                             "status": "SUCCESS"

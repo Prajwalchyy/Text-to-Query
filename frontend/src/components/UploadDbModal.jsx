@@ -10,6 +10,7 @@ import {
   Lock, 
   Layers, 
   FileJson,
+  FileSpreadsheet,
   Plus,
   RefreshCw
 } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function UploadDbModal({
   const [selectedType, setSelectedType] = useState('sql'); // 'sql' | 'nosql'
   const [files, setFiles] = useState([]);
   const [dbName, setDbName] = useState('');
+  const [groupName, setGroupName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -47,6 +49,7 @@ export default function UploadDbModal({
     setUploadMode(mode);
     setFiles([]);
     setDbName('');
+    setGroupName('');
     setErrorMsg(null);
     setSuccessMsg(null);
     setConflictData(null);
@@ -59,6 +62,7 @@ export default function UploadDbModal({
     setSelectedType(type);
     setFiles([]);
     setDbName('');
+    setGroupName('');
     setErrorMsg(null);
     setSuccessMsg(null);
     setConflictData(null);
@@ -140,7 +144,7 @@ export default function UploadDbModal({
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
-    } else {
+    } else if (selectedType === 'nosql') {
       const validNoSql = selectedList.every((f) => {
         const fn = f.name.toLowerCase();
         return fn.endsWith('.json') || fn.endsWith('.jsonl') || fn.endsWith('.bson');
@@ -151,13 +155,26 @@ export default function UploadDbModal({
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
+    } else if (selectedType === 'spreadsheet') {
+      const validSpreadsheet = selectedList.every((f) => {
+        const fn = f.name.toLowerCase();
+        return fn.endsWith('.csv') || fn.endsWith('.xlsx') || fn.endsWith('.xls');
+      });
+      if (!validSpreadsheet) {
+        setErrorMsg("All selected files must be valid spreadsheets (.csv, .xlsx, or .xls).");
+        setFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
     }
 
     setFiles(selectedList);
 
     if (selectedList.length === 1 && !dbName.trim()) {
-      const cleanName = selectedList[0].name.replace(/\.(db|sqlite|sqlite3|s3db|sl3|sql|json|jsonl|bson)$/i, '').replace(/[_-]/g, ' ');
+      const cleanName = selectedList[0].name.replace(/\.(db|sqlite|sqlite3|s3db|sl3|sql|json|jsonl|bson|csv|xlsx|xls)$/i, '').replace(/[_-]/g, ' ');
       setDbName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+    } else if (selectedList.length > 1 && !groupName.trim()) {
+      setGroupName("Imported Batch " + new Date().toLocaleDateString('en-CA'));
     }
   };
 
@@ -194,6 +211,9 @@ export default function UploadDbModal({
     formData.append("name", dbName.trim());
     formData.append("type", selectedType);
     formData.append("mode", uploadMode);
+    if (groupName.trim()) {
+      formData.append("group_name", groupName.trim());
+    }
 
     try {
       const response = await fetch(`${apiBaseUrl}/databases/upload`, {
@@ -215,6 +235,7 @@ export default function UploadDbModal({
 
       setFiles([]);
       setDbName('');
+      setGroupName('');
       onClose();
     } catch (err) {
       setErrorMsg(err.message || "Failed to upload file(s).");
@@ -459,7 +480,7 @@ export default function UploadDbModal({
             </div>
             <div>
               <h3 className="text-base font-bold">Manage Data Sources</h3>
-              <p className="text-xs text-slate-400">View active databases or upload new SQL/NoSQL datasets</p>
+              <p className="text-xs text-slate-400">View active data sources or connect new SQL, NoSQL & Spreadsheet datasets</p>
             </div>
           </div>
           <button
@@ -488,7 +509,7 @@ export default function UploadDbModal({
             <p className="text-slate-300 leading-relaxed text-[11px]">
               {conflictData.type === 'collection' ? 'Collection' : 'Table'}{' '}
               <code className="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[11px] font-semibold">{conflictData.name}</code>{' '}
-              already exists in this database. Do you want to overwrite and replace it with this new file, or cancel?
+              already exists in this dataset. Do you want to overwrite and replace it with this new file, or cancel?
             </p>
             <div className="flex items-center gap-2 pt-0.5">
               <button
@@ -521,27 +542,37 @@ export default function UploadDbModal({
 
           <div className="max-h-52 overflow-y-auto custom-scrollbar space-y-3 pr-1">
             {/* Category A: Relational SQL Databases */}
-            {databases.some(d => d.type !== 'nosql') && (
+            {databases.some(d => d.type === 'sql' || (!d.type && !['nosql', 'csv', 'excel'].includes(d.type))) && (
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5 px-1 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
                   <Database className="w-3 h-3" />
-                  <span>Relational SQL Databases ({databases.filter(d => d.type !== 'nosql').length})</span>
+                  <span>Relational SQL Databases ({databases.filter(d => d.type === 'sql' || (!d.type && !['nosql', 'csv', 'excel'].includes(d.type))).length})</span>
                 </div>
                 <div className={`divide-y rounded-xl border overflow-hidden ${
                   isDark ? 'bg-slate-950/60 border-slate-800 divide-slate-800/80' : 'bg-slate-50 border-slate-200 divide-slate-200'
                 }`}>
-                  {databases.filter(d => d.type !== 'nosql').map((db) => {
+                  {databases.filter(d => d.type === 'sql' || (!d.type && !['nosql', 'csv', 'excel'].includes(d.type))).map((db) => {
                     const isDefault = Boolean(db.is_default || db.id === 'chinook');
                     return (
                       <div key={db.id} className="flex items-center justify-between p-2.5 text-xs">
                         <div className="flex items-center gap-2.5 truncate pr-2">
                           <Database className={`w-4 h-4 shrink-0 ${isDefault ? 'text-indigo-400' : 'text-emerald-400'}`} />
                           <div className="truncate">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <p className="font-semibold truncate">{db.name}</p>
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                 SQL
                               </span>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                              {db.upload_mode === 'single' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                                  Single File
+                                </span>
+                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.table_count || 0} tables
@@ -626,11 +657,21 @@ export default function UploadDbModal({
                         <div className="flex items-center gap-2.5 truncate pr-2">
                           <FileJson className="w-4 h-4 shrink-0 text-amber-400" />
                           <div className="truncate">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <p className="font-semibold truncate">{db.name}</p>
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                 NoSQL
                               </span>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                              {db.upload_mode === 'single' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                                  Single File
+                                </span>
+                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.doc_count || 0} documents
@@ -697,6 +738,90 @@ export default function UploadDbModal({
                 </div>
               </div>
             )}
+
+            {/* Category C: Spreadsheets (CSV & Excel) */}
+            {databases.some(d => d.type === 'csv' || d.type === 'excel') && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-1.5 px-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                  <FileSpreadsheet className="w-3 h-3" />
+                  <span>Spreadsheets & Formulas ({databases.filter(d => d.type === 'csv' || d.type === 'excel').length})</span>
+                </div>
+                <div className={`divide-y rounded-xl border overflow-hidden ${
+                  isDark ? 'bg-slate-950/60 border-slate-800 divide-slate-800/80' : 'bg-slate-50 border-slate-200 divide-slate-200'
+                }`}>
+                  {databases.filter(d => d.type === 'csv' || d.type === 'excel').map((db) => {
+                    const isDefault = Boolean(db.is_default || db.id === 'sales_performance' || db.id === 'financial_budget');
+                    const isExcel = db.type === 'excel';
+                    return (
+                      <div key={db.id} className="flex items-center justify-between p-2.5 text-xs">
+                        <div className="flex items-center gap-2.5 truncate pr-2">
+                          <FileSpreadsheet className={`w-4 h-4 shrink-0 ${isDefault ? 'text-emerald-400' : 'text-teal-400'}`} />
+                          <div className="truncate">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-semibold truncate">{db.name}</p>
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                {isExcel ? 'Excel' : 'CSV'}
+                              </span>
+                              {db.upload_mode === 'multiple' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
+                                  📁 {db.group_name || 'Group'}
+                                </span>
+                              )}
+                              {db.upload_mode === 'single' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                                  Single File
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
+                              <Layers className="w-3 h-3" /> {isExcel ? `${db.sheet_count || 1} sheets` : `${db.row_count || 0} rows`}
+                            </p>
+                          </div>
+                        </div>
+
+                        {isDefault ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20 shrink-0">
+                            <Lock className="w-3 h-3" /> Default
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1 shrink-0">
+                            {confirmDeleteId === db.id ? (
+                              <div className="flex items-center gap-1 shrink-0 animate-fadeIn">
+                                <button
+                                  onClick={() => handleDelete(db.id, db.name)}
+                                  disabled={deletingId === db.id}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-600 hover:bg-rose-500 text-white transition-all cursor-pointer shadow-xs shadow-rose-600/30"
+                                  title="Permanently delete this spreadsheet"
+                                >
+                                  {deletingId === db.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                  <span>Confirm</span>
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 cursor-pointer"
+                                  title="Cancel"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteId(db.id)}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shrink-0"
+                                title="Delete this custom spreadsheet"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -719,8 +844,8 @@ export default function UploadDbModal({
               >
                 <Database className="w-4 h-4 shrink-0 text-indigo-400" />
                 <div className="text-left">
-                  <div className="text-xs font-bold">Full Database(s)</div>
-                  <div className="text-[10px] text-slate-400 font-normal">1 DB or bulk import multiple DBs</div>
+                  <div className="text-xs font-bold">Full Data Source(s)</div>
+                  <div className="text-[10px] text-slate-400 font-normal">Single dataset or bulk import multiple files</div>
                 </div>
               </button>
 
@@ -739,7 +864,7 @@ export default function UploadDbModal({
                     {selectedType === 'sql' ? 'Multiple Tables (Merge)' : 'Multiple Collections (Merge)'}
                   </div>
                   <div className="text-[10px] text-slate-400 font-normal">
-                    {selectedType === 'sql' ? 'Combine .sql tables into 1 DB' : 'Combine files into 1 DB'}
+                    {selectedType === 'sql' ? 'Combine .sql tables into 1 Database' : 'Combine files into 1 Dataset'}
                   </div>
                 </div>
               </button>
@@ -751,7 +876,7 @@ export default function UploadDbModal({
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
               2. Select Engine Type
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handleTypeChange('sql')}
@@ -761,11 +886,11 @@ export default function UploadDbModal({
                     : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <Database className="w-4 h-4 text-indigo-400" />
-                <div className="text-left">
-                  <div className="text-xs font-bold">SQL Database</div>
-                  <div className="text-[10px] text-slate-400 font-normal">
-                    {uploadMode === 'merge' ? 'Table dumps (.sql)' : 'Relational (.db, .sqlite, .sql)'}
+                <Database className="w-4 h-4 text-indigo-400 shrink-0" />
+                <div className="text-left truncate">
+                  <div className="text-xs font-bold truncate">SQL Database</div>
+                  <div className="text-[9px] text-slate-400 font-normal truncate">
+                    .db, .sqlite, .sql
                   </div>
                 </div>
               </button>
@@ -779,11 +904,29 @@ export default function UploadDbModal({
                     : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                <FileJson className="w-4 h-4 text-amber-400" />
-                <div className="text-left">
-                  <div className="text-xs font-bold">NoSQL Document</div>
-                  <div className="text-[10px] text-slate-400 font-normal">
-                    {uploadMode === 'merge' ? 'Collection files (.json, .bson)' : 'Document (.json, .jsonl, .bson)'}
+                <FileJson className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="text-left truncate">
+                  <div className="text-xs font-bold truncate">NoSQL Store</div>
+                  <div className="text-[9px] text-slate-400 font-normal truncate">
+                    .json, .bson
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleTypeChange('spreadsheet')}
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                  selectedType === 'spreadsheet'
+                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-400 shadow-sm shadow-emerald-500/20'
+                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="text-left truncate">
+                  <div className="text-xs font-bold truncate">Spreadsheet</div>
+                  <div className="text-[9px] text-slate-400 font-normal truncate">
+                    .csv, .xlsx
                   </div>
                 </div>
               </button>
@@ -794,7 +937,7 @@ export default function UploadDbModal({
             {/* 3. File Picker */}
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
-                3. Choose {uploadMode === 'merge' ? (selectedType === 'sql' ? 'Table Script (.sql) Files' : 'Collection (.json / .bson) Files') : (selectedType === 'sql' ? 'SQL (.db / .sqlite / .sql) File(s)' : 'NoSQL (.json / .bson) File(s)')}
+                3. Choose {selectedType === 'spreadsheet' ? 'Spreadsheet (.csv / .xlsx) File(s)' : uploadMode === 'merge' ? (selectedType === 'sql' ? 'Table Script (.sql) Files' : 'Collection (.json / .bson) Files') : (selectedType === 'sql' ? 'SQL (.db / .sqlite / .sql) File(s)' : 'NoSQL (.json / .bson) File(s)')}
               </span>
               <div 
                 onClick={() => fileInputRef.current?.click()}
@@ -809,9 +952,11 @@ export default function UploadDbModal({
                   type="file"
                   multiple
                   accept={
-                    uploadMode === 'merge'
-                      ? (selectedType === 'sql' ? '.sql' : '.json,.jsonl,.bson')
-                      : (selectedType === 'sql' ? '.db,.sqlite,.sqlite3,.s3db,.sl3,.sql' : '.json,.jsonl,.bson')
+                    selectedType === 'spreadsheet'
+                      ? '.csv,.xlsx,.xls'
+                      : uploadMode === 'merge'
+                        ? (selectedType === 'sql' ? '.sql' : '.json,.jsonl,.bson')
+                        : (selectedType === 'sql' ? '.db,.sqlite,.sqlite3,.s3db,.sl3,.sql' : '.json,.jsonl,.bson')
                   }
                   onChange={handleFileChange}
                   className="hidden"
@@ -831,7 +976,7 @@ export default function UploadDbModal({
                       <span>
                         {uploadMode === 'merge'
                           ? `${files.length} ${selectedType === 'sql' ? 'Table Scripts' : 'Collections'} (Merged into 1 Database)`
-                          : `${files.length} Databases Selected (Bulk Import as Separate DBs)`}
+                          : `${files.length} Datasets Selected (Bulk Import as Separate Sources)`}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1.5 justify-center max-h-24 overflow-y-auto custom-scrollbar p-1">
@@ -847,7 +992,9 @@ export default function UploadDbModal({
 
                 {files.length === 0 && (
                   <div>
-                    {selectedType === 'sql' ? (
+                    {selectedType === 'spreadsheet' ? (
+                      <FileSpreadsheet className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
+                    ) : selectedType === 'sql' ? (
                       <Database className="w-5 h-5 mx-auto mb-1 text-indigo-400" />
                     ) : (
                       <FileJson className="w-5 h-5 mx-auto mb-1 text-amber-400" />
@@ -856,16 +1003,18 @@ export default function UploadDbModal({
                       Click to browse or drag and drop
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      {uploadMode === 'merge'
-                        ? (selectedType === 'sql' ? 'Select multiple .sql table dumps to merge' : 'Select multiple .json/.bson collection files to merge')
-                        : (selectedType === 'sql' ? 'Select 1 or multiple full .db / .sqlite / .sql files' : 'Select 1 or multiple full .json / .bson files')}
+                      {selectedType === 'spreadsheet'
+                        ? 'Select 1 or multiple .csv / .xlsx spreadsheet files'
+                        : uploadMode === 'merge'
+                          ? (selectedType === 'sql' ? 'Select multiple .sql table dumps to merge' : 'Select multiple .json/.bson collection files to merge')
+                          : (selectedType === 'sql' ? 'Select 1 or multiple full .db / .sqlite / .sql files' : 'Select 1 or multiple full .json / .bson files')}
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 4. Custom Name Input */}
+            {/* 4. Custom Name Input or Batch Group Name */}
             {(uploadMode === 'merge' || files.length <= 1) ? (
               <div>
                 <label className="block text-xs font-semibold mb-1 text-slate-300">
@@ -876,9 +1025,11 @@ export default function UploadDbModal({
                   value={dbName}
                   onChange={(e) => setDbName(e.target.value)}
                   placeholder={
-                    uploadMode === 'merge'
-                      ? (selectedType === 'sql' ? 'e.g. Combined Sales DB' : 'e.g. Merged Catalog Store')
-                      : (selectedType === 'sql' ? 'e.g. Sales 2025 (SQL)' : 'e.g. Product Catalog (JSON)')
+                    selectedType === 'spreadsheet'
+                      ? 'e.g. Sales Performance (CSV) or Financial Budget (Excel)'
+                      : uploadMode === 'merge'
+                        ? (selectedType === 'sql' ? 'e.g. Combined Sales DB' : 'e.g. Merged Catalog Store')
+                        : (selectedType === 'sql' ? 'e.g. Sales 2025 (SQL)' : 'e.g. Product Catalog (JSON)')
                   }
                   className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
                     isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
@@ -886,8 +1037,24 @@ export default function UploadDbModal({
                 />
               </div>
             ) : (
-              <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300">
-                ✨ <strong>Bulk Import:</strong> Display names will be automatically derived from each database filename.
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-semibold mb-1 text-slate-300">
+                    4. Batch / Group Name (Saved to Folder)
+                  </label>
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="e.g. Q3 Sales Reports, Inventory Batch, Marketing Spreadsheets"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
+                      isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+                <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-300">
+                  📁 <strong>Multi-File Group Storage:</strong> Files are saved together in <code>data/{selectedType === 'spreadsheet' ? 'csv' : selectedType}/multiple/{'{group_folder}'}/</code>. Display names are derived automatically from each file.
+                </div>
               </div>
             )}
 
@@ -922,7 +1089,7 @@ export default function UploadDbModal({
                     : uploadMode === 'merge' 
                       ? `Merge & Save (${files.length} ${selectedType === 'sql' ? 'Tables' : 'Collections'})` 
                       : files.length > 1 
-                        ? `Bulk Import (${files.length} Databases)` 
+                        ? `Bulk Import (${files.length} Data Sources)` 
                         : "Save & Register"}
                 </span>
               </button>

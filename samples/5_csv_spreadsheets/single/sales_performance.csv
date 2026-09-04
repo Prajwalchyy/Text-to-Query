@@ -1,0 +1,13 @@
+OrderID,CustomerName,Region,ProductCategory,Quantity,UnitPrice,TotalAmount,OrderDate,PaymentMethod
+1001,Sophia Bennett,North America,Electronics,2,450.0,900.0,2024-01-15,Credit Card
+1002,Liam Tanaka,Asia Pacific,Audio,5,85.0,425.0,2024-01-18,PayPal
+1003,Emma Dupont,Europe,Laptops,1,1200.0,1200.0,2024-01-22,Wire Transfer
+1004,Lucas Silva,South America,Accessories,10,25.0,250.0,2024-01-25,Credit Card
+1005,Aria Patel,Asia Pacific,Electronics,3,310.0,930.0,2024-02-02,Credit Card
+1006,Ethan Mueller,Europe,Audio,4,95.0,380.0,2024-02-07,PayPal
+1007,Mia Johansson,Europe,Laptops,2,1150.0,2300.0,2024-02-14,Credit Card
+1008,Noah Davis,North America,Accessories,8,30.0,240.0,2024-02-18,Apple Pay
+1009,Olivia Martin,North America,Electronics,1,800.0,800.0,2024-02-23,Credit Card
+1010,Alexander Kim,Asia Pacific,Laptops,2,1300.0,2600.0,2024-03-01,Wire Transfer
+1011,Isabella Rossi,Europe,Accessories,12,20.0,240.0,2024-03-05,Credit Card
+1012,Benjamin Scott,North America,Audio,3,120.0,360.0,2024-03-10,PayPal

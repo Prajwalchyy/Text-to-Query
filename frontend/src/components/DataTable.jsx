@@ -44,7 +44,7 @@ export default function DataTable({ data, isDark }) {
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     link.href = url;
-    link.setAttribute('download', `query_results_${timestamp}.csv`);
+    link.setAttribute('download', `data_results_${timestamp}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -61,7 +61,7 @@ export default function DataTable({ data, isDark }) {
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     link.href = url;
-    link.setAttribute('download', `query_results_${timestamp}.json`);
+    link.setAttribute('download', `data_results_${timestamp}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

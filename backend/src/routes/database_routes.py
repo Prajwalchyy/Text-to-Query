@@ -17,7 +17,8 @@ async def upload_database(
     file: Optional[UploadFile] = File(default=None),
     name: Optional[str] = Form(default=""),
     type: Optional[str] = Form(default=None),
-    mode: str = Form(default="full")
+    mode: str = Form(default="full"),
+    group_name: Optional[str] = Form(default=None)
 ):
     """
     Uploads custom dataset(s).
@@ -35,7 +36,13 @@ async def upload_database(
     if len(file_list) == 0:
         raise HTTPException(status_code=400, detail="At least one file is required.")
 
-    return DatabaseController.upload_database(files=file_list, name=name or "", dataset_type=type, mode=mode)
+    return DatabaseController.upload_database(
+        files=file_list, 
+        name=name or "", 
+        dataset_type=type, 
+        mode=mode,
+        group_name=group_name
+    )
 
 
 @router.post("/databases/{db_id}/append-table")

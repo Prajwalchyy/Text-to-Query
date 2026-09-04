@@ -96,7 +96,8 @@ class ChatStorage:
         sub_queries: Optional[List[Dict]] = None,
         needed_tables: Optional[List[str]] = None,
         available_tables: Optional[List[str]] = None,
-        suggested_questions: Optional[List[str]] = None
+        suggested_questions: Optional[List[str]] = None,
+        title: Optional[str] = None
     ) -> Dict[str, Any]:
         """Appends a new message to the specified conversation session in JSON."""
         chats = self._read_data()
@@ -115,6 +116,7 @@ class ChatStorage:
         new_message = {
             "id": message_id,
             "role": role,
+            "title": title,
             "content": content,
             "sql": sql,
             "data": data,
