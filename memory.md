@@ -53,7 +53,6 @@ backend/
         ├── database_routes.py       # /api/databases, /api/databases/upload, /api/tables
         └── chat_routes.py           # /api/chats, /api/chats/{id}, /api/chats/{id}/query
 ```
-
 ---
 
 ## ⚛️ 3. Frontend Architecture & Components
@@ -81,6 +80,17 @@ frontend/src/
 
 ### 🗄️ A. Multi-Model Data Support (SQL & NoSQL in Same Chat)
 * **SQL Relational Engine:** Queries `.db`, `.sqlite`, `.sqlite3`, `.s3db`, `.sl3`, and **`.sql` scripts/dumps** (automatically executes SQL DDL/DML into an active SQLite database). Introspects tables/columns, generates SQL, validates with `sqlglot` AST.
+* **Dual Upload Modes (Full Database vs. Multiple Tables / Collections Merge):**
+  * **Full Database(s) Mode:**
+    * Single database upload (`.db`, `.sqlite`, `.sql`, `.json`, `.bson`).
+    * **Bulk Import:** Multi-select any number of standalone database files (e.g. 5 `.db` files or multiple `.json` datasets) to register them in bulk with auto-derived display names.
+  * **Multiple Tables / Collections (Merge) Mode:**
+    * **SQL:** Multi-select `.sql` table script dumps (e.g. `customers.sql`, `orders.sql`, `products.sql`); merges them sequentially into a single unified `.db` database for multi-table `JOIN` queries.
+    * **NoSQL:** Multi-select separate collection files (e.g. `users.json`, `orders.json`, `reviews.bson`); compiles them into a unified multi-collection JSON dataset for cross-collection aggregation pipelines.
+* **Granular Table & Collection Appending (`[ + Add Table ]` & `[ + Add Collection ]`):**
+  * Click `+ Add Table` on any custom SQL database to upload an additional `.sql` table script.
+  * Click `+ Add Collection` on any custom NoSQL database to upload an additional `.json`, `.jsonl`, or `.bson` collection.
+  * **Collision & Overwrite Guardrails:** Proactively checks for table or collection name collisions before execution. Returns HTTP 409 Conflict and prompts an interactive amber warning modal offering 'Overwrite & Replace' (safely drops the old table/collection first) or 'Cancel', preventing data corruption and accidental duplicates.
 * **NoSQL Document Engine:** Queries `.json`, `.jsonl`, and **MongoDB Binary `.bson` files** (automatically decodes BSON streams, serializing ObjectIds and timestamps). Introspects nested fields, generates MongoDB MQL (`db.collection.aggregate()`, `db.collection.find()`), and executes in-memory.
 * **Connected NoSQL Collections:** `ecommerce_store.json` contains 4 streamlined collections with strictly 5–6 fields max: `customers` (30 docs), `products` (12 docs), `orders` (40 docs), and `reviews` (25 docs).
 
@@ -102,6 +112,8 @@ frontend/src/
 * **Expanded Viewport:** Wide layout (`max-w-5xl xl:max-w-6xl`) eliminates wasted desktop margins.
 * **Searchable Left Sidebar:** Real-time filter across tables and columns with independent multi-table expansion (`Set`).
 * **Resizable & Collapsible Sidebar:** Freeform horizontal drag-handle on the right edge (220px to 500px, double-click to reset), 1-click total collapse to 0px (`PanelLeftClose`), top navbar reopen button (`PanelLeftOpen`), `Ctrl+B` global keyboard shortcut, and `localStorage` persistence.
+* **Elevated Header Stacking Context:** Top `<header>` configured with `relative z-30` and `DatabaseSelectorPopover` with `z-40 / z-50`, ensuring floating dropdown menus always float cleanly above sticky table headers (`z-10`) with zero z-index clipping or interference.
+* **Non-Blocking Inline Delete Confirmation:** Replaced native `window.confirm()` with a 2-step inline `[ Confirm ]` / `[ Cancel ]` button in `UploadDbModal` and added 1-click delete support with inline confirmation directly inside `DatabaseSelectorPopover`. When deleting the active database, automatically falls back to `chinook`, reloads schema, and synchronizes URL params.
 
 ---
 

@@ -92,7 +92,11 @@ class ChatStorage:
         sql: Optional[str] = None,
         data: Optional[List[Dict]] = None,
         telemetry: Optional[Dict] = None,
-        status: str = "SUCCESS"
+        status: str = "SUCCESS",
+        sub_queries: Optional[List[Dict]] = None,
+        needed_tables: Optional[List[str]] = None,
+        available_tables: Optional[List[str]] = None,
+        suggested_questions: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """Appends a new message to the specified conversation session in JSON."""
         chats = self._read_data()
@@ -114,11 +118,37 @@ class ChatStorage:
             "content": content,
             "sql": sql,
             "data": data,
+            "sub_queries": sub_queries,
             "telemetry": telemetry,
             "status": status,
+            "needed_tables": needed_tables or [],
+            "available_tables": available_tables or [],
+            "suggested_questions": suggested_questions or [],
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
         target_chat["messages"].append(new_message)
         self._write_data(chats)
         return new_message
+
+    def get_conversation_context(self, chat_id: str, limit: int = 4) -> List[Dict[str, Any]]:
+        """
+        Retrieves the last `limit` completed turns (user question + assistant query/summary)
+        for feeding as conversational context / memory to the LLM generator.
+        """
+        chats = self._read_data()
+        target_chat = next((c for c in chats if c["id"] == chat_id), None)
+        if not target_chat or not target_chat.get("messages"):
+            return []
+
+        # Get last limit * 2 messages (pairs of user/assistant)
+        recent_messages = target_chat["messages"][-(limit * 2):]
+        context_turns = []
+        for msg in recent_messages:
+            context_turns.append({
+                "role": msg.get("role"),
+                "content": msg.get("content", ""),
+                "sql": msg.get("sql"),
+                "status": msg.get("status", "SUCCESS")
+            })
+        return context_turns

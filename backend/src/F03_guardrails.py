@@ -62,9 +62,9 @@ class SQLInjectionGuardrail:
 
         statement = parsed_statements[0]
 
-        # Layer 2: Must be strictly a SELECT expression
-        if not isinstance(statement, exp.Select):
-            return None, f"Security Violation: Only SELECT queries are permitted (got {type(statement).__name__})."
+        # Layer 2: Must be strictly a SELECT or UNION expression
+        if not isinstance(statement, (exp.Select, exp.Union)):
+            return None, f"Security Violation: Only SELECT/UNION queries are permitted (got {type(statement).__name__})."
 
         return statement, None
 
@@ -72,9 +72,14 @@ class SQLInjectionGuardrail:
         """
         Layer 4: Extracts all table names from parsed AST and ensures
         they exist in the database schema allowlist.
+        Recognizes and permits local CTE (WITH ...) aliases.
         """
+        cte_names = {cte.alias.lower() for cte in statement.find_all(exp.CTE) if cte.alias}
+
         for table_node in statement.find_all(exp.Table):
             table_name = table_node.name.lower()
+            if table_name in cte_names:
+                continue
             if table_name not in self.allowed_tables:
                 return f"Schema Violation: Table '{table_node.name}' does not exist in database allowlist."
         return None

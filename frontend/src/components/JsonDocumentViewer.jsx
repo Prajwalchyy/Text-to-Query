@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileJson, Copy, Check, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { FileJson, Copy, Check, ChevronDown, ChevronUp, Layers, Download } from 'lucide-react';
 
 export default function JsonDocumentViewer({ data, isDark }) {
   const [copied, setCopied] = useState(false);
@@ -23,6 +23,59 @@ export default function JsonDocumentViewer({ data, isDark }) {
     navigator.clipboard.writeText(JSON.stringify(docs, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadJson = (e) => {
+    e.stopPropagation();
+    const jsonContent = JSON.stringify(docs, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    link.href = url;
+    link.setAttribute('download', `nosql_documents_${timestamp}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCsv = (e) => {
+    e.stopPropagation();
+    if (!docs || docs.length === 0) return;
+    const keysSet = new Set();
+    docs.forEach(doc => {
+      if (doc && typeof doc === 'object') {
+        Object.keys(doc).forEach(k => keysSet.add(k));
+      }
+    });
+    const columns = Array.from(keysSet);
+
+    const escapeCsvValue = (val) => {
+      if (val === null || val === undefined) return '';
+      let str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headerLine = columns.map(escapeCsvValue).join(',');
+    const rowLines = docs.map(doc => 
+      columns.map(col => escapeCsvValue(doc[col])).join(',')
+    );
+
+    const csvContent = '\uFEFF' + [headerLine, ...rowLines].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    link.href = url;
+    link.setAttribute('download', `nosql_documents_${timestamp}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const toggleDoc = (idx) => {
@@ -118,6 +171,38 @@ export default function JsonDocumentViewer({ data, isDark }) {
                   <span>Copy JSON</span>
                 </>
               )}
+            </button>
+
+            <span className="text-slate-600 text-xs">|</span>
+
+            {/* Export CSV Button */}
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
+                isDark
+                  ? 'bg-slate-800/90 hover:bg-emerald-600/20 text-slate-300 hover:text-emerald-300 border-slate-700/80 hover:border-emerald-500/40'
+                  : 'bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border-slate-300 hover:border-emerald-300 shadow-xs'
+              }`}
+              title="Download flattened NoSQL documents as CSV (opens in Excel)"
+            >
+              <Download className="w-3 h-3 text-emerald-500" />
+              <span>CSV</span>
+            </button>
+
+            {/* Download JSON Button */}
+            <button
+              type="button"
+              onClick={handleDownloadJson}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
+                isDark
+                  ? 'bg-slate-800/90 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border-slate-700/80 hover:border-indigo-500/40'
+                  : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border-slate-300 hover:border-indigo-300 shadow-xs'
+              }`}
+              title="Download raw documents as JSON file"
+            >
+              <Download className="w-3 h-3 text-indigo-500" />
+              <span>JSON</span>
             </button>
           </div>
         )}

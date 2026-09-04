@@ -26,10 +26,11 @@ class NoSQLGenerator:
         question: str,
         schemas_context: str,
         collection_names: List[str],
-        feedback: Optional[str] = None
+        feedback: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, Any]]] = None
     ) -> str:
         """
-        Synthesizes a MongoDB MQL query using the configured LLM.
+        Synthesizes a MongoDB MQL query using the configured LLM with optional multi-turn memory.
         """
         available_cols = ", ".join(collection_names)
 
@@ -53,9 +54,55 @@ RULES & CONSTRAINTS:
 4. For aggregations ($group, $sum, $avg, $min, $max), ensure field references have a leading '$' (e.g. "$total_amount").
 5. Do NOT include Markdown formatting like ```javascript or ```json, return ONLY the raw JavaScript query starting with db.<collection>.
 6. NEVER generate destructive mutations ($drop, $deleteMany, $deleteOne, $updateMany, $out). Strictly Read-Only queries.
+7. MULTI-TURN CONVERSATION & PRONOUN RESOLUTION:
+   - When a "PREVIOUS CONVERSATION CONTEXT" block is provided, use it to understand what the user is referring to.
+   - If the current question uses coreferences or pronouns (e.g. "their", "them", "those", "that product", "the first one"), resolve them from previous queries.
+   - If the user asks to refine or modify the previous query (e.g. "now sort by price", "filter for only Platinum tier"), adapt the previous MQL pipeline/filter.
+   - If the user asks an unrelated new question, ignore previous context and generate a clean standalone query.
+8. COMPOUND & MULTI-PART QUESTIONS (DECOMPOSITION):
+   - If the user asks multiple distinct sub-questions or bullet points requiring separate data reports:
+     Output a strict JSON array of objects without markdown fences:
+     [
+       {{"title": "1. Sub-question Title", "mql": "db.<collection>.find(...)"}},
+       {{"title": "2. Sub-question Title", "mql": "db.<collection>.aggregate(...)"}}
+     ]
+    - Otherwise, for standard single-question requests, output ONLY the single raw JavaScript query starting with db.<collection>.
+9. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
+   - Carefully verify if the requested entities or collections physically exist in this database.
+   - If the user question references concepts or collections completely absent from this database (e.g. asking for music tracks, albums, hospital records on an e-commerce database, or general chit-chat):
+     DO NOT force an unrelated query.
+     DO NOT substitute collections.
+     Instead, output a strict JSON object without markdown fences:
+     {{
+       "is_relevant": false,
+       "reason": "Clear explanation of what was requested and why this database cannot answer it.",
+       "needed_tables": ["Tracks", "Albums"],
+       "suggested_questions": [
+         "Relevant question 1 that CAN be answered by this database",
+         "Relevant question 2 that CAN be answered by this database",
+         "Relevant question 3 that CAN be answered by this database"
+       ]
+     }}
 """
 
-        user_content = f"User Question: {question}"
+        # Build context block from prior conversation turns if provided
+        history_block = ""
+        if conversation_history and len(conversation_history) > 0:
+            lines = ["PREVIOUS CONVERSATION CONTEXT (for pronoun & reference resolution):"]
+            for msg in conversation_history:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                content = msg.get("content", "").strip()
+                sql = msg.get("sql")
+                if role == "User" and content:
+                    lines.append(f'User asked: "{content}"')
+                elif role == "Assistant":
+                    if sql:
+                        lines.append(f'Generated MQL Query: {sql}')
+                    if content:
+                        lines.append(f'Answer Summary: {content}')
+            history_block = "\n".join(lines) + "\n\n"
+
+        user_content = f"{history_block}CURRENT QUESTION TO ANSWER:\n\"{question}\""
         if feedback:
             user_content += f"\n\nCRITICAL FIX INSTRUCTION (Previous attempt failed):\n{feedback}\nPlease fix the query syntax and field references."
 
@@ -76,3 +123,52 @@ RULES & CONSTRAINTS:
 
         except Exception as e:
             raise RuntimeError(f"NoSQL Generation failed: {str(e)}")
+
+    @staticmethod
+    def parse_queries(raw_output: str) -> Union[List[Dict[str, str]], Dict[str, Any]]:
+        """
+        Parses generator output into a structured list of MQL tasks:
+        [{"title": "...", "mql": "..."}], or an out-of-domain rejection dict.
+        Handles single raw db.<collection> queries, JSON arrays for compound prompts,
+        and JSON objects for out-of-domain schema mismatch rejections.
+        """
+        cleaned = raw_output.strip()
+        # Remove markdown code fences if present
+        if "```" in cleaned:
+            parts = cleaned.split("```")
+            cleaned = parts[1] if len(parts) > 1 else parts[0]
+            if cleaned.lower().startswith("json"):
+                cleaned = cleaned[4:].strip()
+            elif cleaned.lower().startswith("javascript") or cleaned.lower().startswith("mongodb"):
+                cleaned = re.sub(r"^(?:javascript|mongodb)\s*", "", cleaned, flags=re.IGNORECASE).strip()
+
+        # 1. Check if output is an out-of-domain rejection JSON object
+        if cleaned.startswith("{") and cleaned.endswith("}"):
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, dict) and parsed.get("is_relevant") is False:
+                    return parsed
+            except Exception:
+                pass
+
+        # 2. Check if output is a JSON array
+        if cleaned.startswith("[") and cleaned.endswith("]"):
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, list) and len(parsed) > 0 and isinstance(parsed[0], dict):
+                    result = []
+                    for i, item in enumerate(parsed):
+                        mql_str = item.get("mql") or item.get("sql") or item.get("query")
+                        if mql_str:
+                            result.append({
+                                "title": item.get("title", f"Query {i + 1}"),
+                                "mql": mql_str.strip()
+                            })
+                    if len(result) > 0:
+                        return result
+            except Exception:
+                pass
+
+        # 3. Fallback to single MQL query
+        return [{"title": "Query 1", "mql": cleaned}]
+

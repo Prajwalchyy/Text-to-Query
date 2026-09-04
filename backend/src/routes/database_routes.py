@@ -1,5 +1,5 @@
-from typing import Optional
-from fastapi import APIRouter, UploadFile, File, Form, Query
+from typing import Optional, List
+from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 from controllers.database_controller import DatabaseController
 
 router = APIRouter(tags=["Databases"])
@@ -13,12 +13,49 @@ def get_databases():
 
 @router.post("/databases/upload")
 async def upload_database(
-    file: UploadFile = File(...),
-    name: str = Form(...),
-    type: Optional[str] = Form(default=None)
+    files: Optional[List[UploadFile]] = File(default=None),
+    file: Optional[UploadFile] = File(default=None),
+    name: Optional[str] = Form(default=""),
+    type: Optional[str] = Form(default=None),
+    mode: str = Form(default="full")
 ):
-    """Uploads a custom SQL (.db) or NoSQL (.json) file and registers it with validation."""
-    return DatabaseController.upload_database(file=file, name=name, dataset_type=type)
+    """
+    Uploads custom dataset(s).
+    Supports:
+    - Full Database mode (mode='full'): 1 file or multi-file bulk import.
+    - Merge mode (mode='merge'): Merges multiple SQL tables into 1 SQLite DB,
+      or multiple NoSQL collections into 1 NoSQL store.
+    """
+    file_list = []
+    if files != None and len(files) > 0:
+        file_list.extend(files)
+    if file != None:
+        file_list.append(file)
+
+    if len(file_list) == 0:
+        raise HTTPException(status_code=400, detail="At least one file is required.")
+
+    return DatabaseController.upload_database(files=file_list, name=name or "", dataset_type=type, mode=mode)
+
+
+@router.post("/databases/{db_id}/append-table")
+async def append_table(
+    db_id: str,
+    file: UploadFile = File(...),
+    overwrite: bool = Form(default=False)
+):
+    """Appends an individual .sql table script to an existing custom SQL database."""
+    return DatabaseController.append_table_to_database(db_id=db_id, file=file, overwrite=overwrite)
+
+
+@router.post("/databases/{db_id}/append-collection")
+async def append_collection(
+    db_id: str,
+    file: UploadFile = File(...),
+    overwrite: bool = Form(default=False)
+):
+    """Appends an individual .json/.jsonl/.bson collection file to an existing custom NoSQL database."""
+    return DatabaseController.append_collection_to_database(db_id=db_id, file=file, overwrite=overwrite)
 
 
 @router.delete("/databases/{db_id}")

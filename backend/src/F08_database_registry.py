@@ -42,6 +42,20 @@ def get_upload_dir_for_type(dataset_type: Optional[str] = None, file_ext: str = 
     return target
 
 
+class TableConflictError(Exception):
+    """Raised when an appended SQL table script collides with an existing table."""
+    def __init__(self, conflicts: List[str]):
+        self.conflicts = conflicts
+        super().__init__(f"Table(s) already exist: {', '.join(conflicts)}")
+
+
+class CollectionConflictError(Exception):
+    """Raised when an appended NoSQL collection collides with an existing collection."""
+    def __init__(self, conflicts: List[str]):
+        self.conflicts = conflicts
+        super().__init__(f"Collection(s) already exist: {', '.join(conflicts)}")
+
+
 class DatabaseRegistry:
     """
     Manages multi-format data sources (Relational SQLite Databases, NoSQL JSON Collections, CSV, Excel).
@@ -245,3 +259,148 @@ class DatabaseRegistry:
         dbs = [d for d in dbs if d["id"] != db_id]
         self._write_registry(dbs)
         return True
+
+    def append_table_to_database(self, db_id: str, sql_script: str, overwrite: bool = False) -> Dict[str, Any]:
+        """
+        Executes an additional .sql table script into an existing custom SQL database.
+        Checks for table name collisions. If collision exists and overwrite=False, raises TableConflictError.
+        If overwrite=True, drops the existing table first and re-creates it freshly.
+        """
+        entry = self.get_database(db_id)
+        if entry == None:
+            raise ValueError(f"Database with ID '{db_id}' not found.")
+
+        if entry.get("is_default") == True:
+            raise ValueError("Cannot modify system default databases.")
+
+        if entry.get("type") != "sql":
+            raise ValueError("Tables can only be appended to SQL relational databases.")
+
+        db_path = Path(entry["path"]).resolve()
+        if db_path.exists() == False:
+            raise ValueError(f"Database file '{db_path.name}' does not exist on disk.")
+
+        # Extract table names created in the script
+        pattern = r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["`]?([a-zA-Z0-9_]+)["`]?'
+        tables_to_create = list(set(re.findall(pattern, sql_script, re.IGNORECASE)))
+
+        conn = sqlite3.connect(str(db_path))
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+            existing_tables = [row[0] for row in cursor.fetchall()]
+
+            # Detect collisions (case-insensitive)
+            conflicts = []
+            for t in tables_to_create:
+                for existing in existing_tables:
+                    if t.lower() == existing.lower():
+                        conflicts.append(existing)
+                        break
+
+            if len(conflicts) > 0:
+                if overwrite == False:
+                    conn.close()
+                    raise TableConflictError(conflicts=conflicts)
+                else:
+                    # Overwrite mode: safely drop the old conflicting table(s) first
+                    for conflict in conflicts:
+                        cursor.execute(f'DROP TABLE IF EXISTS "{conflict}";')
+                    conn.commit()
+
+            # Execute the new table script
+            conn.executescript(sql_script)
+            conn.commit()
+        except TableConflictError:
+            raise
+        except Exception as e:
+            raise ValueError(f"Failed to execute SQL table script into database: {str(e)}")
+        finally:
+            conn.close()
+
+        new_table_count = self._count_tables(db_path)
+        entry["table_count"] = new_table_count
+
+        # Update registry JSON
+        dbs = self._read_registry()
+        for i, d in enumerate(dbs):
+            if d["id"] == db_id:
+                dbs[i]["table_count"] = new_table_count
+                break
+        self._write_registry(dbs)
+
+        return entry
+
+    def append_collection_to_database(
+        self, 
+        db_id: str, 
+        collection_name: str, 
+        documents: List[Dict[str, Any]], 
+        overwrite: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Appends an additional collection to an existing custom NoSQL database.
+        Checks for collection name collisions. If collision exists and overwrite=False, raises CollectionConflictError.
+        If overwrite=True, replaces the collection.
+        """
+        entry = self.get_database(db_id)
+        if entry == None:
+            raise ValueError(f"Database with ID '{db_id}' not found.")
+
+        if entry.get("is_default") == True:
+            raise ValueError("Cannot modify system default databases.")
+
+        if entry.get("type") != "nosql":
+            raise ValueError("Collections can only be appended to NoSQL document databases.")
+
+        db_path = Path(entry["path"]).resolve()
+        if db_path.exists() == False:
+            raise ValueError(f"Database file '{db_path.name}' does not exist on disk.")
+
+        # Load existing NoSQL collections
+        from F09_nosql_engine import NoSQLEngine
+        engine = NoSQLEngine(str(db_path))
+        existing_collections = dict(engine.collections)
+
+        # Collision check (case-insensitive)
+        matched_key = None
+        for k in existing_collections.keys():
+            if k.lower() == collection_name.lower():
+                matched_key = k
+                break
+
+        if matched_key != None:
+            if overwrite == False:
+                raise CollectionConflictError(conflicts=[matched_key])
+            else:
+                existing_collections[matched_key] = documents
+        else:
+            existing_collections[collection_name] = documents
+
+        # Save back to file
+        ext = db_path.suffix.lower()
+        if ext == ".bson":
+            import bson
+            all_docs = []
+            for col, docs in existing_collections.items():
+                for doc in docs:
+                    d = dict(doc)
+                    d["_collection"] = col
+                    all_docs.append(d)
+            raw_bson = b"".join(bson.encode(d) for d in all_docs) if len(all_docs) > 0 else bson.encode({"collections": existing_collections})
+            db_path.write_bytes(raw_bson)
+        else:
+            db_path.write_text(json.dumps(existing_collections, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        new_doc_count = sum(len(docs) for docs in existing_collections.values())
+        entry["doc_count"] = new_doc_count
+
+        # Update registry JSON
+        dbs = self._read_registry()
+        for i, d in enumerate(dbs):
+            if d["id"] == db_id:
+                dbs[i]["doc_count"] = new_doc_count
+                break
+        self._write_registry(dbs)
+
+        return entry

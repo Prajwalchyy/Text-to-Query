@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Database, FileJson, ChevronDown, Check, Plus, Search, 
-  Layers, Sparkles, FileSpreadsheet, Table2
+  Layers, Sparkles, FileSpreadsheet, Table2, Trash2, X, Loader2
 } from 'lucide-react';
 
 export default function DatabaseSelectorPopover({
@@ -9,10 +9,14 @@ export default function DatabaseSelectorPopover({
   selectedDbId,
   onSelectDb,
   onOpenUpload,
+  onDeleteDatabase,
+  apiBaseUrl,
   isDark
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const popoverRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -71,6 +75,32 @@ export default function DatabaseSelectorPopover({
     onSelectDb(dbId);
     setIsOpen(false);
     setSearchQuery('');
+    setConfirmDeleteId(null);
+  };
+
+  const handleDelete = async (e, dbId, name) => {
+    e.stopPropagation();
+    setDeletingId(dbId);
+    setConfirmDeleteId(null);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/databases/${dbId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || "Failed to delete data source.");
+      }
+
+      if (onDeleteDatabase) {
+        onDeleteDatabase(dbId);
+      }
+    } catch (err) {
+      console.error("Failed to delete database:", err);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleUploadClick = () => {
@@ -79,7 +109,7 @@ export default function DatabaseSelectorPopover({
   };
 
   return (
-    <div className="relative inline-block text-left" ref={popoverRef}>
+    <div className="relative z-40 inline-block text-left" ref={popoverRef}>
       {/* TRIGGER BUTTON */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -206,11 +236,46 @@ export default function DatabaseSelectorPopover({
                           </div>
                         </div>
 
-                        {isSelected && (
-                          <div className="p-1 rounded-full bg-indigo-500/20 text-indigo-400 shrink-0">
-                            <Check className="w-3.5 h-3.5" />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isSelected && (
+                            <div className="p-1 rounded-full bg-indigo-500/20 text-indigo-400 shrink-0">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+
+                          {/* Delete custom SQL database */}
+                          {!db.is_default && db.id !== 'chinook' && (
+                            <div className="shrink-0 flex items-center ml-1" onClick={(e) => e.stopPropagation()}>
+                              {confirmDeleteId === db.id ? (
+                                <div className="flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-lg border border-rose-500/40 animate-fadeIn">
+                                  <button
+                                    onClick={(e) => handleDelete(e, db.id, db.name)}
+                                    disabled={deletingId === db.id}
+                                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
+                                    title="Confirm Delete"
+                                  >
+                                    {deletingId === db.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : "Delete"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                    className="p-0.5 text-slate-400 hover:text-white cursor-pointer"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(db.id); }}
+                                  className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer opacity-40 hover:opacity-100"
+                                  title={`Delete "${db.name}"`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
@@ -260,11 +325,46 @@ export default function DatabaseSelectorPopover({
                           </div>
                         </div>
 
-                        {isSelected && (
-                          <div className="p-1 rounded-full bg-amber-500/20 text-amber-400 shrink-0">
-                            <Check className="w-3.5 h-3.5" />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isSelected && (
+                            <div className="p-1 rounded-full bg-amber-500/20 text-amber-400 shrink-0">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+
+                          {/* Delete custom NoSQL database */}
+                          {!db.is_default && db.id !== 'ecommerce_store' && (
+                            <div className="shrink-0 flex items-center ml-1" onClick={(e) => e.stopPropagation()}>
+                              {confirmDeleteId === db.id ? (
+                                <div className="flex items-center gap-1 bg-slate-900/95 p-0.5 rounded-lg border border-rose-500/40 animate-fadeIn">
+                                  <button
+                                    onClick={(e) => handleDelete(e, db.id, db.name)}
+                                    disabled={deletingId === db.id}
+                                    className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 hover:bg-rose-500 text-white cursor-pointer"
+                                    title="Confirm Delete"
+                                  >
+                                    {deletingId === db.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : "Delete"}
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                                    className="p-0.5 text-slate-400 hover:text-white cursor-pointer"
+                                    title="Cancel"
+                                  >
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(db.id); }}
+                                  className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer opacity-40 hover:opacity-100"
+                                  title={`Delete "${db.name}"`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </button>
                     );
                   })}

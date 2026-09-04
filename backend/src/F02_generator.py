@@ -44,28 +44,123 @@ Strict Rules:
 3. Do NOT provide explanations, commentary, or conversational text.
 4. Only use tables and columns defined in the schema above.
 5. Use proper SQLite syntax and correct JOIN conditions.
+6. When asked to find BOTH highest and lowest (or top and bottom) records in a single query, use UNION ALL combining two subqueries formatted strictly as:
+   SELECT * FROM (SELECT ..., 'Highest' AS Category FROM ... ORDER BY ... DESC LIMIT N)
+   UNION ALL
+   SELECT * FROM (SELECT ..., 'Lowest' AS Category FROM ... ORDER BY ... ASC LIMIT N);
+   (In SQLite, any ORDER BY with LIMIT preceding a UNION ALL MUST be wrapped inside `SELECT * FROM (...)`).
+7. For aggregation queries counting records per parent entity (e.g. orders per customer), use LEFT JOIN with COUNT(child.id) and GROUP BY so entities with zero records are accurately included.
+8. MULTI-TURN CONVERSATION & PRONOUN RESOLUTION:
+   - When a "PREVIOUS CONVERSATION CONTEXT" block is provided, use it to understand what the user is referring to.
+   - If the current question contains pronouns or coreferences (e.g. "their", "them", "those", "that customer", "the first one", "the same ones"), resolve them using the prior questions and generated SQL.
+   - If the current question refines, filters, or sorts the previous result (e.g. "now sort by date", "filter for only 2024", "include their email too"), modify the previous SQL query appropriately.
+   - If the question is an independent, new topic, ignore previous context and generate a clean standalone query.
+9. COMPOUND & MULTI-PART QUESTIONS (DECOMPOSITION):
+   - If the user asks multiple distinct sub-questions or bullet points requiring separate data reports (e.g. "1. List all customers, 2. Total orders per customer, 3. Low orders"):
+     Output a strict JSON array of objects without markdown fences, where each object has:
+     [
+       {{"title": "1. All Customers", "sql": "SELECT ...;"}},
+       {{"title": "2. Total Orders Per Customer", "sql": "SELECT ...;"}}
+     ]
+    - Otherwise, for standard single-question requests, output ONLY the single raw SQL query.
+10. SCHEMA RELEVANCY & OUT-OF-DOMAIN QUESTIONS:
+    - Carefully check if the entities, tables, or business concepts requested by the user physically exist in the Database Schema above.
+    - If the user asks about concepts or tables completely absent from this schema (e.g. asking for e-commerce products, shopping cart, shipping, or inventory when connected to a music database; or asking for hospital patients on a sales database; or general chit-chat):
+      DO NOT force an unrelated query.
+      DO NOT substitute tables (e.g. do NOT substitute 'Track' for 'Product').
+      Instead, output a strict JSON object without markdown fences:
+      {{
+        "is_relevant": false,
+        "reason": "Clear explanation of what was requested and why this database cannot answer it.",
+        "needed_tables": ["Products", "Inventory"],
+        "suggested_questions": [
+          "Relevant question 1 that CAN be answered by this database",
+          "Relevant question 2 that CAN be answered by this database",
+          "Relevant question 3 that CAN be answered by this database"
+        ]
+      }}
 """
         return prompt
 
-    def generate_sql(self, question: str) -> str:
-        """sql generate by llm"""
+    @staticmethod
+    def parse_queries(raw_output: str) -> Union[List[Dict[str, str]], Dict[str, Any]]:
+        """
+        Parses generator output into a structured list of query tasks:
+        [{"title": "...", "sql": "..."}], or an out-of-domain rejection dict.
+        Handles single raw SQL queries, JSON arrays for compound prompts,
+        and JSON objects for out-of-domain schema mismatch rejections.
+        """
+        cleaned = raw_output.strip()
+        # Remove markdown code fences if present
+        if "```" in cleaned:
+            parts = cleaned.split("```")
+            cleaned = parts[1] if len(parts) > 1 else parts[0]
+            if cleaned.lower().startswith("json"):
+                cleaned = cleaned[4:].strip()
+            elif cleaned.lower().startswith("sql"):
+                cleaned = cleaned[3:].strip()
+
+        # 1. Check if output is an out-of-domain rejection JSON object
+        if cleaned.startswith("{") and cleaned.endswith("}"):
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, dict) and parsed.get("is_relevant") is False:
+                    return parsed
+            except Exception:
+                pass
+
+        # 2. Check if output is a JSON array for compound multi-part questions
+        if cleaned.startswith("[") and cleaned.endswith("]"):
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, list) and len(parsed) > 0 and isinstance(parsed[0], dict) and "sql" in parsed[0]:
+                    return [
+                        {
+                            "title": item.get("title", f"Query {i + 1}"),
+                            "sql": item.get("sql", "").strip()
+                        }
+                        for i, item in enumerate(parsed)
+                        if item.get("sql")
+                    ]
+            except Exception:
+                pass
+
+        # 3. Fallback to single SQL query
+        return [{"title": "Query 1", "sql": cleaned}]
+
+    def generate_sql(self, question: str, conversation_history: Optional[List[Dict[str, Any]]] = None) -> str:
+        """sql generate by llm with optional multi-turn conversation memory"""
         System_Prompt = self.System_Prompts()
+
+        # Build context-aware prompt if previous history is available
+        if conversation_history and len(conversation_history) > 0:
+            history_blocks = ["PREVIOUS CONVERSATION CONTEXT (for pronoun & reference resolution):"]
+            for msg in conversation_history:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                content = msg.get("content", "").strip()
+                sql = msg.get("sql")
+                if role == "User" and content:
+                    history_blocks.append(f'User asked: "{content}"')
+                elif role == "Assistant":
+                    if sql:
+                        history_blocks.append(f'Generated SQL: {sql}')
+                    if content:
+                        history_blocks.append(f'Answer Summary: {content}')
+            user_content = "\n".join(history_blocks) + f'\n\nCURRENT QUESTION TO ANSWER:\n"{question}"'
+        else:
+            user_content = question
+
         response = self.client.chat.completions.create(
             model=self.model,
             temperature=0.0,
             messages=[
                 {"role": "system", "content": System_Prompt},
-                {"role": "user", "content": question}
+                {"role": "user", "content": user_content}
             ]
         )
 
         sql_query_result = response.choices[0].message.content.strip()
-        if "```" in sql_query_result:
-            parts = sql_query_result.split("```")
-            sql_query_result = parts[1] if len(parts) > 1 else parts[0]
-            if sql_query_result.startswith("sql"):
-                sql_query_result = sql_query_result[3:]
-        return sql_query_result.strip()
+        return sql_query_result
 
 
 if __name__ == "__main__":

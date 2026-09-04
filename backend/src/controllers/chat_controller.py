@@ -94,7 +94,10 @@ class ChatController:
             elif len(target_chat.get("messages", [])) == 0:
                 chat_storage.update_chat_title(chat_id, payload.question[:32])
 
-            # 1. Store User Message
+            # 1. Fetch Prior Conversation Context (Memory Window)
+            conversation_context = chat_storage.get_conversation_context(chat_id=chat_id, limit=4)
+
+            # 2. Store User Message
             user_msg_id = str(int(time.time() * 1000))
             chat_storage.add_message(
                 chat_id=chat_id,
@@ -103,9 +106,11 @@ class ChatController:
                 content=payload.question
             )
 
-            # 2. Run Pipeline against selected database
+            # 3. Run Pipeline with Conversational Memory
             pipeline = DatabaseController.get_pipeline(db_id)
-            result = pipeline.run_pipeline(payload.question)
+            result = pipeline.run_pipeline(
+                payload.question, conversation_history=conversation_context
+            )
 
             # 3. Store AI Response with Database context
             ai_msg_id = str(int(time.time() * 1000) + 1)
@@ -117,7 +122,10 @@ class ChatController:
                 "error": result.get("error"),
                 "db_id": db_id,
                 "db_name": db_info.get("name", "Default"),
-                "db_type": db_info.get("type", "sql")
+                "db_type": db_info.get("type", "sql"),
+                "needed_tables": result.get("needed_tables", []),
+                "available_tables": result.get("available_tables", []),
+                "suggested_questions": result.get("suggested_questions", [])
             }
 
             chat_storage.add_message(
@@ -127,8 +135,12 @@ class ChatController:
                 content=result.get("summary", ""),
                 sql=result.get("final_sql"),
                 data=result.get("data"),
+                sub_queries=result.get("sub_queries"),
                 telemetry=telemetry,
-                status=result.get("status", "SUCCESS")
+                status=result.get("status", "SUCCESS"),
+                needed_tables=result.get("needed_tables", []),
+                available_tables=result.get("available_tables", []),
+                suggested_questions=result.get("suggested_questions", [])
             )
 
             return {
@@ -137,8 +149,12 @@ class ChatController:
                 "content": result.get("summary", ""),
                 "sql": result.get("final_sql"),
                 "data": result.get("data"),
+                "sub_queries": result.get("sub_queries"),
                 "telemetry": telemetry,
                 "status": result.get("status", "SUCCESS"),
+                "needed_tables": result.get("needed_tables", []),
+                "available_tables": result.get("available_tables", []),
+                "suggested_questions": result.get("suggested_questions", []),
                 "db_name": db_info.get("name", "Default"),
                 "db_type": db_info.get("type", "sql")
             }

@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -184,6 +184,99 @@ class NoSQLEngine:
                 "count": len(self.collections.get(col_name, []))
             })
         return schema_data
+
+    def get_all_relationships(self) -> List[Dict[str, Any]]:
+        """
+        Dynamically infers relationships across NoSQL collections by detecting
+        reference keys (e.g. member_id -> members, course_id -> courses, customer_id -> customers).
+        """
+        relationships = []
+        col_names = self.get_collection_names()
+        if len(col_names) <= 1:
+            return []
+
+        # Build map of collection names to schema fields, candidate PKs, and word stems
+        col_fields_map = {}
+        col_pk_map = {}
+        col_stems_map = {}
+
+        for c_name in col_names:
+            fields = self.get_schema_fields(c_name)
+            field_paths = [f["path"] for f in fields]
+            col_fields_map[c_name] = field_paths
+
+            # Generate possible root stems for collection name
+            lower = c_name.lower()
+            stems = {lower}
+            tokens = [lower]
+            if "_" in lower:
+                tokens.append(lower.split("_")[-1])
+            for t in tokens:
+                stems.add(t)
+                if t.endswith("ies"):
+                    stems.add(t[:-3] + "y")
+                if t.endswith("es"):
+                    stems.add(t[:-2])
+                    stems.add(t[:-1])
+                elif t.endswith("s"):
+                    stems.add(t[:-1])
+            col_stems_map[c_name] = stems
+
+            # Determine primary key for this collection
+            pk = None
+            if "_id" in field_paths:
+                pk = "_id"
+            else:
+                for stem in stems:
+                    cand = f"{stem}_id"
+                    if cand in field_paths:
+                        pk = cand
+                        break
+                if pk is None and "id" in field_paths:
+                    pk = "id"
+            col_pk_map[c_name] = pk
+
+        # Detect cross-collection references
+        for c_name in col_names:
+            field_paths = col_fields_map[c_name]
+            own_pk = col_pk_map.get(c_name)
+
+            for f_path in field_paths:
+                if f_path == own_pk:
+                    continue
+
+                f_base = f_path.split(".")[-1].lower()
+
+                for target_col in col_names:
+                    if target_col == c_name:
+                        continue
+
+                    target_stems = col_stems_map[target_col]
+                    target_fields = col_fields_map[target_col]
+                    target_pk = col_pk_map.get(target_col) or "_id"
+
+                    is_match = False
+                    for stem in target_stems:
+                        if f_base == f"{stem}_id" or f_base == f"id_{stem}" or f_base == stem:
+                            is_match = True
+                            break
+
+                    # Also check if field matches target's specific primary key (e.g. course_id in enrollments)
+                    if not is_match and target_pk and target_pk.lower() not in ("_id", "id") and f_base == target_pk.lower():
+                        is_match = True
+
+                    if is_match:
+                        target_col_name = target_pk if target_pk in target_fields else ("_id" if "_id" in target_fields else f_path)
+                        rel = {
+                            "from_table": c_name,
+                            "from_col": f_path,
+                            "to_table": target_col,
+                            "to_col": target_col_name
+                        }
+                        if rel not in relationships:
+                            relationships.append(rel)
+
+        return relationships
 
     def get_all_schemas_context(self) -> str:
         """Builds a formatted text description of all collections for LLM prompt context."""
@@ -389,3 +482,57 @@ class NoSQLEngine:
             else:
                 unwound.append(d)
         return unwound
+
+    @staticmethod
+    def parse_collection_file(filename: str, content: bytes) -> Tuple[str, List[Dict[str, Any]]]:
+        """
+        Parses an individual .json, .jsonl, or .bson collection file into (collection_name, documents).
+        Uses file stem as the collection name (e.g. 'customers.json' -> 'customers').
+        """
+        path = Path(filename)
+        col_name = path.stem.lower().replace("-", "_").replace(" ", "_")
+        ext = path.suffix.lower()
+
+        if ext == ".bson":
+            import bson
+            raw_docs = bson.decode_all(content)
+            safe_docs = [NoSQLEngine._normalize_bson_doc(d) for d in raw_docs]
+            return col_name, safe_docs
+
+        if ext == ".jsonl":
+            text = content.decode("utf-8", errors="ignore")
+            docs = []
+            for line in text.splitlines():
+                l = line.strip()
+                if l != "":
+                    docs.append(json.loads(l))
+            return col_name, docs
+
+        # Default .json
+        text = content.decode("utf-8", errors="ignore")
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return col_name, parsed
+        elif isinstance(parsed, dict):
+            # If the json is a dictionary mapping collection_name -> documents
+            has_nested_lists = any(isinstance(v, list) for v in parsed.values())
+            if has_nested_lists == True:
+                # Return the collection name matching filename or first list
+                if col_name in parsed and isinstance(parsed[col_name], list):
+                    return col_name, parsed[col_name]
+                for k, v in parsed.items():
+                    if isinstance(v, list):
+                        return k, v
+            return col_name, [parsed]
+        return col_name, []
+
+    @staticmethod
+    def compile_collections_to_dataset(collection_files: List[Tuple[str, bytes]]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Compiles multiple individual collection files into a single multi-collection dictionary.
+        """
+        dataset = {}
+        for filename, content in collection_files:
+            col_name, docs = NoSQLEngine.parse_collection_file(filename, content)
+            dataset[col_name] = docs
+        return dataset

@@ -275,10 +275,28 @@ export default function App() {
     }
   };
 
-  // Callback when a new database is uploaded
-  const handleUploadSuccess = (newDb) => {
-    setDatabases(prev => [...prev, newDb]);
-    setSelectedDbId(newDb.id);
+  // Callback when a new database is uploaded, bulk imported, or an existing one is updated
+  const handleUploadSuccess = (payload) => {
+    if (Array.isArray(payload)) {
+      if (payload.length === 0) return;
+      setDatabases(prev => {
+        const map = new Map(prev.map(d => [d.id, d]));
+        payload.forEach(d => map.set(d.id, d));
+        return Array.from(map.values());
+      });
+      setSelectedDbId(payload[0].id);
+      loadSchemaForDb(payload[0].id);
+    } else if (payload && payload.id) {
+      setDatabases(prev => {
+        const exists = prev.some(d => d.id === payload.id);
+        if (exists) {
+          return prev.map(d => d.id === payload.id ? payload : d);
+        }
+        return [...prev, payload];
+      });
+      setSelectedDbId(payload.id);
+      loadSchemaForDb(payload.id);
+    }
   };
 
   // Callback when a database is deleted
@@ -286,6 +304,8 @@ export default function App() {
     setDatabases(prev => prev.filter(d => d.id !== deletedDbId));
     if (selectedDbId === deletedDbId) {
       setSelectedDbId("chinook");
+      loadSchemaForDb("chinook");
+      updateUrlParams(activeChatId, "chinook");
     }
   };
 
@@ -427,7 +447,7 @@ export default function App() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">
         {/* Top Navbar with Dynamic Database Selector */}
-        <header className={`h-14 px-4 flex items-center justify-between border-b shrink-0 backdrop-blur-md ${
+        <header className={`h-14 px-4 flex items-center justify-between border-b shrink-0 backdrop-blur-md relative z-30 ${
           isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-white/70 border-slate-200'
         }`}>
           <div className="flex items-center gap-2.5">
@@ -464,6 +484,8 @@ export default function App() {
                 selectedDbId={selectedDbId}
                 onSelectDb={(dbId) => setSelectedDbId(dbId)}
                 onOpenUpload={() => setUploadModalOpen(true)}
+                onDeleteDatabase={handleDeleteDatabase}
+                apiBaseUrl={API_BASE_URL}
                 isDark={isDark}
               />
 
@@ -525,7 +547,12 @@ export default function App() {
 
             {/* Conversation Messages */}
             {activeChat?.messages?.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} isDark={isDark} />
+              <ChatMessage 
+                key={msg.id} 
+                message={msg} 
+                isDark={isDark} 
+                onSelectPrompt={handleSendMessage}
+              />
             ))}
 
             {/* AI Thinking Animation */}

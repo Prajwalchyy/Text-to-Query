@@ -44,17 +44,23 @@ Instructions:
         return prompt
 
     def run_with_self_correction(
-        self, user_question: str, initial_sql: str = None, max_retries: int = 3
+        self,
+        user_question: str,
+        initial_sql: str = None,
+        max_retries: int = 3,
+        conversation_history: Optional[List[Dict[str, Any]]] = None
     ):
         """
         End-to-end pipeline:
-        1. Uses provided SQL or generates initial SQL from question.
+        1. Uses provided SQL or generates initial SQL from question (with multi-turn memory).
         2. Validates with guardrails.
         3. Executes query safely.
         4. If it fails, asks the AI to repair it (up to max_retries).
         Returns: (success: bool, data_or_error: list/str, final_sql: str, attempts: int)
         """
-        current_sql = initial_sql or self.generator.generate_sql(user_question)
+        current_sql = initial_sql or self.generator.generate_sql(
+            user_question, conversation_history=conversation_history
+        )
         last_error = ""
 
         for attempt in range(1, max_retries + 1):
