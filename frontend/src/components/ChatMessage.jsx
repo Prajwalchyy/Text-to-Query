@@ -5,7 +5,14 @@ import DataTable from './DataTable';
 import JsonDocumentViewer from './JsonDocumentViewer';
 import DetailsPopover from './DetailsPopover';
 
-export default function ChatMessage({ message, isDark, onSelectPrompt, onReusePrompt }) {
+export default function ChatMessage({ 
+  message, 
+  isDark, 
+  onSelectPrompt, 
+  onReusePrompt,
+  currentDb,
+  apiBaseUrl
+}) {
   const [activeSubIndex, setActiveSubIndex] = useState(0);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const isUser = message.role === 'user';
@@ -335,9 +342,16 @@ export default function ChatMessage({ message, isDark, onSelectPrompt, onReusePr
                 </div>
               )}
 
-              {/* 1. Generated SQL / MQL / Python / Excel Formula Block */}
+              {/* 1. Generated SQL / MQL / Python / Excel Formula / Multi-Language Block */}
               {hasSql && (
-                <SqlCodeBlock sql={currentSql} isDark={isDark} codeType={codeType} />
+                <SqlCodeBlock 
+                  sql={currentSql} 
+                  isDark={isDark} 
+                  codeType={codeType}
+                  dbId={message.telemetry?.db_id || currentDb?.id}
+                  dbType={message.telemetry?.db_type || currentDb?.type}
+                  apiBaseUrl={apiBaseUrl}
+                />
               )}
 
               {/* 2. Direct Result Data Output: JSON Document Viewer for NoSQL, Data Table for SQL, or 0 Records Found */}

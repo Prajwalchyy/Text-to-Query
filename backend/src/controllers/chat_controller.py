@@ -22,6 +22,14 @@ class UpdateChatRequest(BaseModel):
 class QueryRequest(BaseModel):
     question: str
     db_id: Optional[str] = "chinook"
+    target_language: Optional[str] = "auto"
+
+
+class ConvertCodeRequest(BaseModel):
+    code: str
+    from_language: str
+    to_language: str
+    db_id: Optional[str] = "chinook"
 
 
 class ChatController:
@@ -106,13 +114,30 @@ class ChatController:
                 content=payload.question
             )
 
-            # 3. Run Pipeline with Conversational Memory
+            # 3. Run Pipeline with Conversational Memory and Multi-Language Target
             pipeline = DatabaseController.get_pipeline(db_id)
+            target_lang = payload.target_language or "auto"
             result = pipeline.run_pipeline(
-                payload.question, conversation_history=conversation_context
+                payload.question, 
+                conversation_history=conversation_context,
+                target_language=target_lang
             )
 
-            # 3. Store AI Response with Database context
+            # Determine resulting code_type
+            result_code_type = result.get("code_type")
+            if not result_code_type:
+                if target_lang != "auto":
+                    result_code_type = target_lang
+                elif db_info.get("type") == "excel":
+                    result_code_type = "excel_formula"
+                elif db_info.get("type") == "csv":
+                    result_code_type = "pandas"
+                elif db_info.get("type") == "nosql":
+                    result_code_type = "nosql"
+                else:
+                    result_code_type = "sql"
+
+            # 4. Store AI Response with Database context
             ai_msg_id = str(int(time.time() * 1000) + 1)
             telemetry = {
                 "confidence_score": result.get("confidence_score", 0),
@@ -123,7 +148,7 @@ class ChatController:
                 "db_id": db_id,
                 "db_name": db_info.get("name", "Default"),
                 "db_type": db_info.get("type", "sql"),
-                "code_type": result.get("code_type", "excel_formula" if db_info.get("type") == "excel" else "pandas" if db_info.get("type") == "csv" else "sql"),
+                "code_type": result_code_type,
                 "needed_tables": result.get("needed_tables", []),
                 "available_tables": result.get("available_tables", []),
                 "suggested_questions": result.get("suggested_questions", [])
@@ -165,8 +190,54 @@ class ChatController:
                 "suggested_questions": result.get("suggested_questions", []),
                 "db_name": db_info.get("name", "Default"),
                 "db_type": db_info.get("type", "sql"),
-                "code_type": result.get("code_type", "excel_formula" if db_info.get("type") == "excel" else "pandas" if db_info.get("type") == "csv" else "sql")
+                "code_type": result_code_type
             }
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Pipeline execution error: {str(e)}")
+
+    @staticmethod
+    def convert_code(payload: ConvertCodeRequest) -> Dict[str, Any]:
+        """Converts an existing query/code snippet to another language with full schema awareness."""
+        from F17_multi_language_generator import MultiLanguageGenerator
+        generator = MultiLanguageGenerator()
+        db_id = payload.db_id if payload.db_id else "chinook"
+        db_info = db_registry.get_database(db_id)
+        db_type = db_info.get("type", "sql") if db_info else "sql"
+        
+        schema_context = ""
+        try:
+            pipeline = DatabaseController.get_pipeline(db_id)
+            if hasattr(pipeline, "generator") and hasattr(pipeline.generator, "get_schema_context"):
+                schema_context = pipeline.generator.get_schema_context()
+            elif hasattr(pipeline, "engine") and hasattr(pipeline.engine, "get_schema_context"):
+                schema_context = pipeline.engine.get_schema_context()
+            elif hasattr(pipeline, "engine") and hasattr(pipeline.engine, "get_all_schemas_context"):
+                schema_context = pipeline.engine.get_all_schemas_context()
+        except Exception:
+            pass
+
+        try:
+            return generator.convert_code(
+                code=payload.code,
+                from_language=payload.from_language,
+                to_language=payload.to_language,
+                schema_context=schema_context,
+                db_type=db_type
+            )
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    @staticmethod
+    def get_supported_languages(db_id: str) -> Dict[str, Any]:
+        """Returns the list of allowed languages for the active data source."""
+        from F17_multi_language_generator import MultiLanguageGenerator
+        db_info = db_registry.get_database(db_id)
+        db_type = db_info.get("type", "sql") if db_info else "sql"
+        languages = MultiLanguageGenerator.get_supported_languages(db_type)
+        return {
+            "db_id": db_id,
+            "db_type": db_type,
+            "languages": languages
+        }
+

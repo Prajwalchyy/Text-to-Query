@@ -3,7 +3,8 @@ from controllers.chat_controller import (
     ChatController, 
     CreateChatRequest, 
     UpdateChatRequest, 
-    QueryRequest
+    QueryRequest,
+    ConvertCodeRequest
 )
 
 router = APIRouter(tags=["Chats"])
@@ -35,5 +36,18 @@ def delete_chat(chat_id: str):
 
 @router.post("/chats/{chat_id}/query")
 def execute_chat_query(chat_id: str, payload: QueryRequest):
-    """Executes a Text-to-SQL query within a specific chat session."""
+    """Executes a multi-language query within a specific chat session."""
     return ChatController.execute_query(chat_id=chat_id, payload=payload)
+
+
+@router.post("/chats/convert-code")
+def convert_query_code(payload: ConvertCodeRequest):
+    """Converts an existing query/code block into another language with full schema awareness."""
+    return ChatController.convert_code(payload=payload)
+
+
+@router.get("/chats/languages/{db_id}")
+def get_supported_languages(db_id: str):
+    """Returns the list of allowed languages for the active data source."""
+    return ChatController.get_supported_languages(db_id=db_id)
+

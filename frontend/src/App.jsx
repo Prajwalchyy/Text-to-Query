@@ -309,8 +309,8 @@ export default function App() {
     }
   };
 
-  // Send message: Runs Text-to-SQL Pipeline against the selected database
-  const handleSendMessage = async (text) => {
+  // Send message: Runs Multi-Language Pipeline against the selected database
+  const handleSendMessage = async (text, targetLanguage = "auto") => {
     if (!text.trim() || isLoading) return;
 
     const currentChatId = activeChatId || Date.now().toString();
@@ -347,7 +347,8 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           question: text,
-          db_id: selectedDbId 
+          db_id: selectedDbId,
+          target_language: targetLanguage || "auto"
         }),
       });
 
@@ -557,6 +558,8 @@ export default function App() {
                 isDark={isDark} 
                 onSelectPrompt={handleSendMessage}
                 onReusePrompt={handleSelectPrompt}
+                currentDb={currentDb}
+                apiBaseUrl={API_BASE_URL}
               />
             ))}
 
@@ -567,12 +570,7 @@ export default function App() {
                   <Sparkles className="w-4 h-4 animate-spin" />
                 </div>
                 <span>
-                  Analyzing {currentDb.name} schema, applying guardrails & generating {
-                    currentDb.type === 'excel' ? 'Excel formulas' :
-                    currentDb.type === 'csv' ? 'Python / Pandas code' :
-                    currentDb.type === 'nosql' ? 'MongoDB queries' :
-                    'SQL query'
-                  }...
+                  Analyzing {currentDb.name} schema, applying guardrails & generating code...
                 </span>
               </div>
             )}
@@ -581,12 +579,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* Bottom Sticky Prompt Bar (Clean without suggestions) */}
+        {/* Bottom Sticky Prompt Bar with Multi-Language Selector */}
         <ChatInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
           isDark={isDark}
           prefilledText={prefilledPrompt}
+          currentDb={currentDb}
         />
       </div>
     </div>

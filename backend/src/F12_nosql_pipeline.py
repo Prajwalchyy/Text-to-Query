@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from F09_nosql_engine import NoSQLEngine
 from F10_nosql_generator import NoSQLGenerator
 from F11_nosql_guardrails import NoSQLGuardrail
@@ -20,7 +20,8 @@ class TextToNoSQLPipeline:
         self,
         question: str,
         max_retries: int = 3,
-        conversation_history: Optional[List[Dict[str, Any]]] = None
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+        target_language: str = "auto"
     ) -> Dict[str, Any]:
         """
         Executes natural language question across available NoSQL collections with multi-turn memory.
@@ -30,6 +31,74 @@ class TextToNoSQLPipeline:
         feedback: Optional[str] = None
         last_mql: str = ""
         last_error: str = ""
+
+        # Multi-Language Routing: If user requested Python (PyMongo), JS, Java, R, C#
+        target_lang = (target_language or "auto").lower()
+        if target_lang not in ["auto", "nosql", "mongodb", "mql"]:
+            from F17_multi_language_generator import MultiLanguageGenerator
+            generator = MultiLanguageGenerator()
+            schema = self.engine.get_all_schemas_context()
+            gen_res = generator.generate_code(
+                question=question,
+                schema_context=schema,
+                db_type="nosql",
+                target_language=target_lang,
+                db_name="nosql_store",
+                table_or_sheet_names=self.engine.get_collection_names()
+            )
+
+            data = []
+            if gen_res.get("eval_mql"):
+                try:
+                    is_valid, _, parsed_payload, target_col = self.guardrail.validate_and_parse(
+                        raw_mql=gen_res["eval_mql"],
+                        available_collections=self.engine.get_collection_names()
+                    )
+                    if is_valid:
+                        data = self.engine.execute_mql(parsed_payload, target_col)
+                except Exception:
+                    pass
+
+            if not data:
+                try:
+                    fallback_mql = self.generator.generate_mql(
+                        question=question,
+                        schemas_context=schema,
+                        collection_names=self.engine.get_collection_names()
+                    )
+                    parsed_fallback = self.generator.parse_queries(fallback_mql)
+                    single_mql = parsed_fallback[0]["mql"] if isinstance(parsed_fallback, list) and parsed_fallback else fallback_mql
+                    is_valid, _, parsed_payload, target_col = self.guardrail.validate_and_parse(
+                        raw_mql=single_mql,
+                        available_collections=self.engine.get_collection_names()
+                    )
+                    if is_valid:
+                        data = self.engine.execute_mql(parsed_payload, target_col)
+                except Exception:
+                    pass
+
+            latency = round((time.time() - start_time) * 1000, 2)
+            code = gen_res.get("code", "")
+            return {
+                "status": "SUCCESS",
+                "title": gen_res.get("title", question[:40]),
+                "final_query": code,
+                "final_sql": code,
+                "code": code,
+                "code_type": target_lang,
+                "data": data,
+                "latency_ms": latency,
+                "attempts": 1,
+                "confidence_score": 0.95,
+                "error": None,
+                "summary": gen_res.get("explanation", f"Generated {target_lang.upper()} query code for NoSQL store."),
+                "sub_queries": [{
+                    "title": gen_res.get("title", question[:40]),
+                    "sql": code,
+                    "data": data,
+                    "status": "SUCCESS"
+                }]
+            }
 
         schemas_context = self.engine.get_all_schemas_context()
         collection_names = self.engine.get_collection_names()

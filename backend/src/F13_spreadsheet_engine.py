@@ -174,3 +174,31 @@ class SpreadsheetEngine:
                     clean_row[k] = v
             cleaned.append(clean_row)
         return cleaned
+
+    def execute_sql_query(self, sql: str) -> List[Dict[str, Any]]:
+        """
+        Executes an ANSI SQL query directly over the spreadsheet sheets
+        by loading them into an in-memory SQLite database!
+        """
+        import sqlite3
+        conn = sqlite3.connect(":memory:")
+        for sheet_name, df in self.dfs.items():
+            clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', sheet_name.strip())
+            df.to_sql(clean_name, conn, if_exists="replace", index=False)
+            # Register under common default table names if single sheet
+            if len(self.dfs) == 1:
+                df.to_sql("data", conn, if_exists="replace", index=False)
+                df.to_sql("sales", conn, if_exists="replace", index=False)
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+            rows = cursor.fetchall()
+            results = [dict(zip(columns, row)) for row in rows]
+            conn.close()
+            return self._clean_records_for_json(results)
+        except Exception as e:
+            conn.close()
+            raise e
+
