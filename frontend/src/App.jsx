@@ -310,7 +310,7 @@ export default function App() {
   };
 
   // Send message: Runs Multi-Language Pipeline against the selected database
-  const handleSendMessage = async (text, targetLanguage = "auto") => {
+  const handleSendMessage = async (text, targetLanguage) => {
     if (!text.trim() || isLoading) return;
 
     const currentChatId = activeChatId || Date.now().toString();
@@ -342,13 +342,17 @@ export default function App() {
     setIsLoading(true);
 
     try {
+      const currentDbInfo = databases.find(d => d.id === selectedDbId);
+      const fallbackLang = currentDbInfo?.type === 'nosql' ? 'nosql' : currentDbInfo?.type === 'excel' ? 'excel_formula' : currentDbInfo?.type === 'csv' ? 'pandas' : 'sql';
+      const chosenLanguage = targetLanguage || fallbackLang;
+
       const response = await fetch(`${API_BASE_URL}/chats/${currentChatId}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           question: text,
           db_id: selectedDbId,
-          target_language: targetLanguage || "auto"
+          target_language: chosenLanguage
         }),
       });
 

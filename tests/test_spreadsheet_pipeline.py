@@ -2,13 +2,15 @@ import sys
 import pytest
 from pathlib import Path
 
-# Add project root to sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Add project root and archive to sys.path
+root_dir = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root_dir))
+sys.path.insert(0, str(root_dir / "backend" / "archive" / "legacy_pipeline"))
 
-from backend.src.F13_spreadsheet_engine import SpreadsheetEngine
-from backend.src.F14_pandas_guardrails import validate_pandas_code
-from backend.src.F15_spreadsheet_generator import SpreadsheetGenerator
-from backend.src.F16_spreadsheet_pipeline import TextToSpreadsheetPipeline
+from backend.src.engines.spreadsheet_engine import SpreadsheetEngine
+from backend.src.guardrails.pandas_guard import validate_pandas_code
+from backend.archive.legacy_pipeline.F15_spreadsheet_generator import SpreadsheetGenerator
+from backend.archive.legacy_pipeline.F16_spreadsheet_pipeline import TextToSpreadsheetPipeline
 
 
 def test_pandas_guardrail():
@@ -31,10 +33,21 @@ def test_pandas_guardrail():
     assert "forbidden" in err2.lower()
 
 
-def test_csv_pipeline_execution():
+def test_csv_pipeline_execution(monkeypatch):
     csv_path = "backend/data/csv/sales_performance.csv"
     engine = SpreadsheetEngine(csv_path)
     pipeline = TextToSpreadsheetPipeline(engine)
+
+    # Mock generator to avoid live external OpenAI network dependency during automated test runs
+    monkeypatch.setattr(
+        pipeline.generator,
+        "generate",
+        lambda *args, **kwargs: [{
+            "title": "Top Customers",
+            "code": "result_df = df.sort_values(by='TotalAmount', ascending=False).head(3)",
+            "explanation": "Top 3 customers"
+        }]
+    )
 
     res = pipeline.run_pipeline("Show top 3 customers with highest total spending")
     assert res["status"] == "SUCCESS"
@@ -43,10 +56,23 @@ def test_csv_pipeline_execution():
     assert len(res["data"]) > 0
 
 
-def test_excel_pipeline_execution():
+def test_excel_pipeline_execution(monkeypatch):
     excel_path = "backend/data/excel/financial_budget.xlsx"
     engine = SpreadsheetEngine(excel_path)
     pipeline = TextToSpreadsheetPipeline(engine)
+
+    # Mock generator to avoid live external OpenAI network dependency during automated test runs
+    monkeypatch.setattr(
+        pipeline.generator,
+        "generate",
+        lambda *args, **kwargs: [{
+            "title": "Sales Budget",
+            "formula": "=SUM(B2:B10)",
+            "target_cell": "B11",
+            "explanation": "Total budget",
+            "eval_code": "result_df = df.head(3)"
+        }]
+    )
 
     res = pipeline.run_pipeline("What is the remaining budget for Sales?")
     assert res["status"] == "SUCCESS"

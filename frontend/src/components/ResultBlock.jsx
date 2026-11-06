@@ -5,43 +5,29 @@ const LANGUAGE_METADATA = {
   sql: {
     id: 'sql',
     name: 'SQL',
-    badge: 'SQLite Dialect',
+    badge: 'SQL',
     color: 'indigo',
     icon: Terminal
+  },
+  excel_formula: {
+    id: 'excel_formula',
+    name: 'Excel',
+    badge: 'Excel',
+    color: 'emerald',
+    icon: FileSpreadsheet
   },
   pandas: {
     id: 'pandas',
     name: 'Python (Pandas)',
-    badge: 'Python / Pandas',
+    badge: 'Python (Pandas)',
     color: 'cyan',
     icon: Terminal
-  },
-  javascript: {
-    id: 'javascript',
-    name: 'JavaScript',
-    badge: 'Node.js',
-    color: 'amber',
-    icon: Code2
-  },
-  java: {
-    id: 'java',
-    name: 'Java',
-    badge: 'Java / JDBC',
-    color: 'orange',
-    icon: Code2
   },
   r: {
     id: 'r',
     name: 'R',
-    badge: 'R (tidyverse)',
+    badge: 'R',
     color: 'sky',
-    icon: Code2
-  },
-  csharp: {
-    id: 'csharp',
-    name: 'C#',
-    badge: 'C# (.NET)',
-    color: 'purple',
     icon: Code2
   },
   nosql: {
@@ -50,34 +36,27 @@ const LANGUAGE_METADATA = {
     badge: 'MongoDB MQL',
     color: 'emerald',
     icon: FileJson
-  },
-  excel_formula: {
-    id: 'excel_formula',
-    name: 'Excel Formula',
-    badge: 'Excel Formula',
-    color: 'emerald',
-    icon: FileSpreadsheet
   }
 };
 
 const getCompatibleLanguages = (dbType) => {
   const type = (dbType || 'sql').toLowerCase();
   if (type === 'sql') {
-    return ['sql', 'pandas', 'javascript', 'java', 'r', 'csharp'];
+    return ['sql', 'excel_formula', 'pandas', 'r'];
   }
   if (type === 'nosql') {
-    return ['nosql', 'pandas', 'javascript', 'java', 'r', 'csharp'];
+    return ['nosql', 'excel_formula', 'pandas', 'r'];
   }
   if (type === 'csv') {
-    return ['pandas', 'sql', 'excel_formula', 'javascript', 'java', 'r', 'csharp'];
+    return ['sql', 'excel_formula', 'pandas', 'r'];
   }
   if (type === 'excel') {
-    return ['excel_formula', 'sql', 'pandas', 'javascript', 'java', 'r', 'csharp'];
+    return ['excel_formula', 'sql', 'pandas', 'r'];
   }
-  return ['sql', 'pandas', 'javascript', 'java', 'r', 'csharp'];
+  return ['sql', 'excel_formula', 'pandas', 'r'];
 };
 
-export default function SqlCodeBlock({ 
+export default function ResultBlock({ 
   sql, 
   isDark, 
   codeType, 
@@ -182,10 +161,7 @@ export default function SqlCodeBlock({
           <span className={`inline-flex items-center gap-1.5 font-semibold text-[11px] ${
             activeLanguage === 'excel_formula' ? 'text-emerald-300' :
             activeLanguage === 'pandas' ? 'text-cyan-300' :
-            activeLanguage === 'javascript' ? 'text-amber-300' :
-            activeLanguage === 'java' ? 'text-orange-300' :
             activeLanguage === 'r' ? 'text-sky-300' :
-            activeLanguage === 'csharp' ? 'text-purple-300' :
             activeLanguage === 'nosql' ? 'text-emerald-300' :
             'text-indigo-300'
           }`}>
@@ -297,17 +273,11 @@ export default function SqlCodeBlock({
             ? 'text-emerald-300 font-bold selection:bg-emerald-800 selection:text-white' 
             : activeLanguage === 'pandas' 
               ? 'text-cyan-300 selection:bg-cyan-950 selection:text-cyan-200'
-              : activeLanguage === 'javascript'
-                ? 'text-amber-300 selection:bg-amber-950 selection:text-amber-200'
-                : activeLanguage === 'java'
-                  ? 'text-orange-300 selection:bg-orange-950 selection:text-orange-200'
-                  : activeLanguage === 'r'
-                    ? 'text-sky-300 selection:bg-sky-950 selection:text-sky-200'
-                    : activeLanguage === 'csharp'
-                      ? 'text-purple-300 selection:bg-purple-950 selection:text-purple-200'
-                      : activeLanguage === 'nosql' 
-                        ? 'text-emerald-400 selection:bg-emerald-950 selection:text-emerald-200' 
-                        : 'text-emerald-400 selection:bg-emerald-950 selection:text-emerald-200'
+              : activeLanguage === 'r'
+                ? 'text-sky-300 selection:bg-sky-950 selection:text-sky-200'
+                : activeLanguage === 'nosql' 
+                  ? 'text-emerald-400 selection:bg-emerald-950 selection:text-emerald-200' 
+                  : 'text-emerald-400 selection:bg-emerald-950 selection:text-emerald-200'
         }`}>
           {activeCode}
         </pre>

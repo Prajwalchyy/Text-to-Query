@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Sparkles, Database, AlertCircle, Lightbulb, ArrowRight, Inbox, Copy, Check, CornerDownLeft, Target, FileSpreadsheet, FileJson } from 'lucide-react';
-import SqlCodeBlock from './SqlCodeBlock';
+import ResultBlock from './ResultBlock';
 import DataTable from './DataTable';
 import JsonDocumentViewer from './JsonDocumentViewer';
 import DetailsPopover from './DetailsPopover';
@@ -344,7 +344,7 @@ export default function ChatMessage({
 
               {/* 1. Generated SQL / MQL / Python / Excel Formula / Multi-Language Block */}
               {hasSql && (
-                <SqlCodeBlock 
+                <ResultBlock 
                   sql={currentSql} 
                   isDark={isDark} 
                   codeType={codeType}
