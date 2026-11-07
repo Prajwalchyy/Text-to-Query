@@ -7,7 +7,7 @@ and get_chat_memory_window.
 import tempfile
 from pathlib import Path
 import pytest
-from backend.src.pipelines.context import (
+from backend.src.pipelines.prompts import (
     extract_memory_window,
     has_pronoun_reference,
     format_context_for_prompt,

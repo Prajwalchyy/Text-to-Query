@@ -16,7 +16,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from guardrails.nosql_guard import (
+from dialects.nosql import (
     validate_mql,
     validate_and_parse,
     check_forbidden_nosql_operators,

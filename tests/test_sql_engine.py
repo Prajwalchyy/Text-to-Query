@@ -11,7 +11,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from engines.sql_engine import (
+from dialects.sql import (
     get_table_names,
     get_table_schema,
     get_table_details,

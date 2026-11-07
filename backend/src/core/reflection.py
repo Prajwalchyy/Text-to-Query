@@ -411,13 +411,13 @@ class CorrectionEngine:
     def guardrail(self):
         if self._guardrail is None:
             try:
-                from guardrails.sql_guard import SQLInjectionGuardrail
+                from dialects.sql import SQLInjectionGuardrail
                 self._guardrail = SQLInjectionGuardrail(self.db_engine)
             except ImportError:
                 try:
-                    from backend.src.guardrails.sql_guard import SQLInjectionGuardrail
+                    from backend.src.dialects.sql import SQLInjectionGuardrail
                 except ImportError:
-                    from src.guardrails.sql_guard import SQLInjectionGuardrail
+                    from src.dialects.sql import SQLInjectionGuardrail
                 self._guardrail = SQLInjectionGuardrail(self.db_engine)
         return self._guardrail
 
@@ -431,7 +431,7 @@ class CorrectionEngine:
                 return False, str(e)
 
         try:
-            from engines.sql_engine import execute_sql_query
+            from dialects.sql import execute_sql_query
             from config import DEFAULT_CHINOOK_PATH
             res = execute_sql_query(DEFAULT_CHINOOK_PATH, sql)
             return True, res

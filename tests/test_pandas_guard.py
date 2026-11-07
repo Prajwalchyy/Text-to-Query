@@ -17,7 +17,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from guardrails.pandas_guard import (
+from dialects.tabular import (
     validate_pandas_code,
     clean_code_markdown,
     PandasASTGuardrail,

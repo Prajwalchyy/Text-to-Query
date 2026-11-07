@@ -16,17 +16,17 @@ from typing import Any, Dict, List, Optional, Union
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
-from src.engines.nosql_engine import (
+from src.dialects.nosql import (
     get_schema_fields,
     infer_nosql_relationships,
     load_nosql_collections,
     resolve_nosql_path,
 )
-from src.engines.spreadsheet_engine import (
+from src.dialects.tabular import (
     load_spreadsheet,
     resolve_spreadsheet_path,
 )
-from src.engines.sql_engine import (
+from src.dialects.sql import (
     get_all_relationships,
     get_table_details,
     get_table_names,

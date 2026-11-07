@@ -11,7 +11,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from engines.spreadsheet_engine import (
+from dialects.tabular import (
     resolve_spreadsheet_path,
     excel_col_letter,
     letter_to_col_index,

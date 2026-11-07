@@ -21,7 +21,7 @@ from src.core.reflection import (
     clean_repaired_code,
     run_with_reflection,
 )
-from src.guardrails.sql_guard import SQLValidationResult
+from src.dialects.sql import SQLValidationResult
 
 
 def test_clean_repaired_code_markdown_blocks():

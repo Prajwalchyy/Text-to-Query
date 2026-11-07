@@ -8,7 +8,7 @@ sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(root_dir / "backend" / "src"))
 
 from backend.src.core.polyglot import MultiLanguageGenerator, LANGUAGE_CONFIG
-from backend.src.engines.spreadsheet_engine import SpreadsheetEngine
+from backend.src.dialects.tabular import SpreadsheetEngine
 
 
 def test_domain_compatibility_rules():

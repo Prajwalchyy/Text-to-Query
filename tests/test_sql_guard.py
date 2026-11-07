@@ -16,7 +16,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from guardrails.sql_guard import (
+from dialects.sql import (
     validate_sql,
     check_keyword_not_allowed,
     check_ast_and_multi_query,

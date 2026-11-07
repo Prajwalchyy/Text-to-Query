@@ -11,7 +11,7 @@ for p in [str(root_dir), str(backend_dir), str(src_dir)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from engines.nosql_engine import (
+from dialects.nosql import (
     resolve_nosql_path,
     normalize_bson_doc,
     load_nosql_collections,

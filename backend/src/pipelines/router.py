@@ -45,21 +45,22 @@ except ImportError:
     from src.storage.registry import get_database, list_databases
     from src.storage.chat_store import get_conversation_context
 
-# Engines
+# Dialects (Unified Engine + Guardrail per domain)
 try:
-    import engines.sql_engine as sql_engine
-    import engines.nosql_engine as nosql_engine
-    import engines.spreadsheet_engine as spreadsheet_engine
+    import dialects.sql as sql_engine
+    import dialects.nosql as nosql_engine
+    import dialects.tabular as tabular_engine
+    import dialects.sql as sql_guard
+    import dialects.nosql as nosql_guard
+    import dialects.tabular as pandas_guard
 except ImportError:
-    from src.engines import sql_engine, nosql_engine, spreadsheet_engine
-
-# Guardrails
-try:
-    import guardrails.sql_guard as sql_guard
-    import guardrails.nosql_guard as nosql_guard
-    import guardrails.pandas_guard as pandas_guard
-except ImportError:
-    from src.guardrails import sql_guard, nosql_guard, pandas_guard
+    from src.dialects import sql as sql_engine
+    from src.dialects import nosql as nosql_engine
+    from src.dialects import tabular as tabular_engine
+    from src.dialects import sql as sql_guard
+    from src.dialects import nosql as nosql_guard
+    from src.dialects import tabular as pandas_guard
+spreadsheet_engine = tabular_engine  # Tabular engine alias
 
 # Core Logic
 try:
@@ -91,8 +92,6 @@ try:
         build_spreadsheet_prompt,
         build_repair_prompt,
         parse_generator_output,
-    )
-    from pipelines.context import (
         extract_memory_window,
         get_chat_memory_window,
     )
@@ -103,8 +102,6 @@ except ImportError:
         build_spreadsheet_prompt,
         build_repair_prompt,
         parse_generator_output,
-    )
-    from src.pipelines.context import (
         extract_memory_window,
         get_chat_memory_window,
     )
