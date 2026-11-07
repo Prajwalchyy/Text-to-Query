@@ -1,19 +1,17 @@
 # ==============================================================================
-# OmniData AI - .gitignore
-# Allows all project code and connected data files (.py, .jsx, .db, .csv, .xlsx, .json, etc.)
-# Strictly blocks all markdown documentation, environment secrets, caches, and build junk.
+# Text to Code (Text to Query) - .gitignore
+# Allows all project code and connected data files (.py, .jsx, .db, .csv, .xlsx, .json)
+# Blocks markdown documentation, environment secrets, runtime caches, and dependencies.
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Documentation & Markdown Files (STRICTLY BLOCKED)
+# 1. Documentation & Markdown Files (Blocked from repository)
 # ------------------------------------------------------------------------------
 *.md
 **/*.md
-docs/
-guide/
 
 # ------------------------------------------------------------------------------
-# 2. Environment Secrets
+# 2. Environment Secrets (Keep Example Templates Allowed)
 # ------------------------------------------------------------------------------
 .env
 .env.*
@@ -21,54 +19,37 @@ guide/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Allow environment templates to be committed in git
 !.env_example
+!backend/.env_example
+!.env.example
+!frontend/.env.example
 
 # ------------------------------------------------------------------------------
 # 3. Python Caches & Virtual Environments
 # ------------------------------------------------------------------------------
 __pycache__/
-*.py[cod]
-*$py.class
 *.pyc
-*.pyo
-*.pyd
-.Python
 .venv/
 env/
 venv/
-ENV/
 .pytest_cache/
-.ruff_cache/
-.coverage
-htmlcov/
 
 # ------------------------------------------------------------------------------
 # 4. Node.js Dependencies & Frontend Build Outputs
 # ------------------------------------------------------------------------------
 node_modules/
 dist/
-build/
 .vite/
-.oxlint_cache/
 npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
 
 # ------------------------------------------------------------------------------
-# 5. IDE, Editors & Agent Scratchpads
+# 5. IDE & Agent Configurations
 # ------------------------------------------------------------------------------
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
-*.swp
-*.swo
 .agents/
-.gemini/
-.system_generated/
-.codegraphy/
-scratch/
-brain/
 
 # ------------------------------------------------------------------------------
 # 6. Database Temporary Lock & Journal Files (Keep real .db / .csv / .xlsx allowed)
@@ -77,17 +58,8 @@ brain/
 *.sqlite-journal
 
 # ------------------------------------------------------------------------------
-# 7. Operating System Artifacts & Temporary Files
+# 7. Operating System Artifacts
 # ------------------------------------------------------------------------------
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-desktop.ini
-*.bak
-*.tmp
-*.temp
 *.log
