@@ -44,35 +44,75 @@ UPLOADS_DIR = DATA_DIR / "uploads"
 CUSTOM_DB_DIR = DATA_DIR / "custom_db"
 NOSQL_DEFAULT_DIR = DATA_DIR / "nosql_default"
 
+# Default datasets categorized by file extension under data/default/<ext>/
+DEFAULT_DATA_DIR = DATA_DIR / "default"
+DEFAULT_DB_DIR = DEFAULT_DATA_DIR / "db"
+DEFAULT_JSON_DIR = DEFAULT_DATA_DIR / "json"
+DEFAULT_CSV_DIR = DEFAULT_DATA_DIR / "csv"
+DEFAULT_XLSX_DIR = DEFAULT_DATA_DIR / "xlsx"
+
+# Chat storage directory and session store files
+CHAT_STORAGE_DIR = DATA_DIR / "chat-storage"
+CHAT_HISTORY_FILE = CHAT_STORAGE_DIR / "chat_history.json"
+LEGACY_CHAT_HISTORY_FILE = DATA_DIR / "chat_history.json"
+
+# System-level Registry File
+REGISTRY_FILE = DATA_DIR / "databases.json"
+
 ALL_MANAGED_DIRS = [
     DATA_DIR,
-    RELATIONAL_DIR,
-    NOSQL_DIR,
-    CSV_DIR,
-    EXCEL_DIR,
     UPLOADS_DIR,
-    CUSTOM_DB_DIR,
-    NOSQL_DEFAULT_DIR,
+    DEFAULT_DATA_DIR,
+    DEFAULT_DB_DIR,
+    DEFAULT_JSON_DIR,
+    DEFAULT_CSV_DIR,
+    DEFAULT_XLSX_DIR,
+    CHAT_STORAGE_DIR,
 ]
 
-# System-level Registry and Session Store Files
-REGISTRY_FILE = DATA_DIR / "databases.json"
-CHAT_HISTORY_FILE = DATA_DIR / "chat_history.json"
-
-# Protected Default Datasets
-DEFAULT_CHINOOK_PATH = DATA_DIR / "chinook.db"
-DEFAULT_NOSQL_PATH = NOSQL_DEFAULT_DIR / "ecommerce_store.json"
-DEFAULT_CSV_PATH = CSV_DIR / "sales_performance.csv"
-DEFAULT_EXCEL_PATH = EXCEL_DIR / "financial_budget.xlsx"
+# Protected Default Datasets (saved under backend/data/default/<extension>/)
+DEFAULT_CHINOOK_PATH = (
+    DEFAULT_DB_DIR / "chinook.db"
+    if (DEFAULT_DB_DIR / "chinook.db").exists()
+    else DATA_DIR / "chinook.db"
+)
+DEFAULT_NOSQL_PATH = (
+    DEFAULT_JSON_DIR / "ecommerce_store.json"
+    if (DEFAULT_JSON_DIR / "ecommerce_store.json").exists()
+    else NOSQL_DEFAULT_DIR / "ecommerce_store.json"
+)
+DEFAULT_CSV_PATH = (
+    DEFAULT_CSV_DIR / "sales_performance.csv"
+    if (DEFAULT_CSV_DIR / "sales_performance.csv").exists()
+    else CSV_DIR / "sales_performance.csv"
+)
+DEFAULT_EXCEL_PATH = (
+    DEFAULT_XLSX_DIR / "financial_budget.xlsx"
+    if (DEFAULT_XLSX_DIR / "financial_budget.xlsx").exists()
+    else EXCEL_DIR / "financial_budget.xlsx"
+)
 
 
 # ==============================================================================
 # Helper Functions
 # ==============================================================================
 def ensure_directories() -> None:
-    """Ensures all managed data directories exist on the filesystem."""
+    """Ensures all managed data directories exist on the filesystem and defaults are seeded."""
     for directory in ALL_MANAGED_DIRS:
         directory.mkdir(parents=True, exist_ok=True)
+
+    # Seed default/<ext>/ datasets and chat storage from legacy locations if not present
+    pairs = [
+        (DATA_DIR / "chinook.db", DEFAULT_DB_DIR / "chinook.db"),
+        (NOSQL_DEFAULT_DIR / "ecommerce_store.json", DEFAULT_JSON_DIR / "ecommerce_store.json"),
+        (CSV_DIR / "sales_performance.csv", DEFAULT_CSV_DIR / "sales_performance.csv"),
+        (EXCEL_DIR / "financial_budget.xlsx", DEFAULT_XLSX_DIR / "financial_budget.xlsx"),
+        (LEGACY_CHAT_HISTORY_FILE, CHAT_HISTORY_FILE),
+    ]
+    for src, dst in pairs:
+        if src.exists() and not dst.exists():
+            import shutil
+            shutil.copy2(src, dst)
 
 
 def get_llm_settings() -> Dict[str, str]:

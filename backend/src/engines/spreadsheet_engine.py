@@ -24,7 +24,11 @@ from config import (
     DATA_DIR,
     DEFAULT_CSV_PATH,
     DEFAULT_EXCEL_PATH,
+    DEFAULT_DATA_DIR,
+    DEFAULT_CSV_DIR,
+    DEFAULT_XLSX_DIR,
     EXCEL_DIR,
+    UPLOADS_DIR,
 )
 
 
@@ -49,12 +53,31 @@ def resolve_spreadsheet_path(
         return p.resolve()
 
     filename = p.name
-    for base in [DATA_DIR, CSV_DIR, EXCEL_DIR, BACKEND_DIR]:
+    # Direct match for default datasets
+    if filename == DEFAULT_CSV_PATH.name and DEFAULT_CSV_PATH.exists():
+        return DEFAULT_CSV_PATH.resolve()
+    if filename == DEFAULT_EXCEL_PATH.name and DEFAULT_EXCEL_PATH.exists():
+        return DEFAULT_EXCEL_PATH.resolve()
+
+    search_bases = [
+        DEFAULT_DATA_DIR,
+        DEFAULT_CSV_DIR,
+        DEFAULT_XLSX_DIR,
+        UPLOADS_DIR,
+        UPLOADS_DIR / "csv",
+        UPLOADS_DIR / "xlsx",
+        DATA_DIR,
+        CSV_DIR,
+        EXCEL_DIR,
+        BACKEND_DIR,
+    ]
+
+    for base in search_bases:
         candidate_file = (base / filename).resolve()
         if candidate_file.exists():
             return candidate_file
 
-    for base in [DATA_DIR, CSV_DIR, EXCEL_DIR, BACKEND_DIR]:
+    for base in search_bases:
         try:
             candidate = (base / p).resolve()
             if candidate.exists():
@@ -188,6 +211,7 @@ def get_spreadsheet_schema(
             "name": sheet_name,
             "cols": col_list,
             "count": row_count,
+            "columns": cols_meta,
             "columns_meta": cols_meta,
             "data_range": f"A2:{excel_col_letter(max(0, len(df.columns) - 1))}{row_count + 1}" if row_count > 0 else "Empty",
         })

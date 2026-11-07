@@ -4,7 +4,7 @@
     "name": "Chinook (Music)",
     "type": "sql",
     "filename": "chinook.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\chinook.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\default\\db\\chinook.db",
     "table_count": 11,
     "is_default": true,
     "created_at": "2026-09-01T14:43:16.521604+00:00"
@@ -14,7 +14,7 @@
     "name": "E-Commerce Store (NoSQL)",
     "type": "nosql",
     "filename": "ecommerce_store.json",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\nosql_default\\ecommerce_store.json",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\default\\json\\ecommerce_store.json",
     "table_count": 4,
     "doc_count": 107,
     "row_count": 107,
@@ -26,7 +26,7 @@
     "name": "Sales Performance (CSV)",
     "type": "csv",
     "filename": "sales_performance.csv",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\csv\\sales_performance.csv",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\default\\csv\\sales_performance.csv",
     "row_count": 12,
     "column_count": 9,
     "table_count": 1,
@@ -38,7 +38,7 @@
     "name": "Financial Budget (Excel)",
     "type": "excel",
     "filename": "financial_budget.xlsx",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\excel\\financial_budget.xlsx",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\default\\xlsx\\financial_budget.xlsx",
     "sheet_count": 1,
     "sheets": [
       "DepartmentBudget"
@@ -48,5 +48,59 @@
     "column_count": 13,
     "is_default": true,
     "created_at": "2026-09-04T08:35:36.028788+00:00"
+  },
+  {
+    "id": "healthcare_patients_1794063484",
+    "name": "Healthcare Patients",
+    "type": "sql",
+    "filename": "healthcare_patients.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\healthcare_patients.db",
+    "upload_mode": "single",
+    "group_name": null,
+    "group_id": null,
+    "table_count": 5,
+    "is_default": false,
+    "created_at": "2026-11-07T14:58:04.023495+00:00"
+  },
+  {
+    "id": "company_management__combined__1794063484",
+    "name": "Company Management (Combined)",
+    "type": "sql",
+    "filename": "combined_sql_database.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\combined_sql_database.db",
+    "upload_mode": "single",
+    "group_name": null,
+    "group_id": null,
+    "table_count": 4,
+    "is_default": false,
+    "created_at": "2026-11-07T14:58:04.027472+00:00"
+  },
+  {
+    "id": "northwind_e_commerce_1794063484",
+    "name": "Northwind E-Commerce",
+    "type": "sql",
+    "filename": "northwind_ecommerce.db",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\northwind_ecommerce.db",
+    "upload_mode": "single",
+    "group_name": null,
+    "group_id": null,
+    "table_count": 7,
+    "is_default": false,
+    "created_at": "2026-11-07T14:58:04.044977+00:00"
+  },
+  {
+    "id": "online_academy__courses___reviews__1794063484",
+    "name": "Online Academy (Courses & Reviews)",
+    "type": "nosql",
+    "filename": "test_academy.json",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\json\\test_academy.json",
+    "upload_mode": "single",
+    "group_name": null,
+    "group_id": null,
+    "table_count": 4,
+    "doc_count": 20,
+    "row_count": 20,
+    "is_default": false,
+    "created_at": "2026-11-07T14:58:04.063884+00:00"
   }
 ]

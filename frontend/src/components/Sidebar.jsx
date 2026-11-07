@@ -181,8 +181,7 @@ export default function Sidebar({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold tracking-tight group-hover:text-indigo-400 transition-colors">OmniData AI</h1>
-              <p className="text-[10px] text-slate-400">Multi-Engine Data Intelligence</p>
+              <h1 className="text-sm font-bold tracking-tight group-hover:text-indigo-400 transition-colors">Text to Code</h1>
             </div>
           </button>
 

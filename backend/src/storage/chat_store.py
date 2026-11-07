@@ -2,7 +2,7 @@
 Chat Storage Module.
 
 Provides pure functional persistence and session management for conversational
-chat history stored in backend/data/chat_history.json.
+chat history stored in backend/data/chat-storage/chat_history.json.
 All sessions, user prompts, AI responses, generated code/queries, and
 telemetry metrics are stored in structured, human-readable JSON.
 
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from config import CHAT_HISTORY_FILE, ensure_directories
+from config import CHAT_HISTORY_FILE, CHAT_STORAGE_DIR, LEGACY_CHAT_HISTORY_FILE, ensure_directories
 
 
 # ==============================================================================
@@ -23,6 +23,8 @@ from config import CHAT_HISTORY_FILE, ensure_directories
 def _resolve_file_path(file_path: Optional[Path | str] = None) -> Path:
     """Resolves and returns the Path object for chat history storage."""
     if file_path is None:
+        if not CHAT_HISTORY_FILE.exists() and LEGACY_CHAT_HISTORY_FILE.exists():
+            return LEGACY_CHAT_HISTORY_FILE
         return CHAT_HISTORY_FILE
     return Path(file_path).resolve()
 

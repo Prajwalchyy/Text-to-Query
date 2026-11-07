@@ -131,3 +131,19 @@ def test_registry_integration():
     assert chinook is not None
     assert chinook["type"] == "sql"
 
+
+def test_chat_storage_directory_and_path_resolution():
+    """Verifies that chat storage points to data/chat-storage and resolves correctly."""
+    from config import CHAT_STORAGE_DIR, CHAT_HISTORY_FILE
+    from storage.chat_store import _resolve_file_path
+
+    assert CHAT_STORAGE_DIR.name == "chat-storage"
+    assert CHAT_HISTORY_FILE.name == "chat_history.json"
+    assert CHAT_HISTORY_FILE.parent == CHAT_STORAGE_DIR
+
+    # When no explicit file path is provided, it resolves to CHAT_HISTORY_FILE
+    resolved = _resolve_file_path()
+    assert resolved.name == "chat_history.json"
+    assert "chat-storage" in str(resolved)
+
+

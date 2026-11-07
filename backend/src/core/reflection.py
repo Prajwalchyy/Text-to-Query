@@ -405,16 +405,6 @@ class CorrectionEngine:
 
     @property
     def generator(self):
-        if self._generator is None:
-            try:
-                from backend.archive.legacy_pipeline.F02_generator import SQLGenerator
-                self._generator = SQLGenerator(self.db_engine)
-            except ImportError:
-                try:
-                    from F02_generator import SQLGenerator
-                    self._generator = SQLGenerator(self.db_engine)
-                except ImportError:
-                    self._generator = None
         return self._generator
 
     @property

@@ -3,8 +3,9 @@ import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Network, PanelLeftOp
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
-import UploadDbModal from './components/UploadDbModal';
+import UploadDatasets from './components/UploadDatasets';
 import SchemaMapModal from './components/SchemaMapModal';
+import SwitchDatasetModal from './components/SwitchDatasetModal';
 import DatabaseSelectorPopover from './components/DatabaseSelectorPopover';
 import HomepageWelcome from './components/HomepageWelcome';
 
@@ -32,10 +33,12 @@ export default function App() {
   const [databases, setDatabases] = useState([]);
   const [selectedDbId, setSelectedDbId] = useState(() => getUrlParam("db") || "chinook");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [pendingDbSwitch, setPendingDbSwitch] = useState(null);
 
   // Schema & Relationship states
   const [tables, setTables] = useState([]);
   const [relationships, setRelationships] = useState([]);
+  const [isSchemaLoading, setIsSchemaLoading] = useState(true);
   const [schemaModalOpen, setSchemaModalOpen] = useState(false);
   const [prefilledPrompt, setPrefilledPrompt] = useState('');
 
@@ -78,6 +81,26 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Prunes any empty conversation (0 messages) that is not actively kept
+  const pruneEmptyChats = (keepChatId = null) => {
+    setChats(prev => {
+      const emptyToRemove = prev.filter(c => c.id !== keepChatId && (!c.messages || c.messages.length === 0));
+      if (emptyToRemove.length === 0) return prev;
+
+      // Clean up from backend storage in background in case any were persisted
+      emptyToRemove.forEach(chat => {
+        fetch(`${API_BASE_URL}/chats/${chat.id}`, { method: "DELETE" }).catch(() => {});
+      });
+
+      return prev.filter(c => c.id === keepChatId || (c.messages && c.messages.length > 0));
+    });
+  };
+
+  const handleGoHome = () => {
+    pruneEmptyChats(null);
+    setActiveChatId(null);
+  };
+
   // 1. Initial Load: Fetch chats, databases, and schema
   useEffect(() => {
     loadChatsFromBackend();
@@ -90,6 +113,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const chatParam = params.get("chat");
       const dbParam = params.get("db");
+      pruneEmptyChats(chatParam || null);
       setActiveChatId(chatParam || null);
       if (dbParam) setSelectedDbId(dbParam);
     };
@@ -141,13 +165,23 @@ export default function App() {
         const data = await res.json();
         setApiOnline(true);
         const fetchedChats = data.chats || [];
-        setChats(fetchedChats);
+
+        // Prune any abandoned empty chats loaded from backend storage
+        const initialChatParam = getUrlParam("chat");
+        const validChats = fetchedChats.filter(c => (c.messages && c.messages.length > 0) || c.id === initialChatParam);
+
+        // Delete abandoned empty chats from backend storage in background
+        const abandonedEmpty = fetchedChats.filter(c => (!c.messages || c.messages.length === 0) && c.id !== initialChatParam);
+        abandonedEmpty.forEach(ec => {
+          fetch(`${API_BASE_URL}/chats/${ec.id}`, { method: "DELETE" }).catch(() => {});
+        });
+
+        setChats(validChats);
 
         // Respect explicit chat in URL parameter if valid, otherwise default to homepage (null)
-        const initialChatParam = getUrlParam("chat");
-        if (initialChatParam && fetchedChats.some(c => c.id === initialChatParam)) {
+        if (initialChatParam && validChats.some(c => c.id === initialChatParam)) {
           setActiveChatId(initialChatParam);
-          const initialChat = fetchedChats.find(c => c.id === initialChatParam);
+          const initialChat = validChats.find(c => c.id === initialChatParam);
           if (initialChat && initialChat.db_id) {
             setSelectedDbId(initialChat.db_id);
           }
@@ -183,6 +217,7 @@ export default function App() {
   };
 
   const loadSchemaForDb = async (dbId) => {
+    setIsSchemaLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/tables?db_id=${encodeURIComponent(dbId)}`);
       if (res.ok) {
@@ -192,6 +227,8 @@ export default function App() {
       }
     } catch (e) {
       console.error("Failed to load schema for db:", dbId, e);
+    } finally {
+      setIsSchemaLoading(false);
     }
   };
 
@@ -203,6 +240,8 @@ export default function App() {
 
   // Synchronize selected database whenever user clicks a conversation in sidebar
   const handleSelectChat = (chatId) => {
+    // If switching away from an empty conversation, prune it so it doesn't linger in sidebar
+    pruneEmptyChats(chatId);
     setActiveChatId(chatId);
     if (chatId) {
       const target = chats.find(c => c.id === chatId);
@@ -221,31 +260,25 @@ export default function App() {
     scrollToBottom();
   }, [activeChat?.messages, isLoading]);
 
-  // Create a new conversation on Backend and select it (strictly bound to 1 dataset)
-  const handleNewChat = async (targetDbId) => {
+  // Create a new conversation (in-memory draft bound to 1 dataset; persisted upon first message)
+  const handleNewChat = (targetDbId) => {
     const dbToUse = targetDbId || selectedDbId || "chinook";
     const targetDbInfo = databases.find(d => d.id === dbToUse) || { id: dbToUse, name: "Chinook (Music)" };
 
+    // Prune any existing abandoned empty chats first
+    pruneEmptyChats(activeChatId);
+
     // If current active chat is already an empty conversation for the same dataset, focus it and avoid duplicating
-    if (activeChat && activeChat.title === "New Conversation" && (!activeChat.messages || activeChat.messages.length === 0) && activeChat.db_id === dbToUse) {
+    if (activeChat && (!activeChat.messages || activeChat.messages.length === 0) && activeChat.db_id === dbToUse) {
       setPrefilledPrompt('');
       return;
     }
 
     // If current active chat is an empty conversation for a different dataset, update its dataset in place
-    if (activeChat && activeChat.title === "New Conversation" && (!activeChat.messages || activeChat.messages.length === 0)) {
+    if (activeChat && (!activeChat.messages || activeChat.messages.length === 0)) {
       setChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, db_id: dbToUse, db_name: targetDbInfo.name } : c));
       setSelectedDbId(dbToUse);
       setPrefilledPrompt('');
-      try {
-        await fetch(`${API_BASE_URL}/chats/${activeChat.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ db_id: dbToUse, db_name: targetDbInfo.name }),
-        });
-      } catch (err) {
-        console.error("Backend error updating chat dataset:", err);
-      }
       return;
     }
 
@@ -262,21 +295,8 @@ export default function App() {
     setActiveChatId(newId);
     setSelectedDbId(targetDbInfo.id);
     setPrefilledPrompt('');
-
-    try {
-      await fetch(`${API_BASE_URL}/chats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: newId,
-          title: "New Conversation",
-          db_id: targetDbInfo.id,
-          db_name: targetDbInfo.name
-        }),
-      });
-    } catch (err) {
-      console.error("Backend error creating chat:", err);
-    }
+    // NOTE: Do not persist empty chat to backend via POST /chats.
+    // Session is persisted automatically once the user executes the first query.
   };
 
   // Handle dataset selection: enforce One Dataset Per Conversation
@@ -289,26 +309,31 @@ export default function App() {
       return;
     }
 
-    // Case 2: In an empty conversation (0 messages) - update its dataset
+    // Case 2: In an empty conversation (0 messages) - update its dataset in place
     const isChatEmpty = !activeChat?.messages || activeChat.messages.length === 0;
     if (isChatEmpty) {
       const newDbInfo = databases.find(d => d.id === newDbId) || { id: newDbId, name: newDbId };
       setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, db_id: newDbId, db_name: newDbInfo.name } : c));
       setSelectedDbId(newDbId);
-      fetch(`${API_BASE_URL}/chats/${activeChatId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ db_id: newDbId, db_name: newDbInfo.name }),
-      }).catch(err => console.error("Backend error updating chat dataset:", err));
       return;
     }
 
     // Case 3: In an ongoing conversation with messages
-    // The conversation is locked to its dataset. Switching dataset starts a new conversation!
+    // If the conversation is already on this dataset, no switch needed
     if (activeChat.db_id === newDbId) {
       return;
     }
-    handleNewChat(newDbId);
+
+    // Ask user for consent before creating/switching to a new conversation
+    const targetDbInfo = databases.find(d => d.id === newDbId) || { id: newDbId, name: newDbId, type: 'sql' };
+    setPendingDbSwitch(targetDbInfo);
+  };
+
+  const handleConfirmDbSwitch = () => {
+    if (!pendingDbSwitch) return;
+    const targetDbId = pendingDbSwitch.id;
+    setPendingDbSwitch(null);
+    handleNewChat(targetDbId);
   };
 
   // Delete a conversation on Backend
@@ -509,7 +534,7 @@ export default function App() {
         activeChatId={activeChatId}
         onSelectChat={handleSelectChat}
         onNewChat={() => handleNewChat()}
-        onGoHome={() => setActiveChatId(null)}
+        onGoHome={handleGoHome}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
         tables={tables}
@@ -526,8 +551,8 @@ export default function App() {
         onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
       />
 
-      {/* Manage & Upload Databases Modal */}
-      <UploadDbModal
+      {/* Manage & Upload Databases / Datasets Modal */}
+      <UploadDatasets
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         databases={databases}
@@ -549,6 +574,17 @@ export default function App() {
           isDark={isDark}
         />
       )}
+
+      {/* Dataset Switch Confirmation Modal */}
+      <SwitchDatasetModal
+        isOpen={Boolean(pendingDbSwitch)}
+        targetDb={pendingDbSwitch}
+        currentDbName={activeChat?.db_name || currentDb?.name}
+        currentChatTitle={activeChat?.title}
+        onConfirm={handleConfirmDbSwitch}
+        onClose={() => setPendingDbSwitch(null)}
+        isDark={isDark}
+      />
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">
@@ -646,6 +682,9 @@ export default function App() {
               <HomepageWelcome 
                 currentDb={currentDb}
                 tables={tables}
+                relationships={relationships}
+                activeChatId={activeChatId}
+                isSchemaLoading={isSchemaLoading}
                 onSelectPrompt={handleSelectPrompt}
                 onOpenSchemaMap={showSchemaMap ? () => setSchemaModalOpen(true) : null}
                 isDark={isDark}

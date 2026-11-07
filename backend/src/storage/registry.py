@@ -52,22 +52,21 @@ def get_upload_dir_for_type(
     group_folder: str = "",
 ) -> Path:
     """
-    Returns the categorized storage directory under data/:
-    - Single dataset upload: data/{type}/single/
+    Returns the categorized storage directory under data/uploads/<extension_name>/:
+    Scans the extension, dynamically creates the folder for that extension, and returns the path.
     """
-    ext = file_ext.lower()
-    if dataset_type == "sql" or ext in [".db", ".sqlite", ".sqlite3", ".sql"]:
-        base_dir = RELATIONAL_DIR
-    elif dataset_type == "nosql" or ext in [".json", ".jsonl", ".bson"]:
-        base_dir = NOSQL_DIR
-    elif dataset_type == "csv" or ext in [".csv", ".tsv", ".parquet"]:
-        base_dir = CSV_DIR
-    elif dataset_type == "excel" or ext in [".xlsx", ".xls"]:
-        base_dir = EXCEL_DIR
-    else:
-        base_dir = RELATIONAL_DIR
+    ext = (file_ext or "").lower().strip()
+    if ext.startswith("."):
+        ext = ext[1:]
 
-    target = base_dir / "single"
+    # Fallback if no extension was provided or file has no suffix
+    if not ext:
+        if dataset_type:
+            ext = dataset_type.lower().strip()
+        else:
+            ext = "misc"
+
+    target = UPLOADS_DIR / ext
     target.mkdir(parents=True, exist_ok=True)
     return target
 
@@ -235,9 +234,24 @@ def write_registry(data: List[Dict[str, Any]]) -> None:
 
 
 def _ensure_defaults_present(dbs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Guarantees protected system defaults exist in registry list."""
+    """Guarantees protected system defaults exist in registry list and paths are synchronized."""
     existing_ids = {d["id"] for d in dbs}
     updated = False
+
+    # Sync paths for existing default datasets
+    default_path_map = {
+        "chinook": DEFAULT_CHINOOK_PATH,
+        "ecommerce_store": DEFAULT_NOSQL_PATH,
+        "sales_performance": DEFAULT_CSV_PATH,
+        "financial_budget": DEFAULT_EXCEL_PATH,
+    }
+    for d in dbs:
+        db_id = d.get("id")
+        if d.get("is_default") and db_id in default_path_map:
+            expected_path = str(default_path_map[db_id].resolve())
+            if d.get("path") != expected_path and default_path_map[db_id].exists():
+                d["path"] = expected_path
+                updated = True
 
     # 1. Chinook
     if "chinook" not in existing_ids and DEFAULT_CHINOOK_PATH.exists():

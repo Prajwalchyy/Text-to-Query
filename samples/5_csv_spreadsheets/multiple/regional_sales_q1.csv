@@ -1,7 +1,0 @@
-Transaction_ID,Date,Region,Sales_Rep,Category,Units_Sold,Unit_Price,Total_Revenue
-TXN-1001,2026-01-15,North,Alice Walker,Electronics,12,250.0,3000.0
-TXN-1002,2026-01-22,South,Bob Vance,Furniture,5,480.0,2400.0
-TXN-1003,2026-02-05,East,Carol Danvers,Electronics,8,310.0,2480.0
-TXN-1004,2026-02-18,West,Dave Miller,Office Supplies,45,18.5,832.5
-TXN-1005,2026-03-10,North,Alice Walker,Furniture,7,420.0,2940.0
-TXN-1006,2026-03-25,West,Dave Miller,Electronics,15,220.0,3300.0

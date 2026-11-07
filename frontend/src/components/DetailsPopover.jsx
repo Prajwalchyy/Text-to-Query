@@ -25,7 +25,6 @@ export default function DetailsPopover({ telemetry, isDark }) {
   const { 
     confidence_score = 0, 
     latency_ms = 0, 
-    attempts = 1, 
     status = "SUCCESS", 
     error = null 
   } = telemetry;
@@ -92,11 +91,6 @@ export default function DetailsPopover({ telemetry, isDark }) {
               <span className="font-mono font-medium">{latencySec}s ({latency_ms} ms)</span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Correction Attempts:</span>
-              <span className="font-mono font-medium">{attempts} / 3</span>
-            </div>
-
             <div className="flex items-center justify-between pt-1 border-t border-slate-700/30">
               <span className="text-slate-400">Execution Status:</span>
               <div className="flex items-center gap-1">
@@ -114,20 +108,11 @@ export default function DetailsPopover({ telemetry, isDark }) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Guardrails:</span>
-              {isSuccess ? (
-                <span className="text-emerald-400 font-medium">AST & Allowlist Passed</span>
-              ) : (
-                <span className="text-rose-400 font-medium">Enforced (Read-Only)</span>
-              )}
-            </div>
-
-            {/* Detailed Guardrail Diagnostic Note (Cleanly inside popover) */}
+            {/* Detailed Diagnostic Note (Cleanly inside popover) */}
             {error && (
               <div className="mt-2.5 pt-2 border-t border-slate-700/40">
                 <span className="text-[10px] font-semibold text-rose-400 block mb-1">
-                  Guardrail Diagnostic:
+                  Diagnostic Note:
                 </span>
                 <p className={`text-[11px] font-mono leading-relaxed p-2 rounded-lg border break-words ${
                   isDark ? 'bg-slate-950/70 border-slate-800 text-slate-300' : 'bg-rose-50/50 border-rose-200 text-rose-800'

@@ -13,7 +13,14 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from config import DEFAULT_CHINOOK_PATH, DATA_DIR, BACKEND_DIR
+from config import (
+    BACKEND_DIR,
+    DATA_DIR,
+    DEFAULT_CHINOOK_PATH,
+    DEFAULT_DATA_DIR,
+    DEFAULT_DB_DIR,
+    UPLOADS_DIR,
+)
 
 
 # ==============================================================================
@@ -35,15 +42,26 @@ def resolve_sqlite_path(db_target: Optional[Path | str] = None) -> Path:
     if p.is_absolute() and p.exists():
         return p.resolve()
 
-    # If the path does not exist, check if its filename exists in standard locations
     filename = p.name
-    for base in [DATA_DIR, DATA_DIR / "relational", BACKEND_DIR]:
+    if filename == DEFAULT_CHINOOK_PATH.name and DEFAULT_CHINOOK_PATH.exists():
+        return DEFAULT_CHINOOK_PATH.resolve()
+
+    search_bases = [
+        DEFAULT_DATA_DIR,
+        DEFAULT_DB_DIR,
+        UPLOADS_DIR,
+        UPLOADS_DIR / "db",
+        UPLOADS_DIR / "sqlite",
+        DATA_DIR,
+        BACKEND_DIR,
+    ]
+
+    for base in search_bases:
         candidate_file = (base / filename).resolve()
         if candidate_file.exists():
             return candidate_file
 
-    # Try resolving relative to DATA_DIR, then RELATIONAL_DIR, then BACKEND_DIR
-    for base in [DATA_DIR, DATA_DIR / "relational", BACKEND_DIR]:
+    for base in search_bases:
         try:
             candidate = (base / target_str).resolve()
             if candidate.exists():

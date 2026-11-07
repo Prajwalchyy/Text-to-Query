@@ -15,7 +15,16 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from config import DATA_DIR, NOSQL_DIR, NOSQL_DEFAULT_DIR, DEFAULT_NOSQL_PATH, BACKEND_DIR
+from config import (
+    BACKEND_DIR,
+    DATA_DIR,
+    DEFAULT_DATA_DIR,
+    DEFAULT_JSON_DIR,
+    DEFAULT_NOSQL_PATH,
+    NOSQL_DEFAULT_DIR,
+    NOSQL_DIR,
+    UPLOADS_DIR,
+)
 
 
 # ==============================================================================
@@ -34,12 +43,27 @@ def resolve_nosql_path(target_path: Optional[Union[Path, str]] = None) -> Path:
         return p.resolve()
 
     filename = p.name
-    for base in [DATA_DIR, NOSQL_DIR, NOSQL_DEFAULT_DIR, BACKEND_DIR]:
+    if filename == DEFAULT_NOSQL_PATH.name and DEFAULT_NOSQL_PATH.exists():
+        return DEFAULT_NOSQL_PATH.resolve()
+
+    search_bases = [
+        DEFAULT_DATA_DIR,
+        DEFAULT_JSON_DIR,
+        UPLOADS_DIR,
+        UPLOADS_DIR / "json",
+        UPLOADS_DIR / "bson",
+        DATA_DIR,
+        NOSQL_DIR,
+        NOSQL_DEFAULT_DIR,
+        BACKEND_DIR,
+    ]
+
+    for base in search_bases:
         candidate_file = (base / filename).resolve()
         if candidate_file.exists():
             return candidate_file
 
-    for base in [DATA_DIR, NOSQL_DIR, NOSQL_DEFAULT_DIR, BACKEND_DIR]:
+    for base in search_bases:
         try:
             candidate = (base / p).resolve()
             if candidate.exists():

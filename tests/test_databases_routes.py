@@ -78,6 +78,7 @@ def test_get_tables_excel():
     assert len(data["tables"]) >= 1
     sheet_names = [t["name"] for t in data["tables"]]
     assert "DepartmentBudget" in sheet_names
+    assert "columns" in data["tables"][0]
     assert all("count" in t and isinstance(t["count"], int) for t in data["tables"])
 
 
