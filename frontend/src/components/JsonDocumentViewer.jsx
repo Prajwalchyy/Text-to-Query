@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileJson, Copy, Check, ChevronDown, ChevronUp, Layers, Download } from 'lucide-react';
+import { FileJson, Copy, Check, ChevronDown, ChevronUp, Download } from 'lucide-react';
 
 export default function JsonDocumentViewer({ data, isDark }) {
   const [copied, setCopied] = useState(false);

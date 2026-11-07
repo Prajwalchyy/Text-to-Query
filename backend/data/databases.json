@@ -14,8 +14,10 @@
     "name": "E-Commerce Store (NoSQL)",
     "type": "nosql",
     "filename": "ecommerce_store.json",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\nosql_default\\ecommerce_store.json",
-    "doc_count": 50,
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\nosql_default\\ecommerce_store.json",
+    "table_count": 4,
+    "doc_count": 107,
+    "row_count": 107,
     "is_default": true,
     "created_at": "2026-09-02T17:00:42.386418+00:00"
   },
@@ -24,8 +26,9 @@
     "name": "Sales Performance (CSV)",
     "type": "csv",
     "filename": "sales_performance.csv",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\csv\\sales_performance.csv",
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\csv\\sales_performance.csv",
     "row_count": 12,
+    "column_count": 9,
     "table_count": 1,
     "is_default": true,
     "created_at": "2026-09-04T08:35:35.779158+00:00"
@@ -35,14 +38,14 @@
     "name": "Financial Budget (Excel)",
     "type": "excel",
     "filename": "financial_budget.xlsx",
-    "path": "E:\\ALL_CODES_HERE_NOW\\Project_Prot\\Text_to_sql\\backend\\data\\excel\\financial_budget.xlsx",
-    "sheet_count": 2,
+    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\excel\\financial_budget.xlsx",
+    "sheet_count": 1,
     "sheets": [
-      "DepartmentBudget",
-      "ExpenseDetails"
+      "DepartmentBudget"
     ],
-    "table_count": 2,
-    "row_count": 13,
+    "table_count": 1,
+    "row_count": 1000,
+    "column_count": 13,
     "is_default": true,
     "created_at": "2026-09-04T08:35:36.028788+00:00"
   }

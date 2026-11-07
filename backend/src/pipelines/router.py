@@ -333,11 +333,11 @@ def run_pipeline(
         }
 
     # 4. Resolve Conversational Memory Window
+    # Stateless prompt execution: prompts are executed individually without auto-pulling
+    # prior turns from chat_id, eliminating token compounding turn penalties.
     active_history: List[Dict[str, Any]] = []
     if history:
         active_history = extract_memory_window(history, limit=4)
-    elif chat_id:
-        active_history = get_chat_memory_window(chat_id, limit=4)
 
     # 5. Polyglot Multi-Language Routing Check
     raw_lang = normalize_target_language(target_language)

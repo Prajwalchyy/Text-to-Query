@@ -32,28 +32,19 @@ const LANGUAGE_METADATA = {
   },
   nosql: {
     id: 'nosql',
-    name: 'MongoDB MQL',
-    badge: 'MongoDB MQL',
-    color: 'emerald',
+    name: 'NoSQL',
+    badge: 'NoSQL',
+    color: 'amber',
     icon: FileJson
   }
 };
 
 const getCompatibleLanguages = (dbType) => {
   const type = (dbType || 'sql').toLowerCase();
-  if (type === 'sql') {
-    return ['sql', 'excel_formula', 'pandas', 'r'];
-  }
-  if (type === 'nosql') {
-    return ['nosql', 'excel_formula', 'pandas', 'r'];
-  }
-  if (type === 'csv') {
-    return ['sql', 'excel_formula', 'pandas', 'r'];
-  }
-  if (type === 'excel') {
-    return ['excel_formula', 'sql', 'pandas', 'r'];
-  }
-  return ['sql', 'excel_formula', 'pandas', 'r'];
+  if (type === 'nosql') return ['nosql', 'pandas', 'r'];
+  if (type === 'excel') return ['excel_formula', 'pandas', 'r'];
+  if (type === 'csv') return ['pandas', 'excel_formula', 'r'];
+  return ['sql', 'pandas', 'r'];
 };
 
 export default function ResultBlock({ 
@@ -211,7 +202,7 @@ export default function ResultBlock({
             {convertMenuOpen && (
               <div className="absolute right-0 top-full mt-1.5 w-44 rounded-xl bg-slate-900 border border-slate-700/90 shadow-2xl p-1 z-40 text-slate-200 backdrop-blur-md animate-fadeIn">
                 <div className="px-2 py-1 text-[9px] uppercase font-bold text-slate-400 border-b border-slate-800">
-                  Convert Query To
+                  Select Language or Tools
                 </div>
                 <div className="py-1 max-h-56 overflow-y-auto custom-scrollbar">
                   {compatibleLanguages.map((langKey) => {

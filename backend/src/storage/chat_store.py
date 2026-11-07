@@ -27,6 +27,27 @@ def _resolve_file_path(file_path: Optional[Path | str] = None) -> Path:
     return Path(file_path).resolve()
 
 
+def _normalize_chat_record(chat: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensures each chat session has db_id and db_name populated if available."""
+    if not chat.get("db_id"):
+        # Try to infer db_id and db_name from messages telemetry
+        for msg in chat.get("messages", []):
+            t = msg.get("telemetry") or {}
+            if t.get("db_id"):
+                chat["db_id"] = t.get("db_id")
+                chat["db_name"] = t.get("db_name") or t.get("db_id")
+                break
+    if chat.get("db_id") and not chat.get("db_name"):
+        known_names = {
+            "chinook": "Chinook (Music)",
+            "ecommerce_store": "E-Commerce Store (NoSQL)",
+            "sales_performance": "Sales Performance (CSV)",
+            "financial_budget": "Financial Budget (Excel)",
+        }
+        chat["db_name"] = known_names.get(chat["db_id"], chat["db_id"].replace("_", " ").title())
+    return chat
+
+
 def _read_chats(file_path: Optional[Path | str] = None) -> List[Dict[str, Any]]:
     """
     Safely reads and parses the JSON chat history file.
@@ -42,7 +63,9 @@ def _read_chats(file_path: Optional[Path | str] = None) -> List[Dict[str, Any]]:
         if not content:
             return []
         data = json.loads(content)
-        return data if isinstance(data, list) else []
+        if isinstance(data, list):
+            return [_normalize_chat_record(c) for c in data if isinstance(c, dict)]
+        return []
     except (json.JSONDecodeError, OSError):
         return []
 
@@ -81,19 +104,39 @@ def get_chat_session(chat_id: str, file_path: Optional[Path | str] = None) -> Op
 def create_chat_session(
     chat_id: str,
     title: str = "New Conversation",
-    file_path: Optional[Path | str] = None
+    file_path: Optional[Path | str] = None,
+    db_id: Optional[str] = None,
+    db_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Creates and persists a new conversation session.
     If the chat_id already exists, returns the existing session without duplicating.
     New sessions are inserted at the beginning (newest first).
+    Maintains 100% backward compatibility with positional file_path callers.
     """
-    chats = _read_chats(file_path)
+    # Detect if 3rd positional argument was passed as db_id instead of file_path
+    resolved_file_path = file_path
+    resolved_db_id = db_id
+    if isinstance(file_path, str) and not file_path.endswith(".json") and "/" not in file_path and "\\" not in file_path:
+        resolved_db_id = file_path
+        resolved_file_path = None
+
+    chats = _read_chats(resolved_file_path)
 
     # Prevent duplicate session creation
     for chat in chats:
         if chat.get("id") == chat_id:
             return chat
+
+    clean_db_id = resolved_db_id.strip() if resolved_db_id else None
+    if clean_db_id and not db_name:
+        known_names = {
+            "chinook": "Chinook (Music)",
+            "ecommerce_store": "E-Commerce Store (NoSQL)",
+            "sales_performance": "Sales Performance (CSV)",
+            "financial_budget": "Financial Budget (Excel)",
+        }
+        db_name = known_names.get(clean_db_id, clean_db_id.replace("_", " ").title())
 
     new_chat: Dict[str, Any] = {
         "id": chat_id,
@@ -101,11 +144,47 @@ def create_chat_session(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "messages": []
     }
+    if clean_db_id:
+        new_chat["db_id"] = clean_db_id
+        new_chat["db_name"] = db_name
 
     # Prepend newest chat session
     chats.insert(0, new_chat)
-    _write_chats(chats, file_path)
+    _write_chats(chats, resolved_file_path)
     return new_chat
+
+
+def update_chat_db(
+    chat_id: str,
+    db_id: str,
+    db_name: Optional[str] = None,
+    file_path: Optional[Path | str] = None
+) -> bool:
+    """
+    Updates the dataset associated with a chat session.
+    STRICT INVARIANT: Only permitted if the conversation has 0 messages.
+    Once messages exist, the conversation is locked to its dataset.
+    """
+    chats = _read_chats(file_path)
+    for chat in chats:
+        if chat.get("id") == chat_id:
+            if len(chat.get("messages", [])) > 0:
+                return False
+            clean_db_id = (db_id or "chinook").strip()
+            chat["db_id"] = clean_db_id
+            if db_name:
+                chat["db_name"] = db_name.strip()
+            else:
+                known_names = {
+                    "chinook": "Chinook (Music)",
+                    "ecommerce_store": "E-Commerce Store (NoSQL)",
+                    "sales_performance": "Sales Performance (CSV)",
+                    "financial_budget": "Financial Budget (Excel)",
+                }
+                chat["db_name"] = known_names.get(clean_db_id, clean_db_id.replace("_", " ").title())
+            _write_chats(chats, file_path)
+            return True
+    return False
 
 
 def update_chat_title(
@@ -206,13 +285,31 @@ def append_chat_message(
     if target_chat is None:
         # Auto-create chat if not found
         auto_title = content[:32].strip() if content else "New Conversation"
+        inferred_db_id = (telemetry or {}).get("db_id") or "chinook"
+        inferred_db_name = (telemetry or {}).get("db_name")
+        if not inferred_db_name:
+            known_names = {
+                "chinook": "Chinook (Music)",
+                "ecommerce_store": "E-Commerce Store (NoSQL)",
+                "sales_performance": "Sales Performance (CSV)",
+                "financial_budget": "Financial Budget (Excel)",
+            }
+            inferred_db_name = known_names.get(inferred_db_id, inferred_db_id.replace("_", " ").title())
+
         target_chat = {
             "id": chat_id,
             "title": auto_title or "New Conversation",
+            "db_id": inferred_db_id,
+            "db_name": inferred_db_name,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "messages": []
         }
         chats.insert(0, target_chat)
+    else:
+        if not target_chat.get("db_id") and telemetry and telemetry.get("db_id"):
+            target_chat["db_id"] = telemetry["db_id"]
+        if not target_chat.get("db_name") and telemetry and telemetry.get("db_name"):
+            target_chat["db_name"] = telemetry["db_name"]
 
     new_message: Dict[str, Any] = {
         "id": message_id,
@@ -276,4 +373,5 @@ get_chat = get_chat_session
 create_chat = create_chat_session
 delete_chat = delete_chat_session
 add_message = append_chat_message
+update_chat_dataset = update_chat_db
 

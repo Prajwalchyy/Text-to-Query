@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Database, Plus, ChevronDown, Network, PanelLeftOpen } from 'lucide-react';
+import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Network, PanelLeftOpen } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
 import UploadDbModal from './components/UploadDbModal';
 import SchemaMapModal from './components/SchemaMapModal';
 import DatabaseSelectorPopover from './components/DatabaseSelectorPopover';
+import HomepageWelcome from './components/HomepageWelcome';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -89,7 +90,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const chatParam = params.get("chat");
       const dbParam = params.get("db");
-      if (chatParam) setActiveChatId(chatParam);
+      setActiveChatId(chatParam || null);
       if (dbParam) setSelectedDbId(dbParam);
     };
 
@@ -99,22 +100,29 @@ export default function App() {
 
   // 3. Keep URL Parameters synchronized with current active chat & database
   useEffect(() => {
-    if (!activeChatId && !selectedDbId) return;
-
     const params = new URLSearchParams(window.location.search);
     let changed = false;
 
-    if (activeChatId && params.get("chat") !== activeChatId) {
-      params.set("chat", activeChatId);
-      changed = true;
+    if (activeChatId) {
+      if (params.get("chat") !== activeChatId) {
+        params.set("chat", activeChatId);
+        changed = true;
+      }
+    } else {
+      if (params.has("chat")) {
+        params.delete("chat");
+        changed = true;
+      }
     }
+
     if (selectedDbId && params.get("db") !== selectedDbId) {
       params.set("db", selectedDbId);
       changed = true;
     }
 
     if (changed) {
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      const searchStr = params.toString();
+      const newUrl = searchStr ? `${window.location.pathname}?${searchStr}` : window.location.pathname;
       window.history.pushState({ chat: activeChatId, db: selectedDbId }, '', newUrl);
     }
   }, [activeChatId, selectedDbId]);
@@ -132,16 +140,19 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setApiOnline(true);
-        if (data.chats && data.chats.length > 0) {
-          setChats(data.chats);
-          const initialChatParam = getUrlParam("chat");
-          if (initialChatParam && data.chats.some(c => c.id === initialChatParam)) {
-            setActiveChatId(initialChatParam);
-          } else {
-            setActiveChatId(data.chats[0].id);
+        const fetchedChats = data.chats || [];
+        setChats(fetchedChats);
+
+        // Respect explicit chat in URL parameter if valid, otherwise default to homepage (null)
+        const initialChatParam = getUrlParam("chat");
+        if (initialChatParam && fetchedChats.some(c => c.id === initialChatParam)) {
+          setActiveChatId(initialChatParam);
+          const initialChat = fetchedChats.find(c => c.id === initialChatParam);
+          if (initialChat && initialChat.db_id) {
+            setSelectedDbId(initialChat.db_id);
           }
         } else {
-          await createInitialChat();
+          setActiveChatId(null);
         }
       } else {
         setApiOnline(false);
@@ -184,27 +195,22 @@ export default function App() {
     }
   };
 
-  const createInitialChat = async () => {
-    const initialId = Date.now().toString();
-    try {
-      const res = await fetch(`${API_BASE_URL}/chats`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: initialId, title: "New Conversation" }),
-      });
-      if (res.ok) {
-        const newChat = await res.json();
-        setChats([newChat]);
-        setActiveChatId(newChat.id);
+  // Active chat session object (null when on Homepage)
+  const activeChat = activeChatId ? (chats.find(c => c.id === activeChatId) || null) : null;
+  const currentDb = databases.find(d => d.id === (activeChat?.db_id || selectedDbId)) || { name: "Chinook", id: (activeChat?.db_id || selectedDbId || "chinook"), type: ((activeChat?.db_id || selectedDbId) === 'ecommerce_store' ? 'nosql' : 'sql') };
+  const isTabular = currentDb.type === 'csv' || currentDb.type === 'excel';
+  const showSchemaMap = !isTabular; // Schema Map / ER diagrams are strictly for multi-relation SQL and NoSQL datasets
+
+  // Synchronize selected database whenever user clicks a conversation in sidebar
+  const handleSelectChat = (chatId) => {
+    setActiveChatId(chatId);
+    if (chatId) {
+      const target = chats.find(c => c.id === chatId);
+      if (target && target.db_id) {
+        setSelectedDbId(target.db_id);
       }
-    } catch (e) {
-      console.error("Failed to create initial chat on backend:", e);
     }
   };
-
-  // Active chat session object
-  const activeChat = chats.find(c => c.id === activeChatId) || chats[0] || { messages: [] };
-  const currentDb = databases.find(d => d.id === selectedDbId) || { name: "Chinook", id: selectedDbId || "chinook", type: (selectedDbId === 'ecommerce_store' ? 'nosql' : 'sql') };
 
   // Auto-scroll to bottom of messages
   const scrollToBottom = () => {
@@ -215,40 +221,105 @@ export default function App() {
     scrollToBottom();
   }, [activeChat?.messages, isLoading]);
 
-  // Create a new conversation on Backend
-  const handleNewChat = async () => {
+  // Create a new conversation on Backend and select it (strictly bound to 1 dataset)
+  const handleNewChat = async (targetDbId) => {
+    const dbToUse = targetDbId || selectedDbId || "chinook";
+    const targetDbInfo = databases.find(d => d.id === dbToUse) || { id: dbToUse, name: "Chinook (Music)" };
+
+    // If current active chat is already an empty conversation for the same dataset, focus it and avoid duplicating
+    if (activeChat && activeChat.title === "New Conversation" && (!activeChat.messages || activeChat.messages.length === 0) && activeChat.db_id === dbToUse) {
+      setPrefilledPrompt('');
+      return;
+    }
+
+    // If current active chat is an empty conversation for a different dataset, update its dataset in place
+    if (activeChat && activeChat.title === "New Conversation" && (!activeChat.messages || activeChat.messages.length === 0)) {
+      setChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, db_id: dbToUse, db_name: targetDbInfo.name } : c));
+      setSelectedDbId(dbToUse);
+      setPrefilledPrompt('');
+      try {
+        await fetch(`${API_BASE_URL}/chats/${activeChat.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ db_id: dbToUse, db_name: targetDbInfo.name }),
+        });
+      } catch (err) {
+        console.error("Backend error updating chat dataset:", err);
+      }
+      return;
+    }
+
     const newId = Date.now().toString();
-    const newChatObj = { id: newId, title: "New Conversation", messages: [] };
+    const newChatObj = {
+      id: newId,
+      title: "New Conversation",
+      db_id: targetDbInfo.id,
+      db_name: targetDbInfo.name,
+      messages: []
+    };
 
     setChats(prev => [newChatObj, ...prev]);
     setActiveChatId(newId);
+    setSelectedDbId(targetDbInfo.id);
+    setPrefilledPrompt('');
 
     try {
       await fetch(`${API_BASE_URL}/chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: newId, title: "New Conversation" }),
+        body: JSON.stringify({
+          id: newId,
+          title: "New Conversation",
+          db_id: targetDbInfo.id,
+          db_name: targetDbInfo.name
+        }),
       });
     } catch (err) {
       console.error("Backend error creating chat:", err);
     }
   };
 
+  // Handle dataset selection: enforce One Dataset Per Conversation
+  const handleSelectDb = (newDbId) => {
+    if (!newDbId) return;
+
+    // Case 1: On Homepage (activeChatId is null)
+    if (!activeChatId) {
+      setSelectedDbId(newDbId);
+      return;
+    }
+
+    // Case 2: In an empty conversation (0 messages) - update its dataset
+    const isChatEmpty = !activeChat?.messages || activeChat.messages.length === 0;
+    if (isChatEmpty) {
+      const newDbInfo = databases.find(d => d.id === newDbId) || { id: newDbId, name: newDbId };
+      setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, db_id: newDbId, db_name: newDbInfo.name } : c));
+      setSelectedDbId(newDbId);
+      fetch(`${API_BASE_URL}/chats/${activeChatId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ db_id: newDbId, db_name: newDbInfo.name }),
+      }).catch(err => console.error("Backend error updating chat dataset:", err));
+      return;
+    }
+
+    // Case 3: In an ongoing conversation with messages
+    // The conversation is locked to its dataset. Switching dataset starts a new conversation!
+    if (activeChat.db_id === newDbId) {
+      return;
+    }
+    handleNewChat(newDbId);
+  };
+
   // Delete a conversation on Backend
   const handleDeleteChat = async (chatId) => {
     setChats(prev => {
       const filtered = prev.filter(c => c.id !== chatId);
-      if (filtered.length === 0) return [];
       return filtered;
     });
 
     if (activeChatId === chatId) {
-      const remaining = chats.filter(c => c.id !== chatId);
-      if (remaining.length > 0) {
-        setActiveChatId(remaining[0].id);
-      } else {
-        createInitialChat();
-      }
+      setActiveChatId(null);
     }
 
     try {
@@ -275,7 +346,7 @@ export default function App() {
     }
   };
 
-  // Callback when a new database is uploaded, bulk imported, or an existing one is updated
+  // Callback when a new database is uploaded or an existing one is updated
   const handleUploadSuccess = (payload) => {
     if (Array.isArray(payload)) {
       if (payload.length === 0) return;
@@ -305,7 +376,6 @@ export default function App() {
     if (selectedDbId === deletedDbId) {
       setSelectedDbId("chinook");
       loadSchemaForDb("chinook");
-      updateUrlParams(activeChatId, "chinook");
     }
   };
 
@@ -321,6 +391,9 @@ export default function App() {
     setPrefilledPrompt('');
 
     // Optimistic User Message
+    const conversationDbId = activeChat?.db_id || selectedDbId || "chinook";
+    const conversationDbInfo = databases.find(d => d.id === conversationDbId) || currentDb;
+
     const userMsg = {
       id: Date.now().toString(),
       role: 'user',
@@ -328,30 +401,51 @@ export default function App() {
       timestamp: new Date().toISOString()
     };
 
-    setChats(prev => prev.map(chat => {
-      if (chat.id === currentChatId) {
-        return {
-          ...chat,
-          title: newTitle,
-          messages: [...(chat.messages || []), userMsg]
-        };
-      }
-      return chat;
-    }));
+    if (!activeChatId) {
+      setActiveChatId(currentChatId);
+      const newChatObj = {
+        id: currentChatId,
+        title: newTitle,
+        db_id: conversationDbId,
+        db_name: conversationDbInfo.name,
+        messages: [userMsg]
+      };
+      setChats(prev => [newChatObj, ...prev]);
+    } else {
+      setChats(prev => prev.map(chat => {
+        if (chat.id === currentChatId) {
+          return {
+            ...chat,
+            title: newTitle,
+            db_id: chat.db_id || conversationDbId,
+            db_name: chat.db_name || conversationDbInfo.name,
+            messages: [...(chat.messages || []), userMsg]
+          };
+        }
+        return chat;
+      }));
+    }
 
     setIsLoading(true);
 
     try {
-      const currentDbInfo = databases.find(d => d.id === selectedDbId);
-      const fallbackLang = currentDbInfo?.type === 'nosql' ? 'nosql' : currentDbInfo?.type === 'excel' ? 'excel_formula' : currentDbInfo?.type === 'csv' ? 'pandas' : 'sql';
-      const chosenLanguage = targetLanguage || fallbackLang;
+      const dbType = (conversationDbInfo?.type || 'sql').toLowerCase();
+      const fallbackLang = dbType === 'nosql' ? 'nosql' : dbType === 'excel' ? 'excel_formula' : dbType === 'csv' ? 'pandas' : 'sql';
+      const validLangsForDb = {
+        sql: ['sql', 'pandas', 'r'],
+        nosql: ['nosql', 'pandas', 'r'],
+        csv: ['pandas', 'excel_formula', 'r'],
+        excel: ['excel_formula', 'pandas', 'r'],
+      };
+      const allowedLangs = validLangsForDb[dbType] || validLangsForDb.sql;
+      const chosenLanguage = (targetLanguage && allowedLangs.includes(targetLanguage)) ? targetLanguage : fallbackLang;
 
       const response = await fetch(`${API_BASE_URL}/chats/${currentChatId}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           question: text,
-          db_id: selectedDbId,
+          db_id: conversationDbId,
           target_language: chosenLanguage
         }),
       });
@@ -368,6 +462,8 @@ export default function App() {
           return {
             ...chat,
             title: newTitle,
+            db_id: assistantMsg.db_id || chat.db_id || conversationDbId,
+            db_name: assistantMsg.db_name || chat.db_name || conversationDbInfo.name,
             messages: [...(chat.messages || []), assistantMsg]
           };
         }
@@ -409,14 +505,17 @@ export default function App() {
       {/* ChatGPT-style Left Sidebar (with integrated Chats & Searchable Tables) */}
       <Sidebar
         chats={chats}
+        databases={databases}
         activeChatId={activeChatId}
-        onSelectChat={setActiveChatId}
-        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        onNewChat={() => handleNewChat()}
+        onGoHome={() => setActiveChatId(null)}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
         tables={tables}
+        currentDb={currentDb}
         onSelectPrompt={handleSelectPrompt}
-        onOpenSchemaMap={() => setSchemaModalOpen(true)}
+        onOpenSchemaMap={showSchemaMap ? () => setSchemaModalOpen(true) : null}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
         isOpen={mobileMenuOpen}
@@ -438,16 +537,18 @@ export default function App() {
         apiBaseUrl={API_BASE_URL}
       />
 
-      {/* Schema Relationships & ER Map Modal */}
-      <SchemaMapModal
-        isOpen={schemaModalOpen}
-        onClose={() => setSchemaModalOpen(false)}
-        dbName={currentDb.name}
-        dbType={currentDb.type || 'sql'}
-        tables={tables}
-        relationships={relationships}
-        isDark={isDark}
-      />
+      {/* Schema Relationships & ER Map Modal (Multi-relation SQL and NoSQL only) */}
+      {showSchemaMap && (
+        <SchemaMapModal
+          isOpen={schemaModalOpen && showSchemaMap}
+          onClose={() => setSchemaModalOpen(false)}
+          dbName={currentDb.name}
+          dbType={currentDb.type || 'sql'}
+          tables={tables}
+          relationships={relationships}
+          isDark={isDark}
+        />
+      )}
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">
@@ -477,7 +578,7 @@ export default function App() {
             )}
 
             <span className="font-semibold text-xs tracking-wide">
-              {activeChat?.title || "New Conversation"}
+              {activeChat?.title || "Home"}
             </span>
           </div>
 
@@ -487,28 +588,30 @@ export default function App() {
               <DatabaseSelectorPopover
                 databases={databases}
                 selectedDbId={selectedDbId}
-                onSelectDb={(dbId) => setSelectedDbId(dbId)}
+                onSelectDb={handleSelectDb}
                 onOpenUpload={() => setUploadModalOpen(true)}
                 onDeleteDatabase={handleDeleteDatabase}
                 apiBaseUrl={API_BASE_URL}
                 isDark={isDark}
+                isLocked={Boolean(activeChat && activeChat.messages && activeChat.messages.length > 0)}
+                activeChatDbName={activeChat?.db_name || currentDb.name}
               />
 
-              {/* 🗺️ PROMINENT "SCHEMA MAP" BUTTON */}
-              <button
-                onClick={() => setSchemaModalOpen(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  currentDb.type === 'excel' || currentDb.type === 'csv'
-                    ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                    : currentDb.type === 'nosql'
+              {/* 🗺️ PROMINENT "SCHEMA MAP" BUTTON (Only for multi-relation SQL & NoSQL datasets) */}
+              {showSchemaMap && (
+                <button
+                  onClick={() => setSchemaModalOpen(true)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                    currentDb.type === 'nosql'
                       ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
                       : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
-                }`}
-                title="View data architecture & schema map"
-              >
-                <Network className="w-3.5 h-3.5" />
-                <span>Schema Map</span>
-              </button>
+                  }`}
+                  title="View data architecture & schema map"
+                >
+                  <Network className="w-3.5 h-3.5" />
+                  <span>Schema Map</span>
+                </button>
+              )}
             </div>
 
             {!apiOnline && (
@@ -538,20 +641,16 @@ export default function App() {
         {/* Messages Stream Container */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-5xl xl:max-w-6xl mx-auto w-full">
-            {/* Empty State Welcome Screen */}
+            {/* Empty State / Default Homepage on Project Open */}
             {(!activeChat?.messages || activeChat.messages.length === 0) && (
-              <div className="py-14 text-center animate-fadeIn">
-                <div className="inline-flex p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 mb-4 shadow-sm">
-                  <Sparkles className="w-8 h-8" />
-                </div>
-                <h2 className="text-xl font-bold mb-1.5">What can I query for you today?</h2>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed mb-4">
-                  Currently querying: <strong className="text-indigo-400">{currentDb.name}</strong> ({tables.length} {
-                    currentDb.type === 'excel' ? 'worksheets' : currentDb.type === 'nosql' ? 'collections' : 'tables'
-                  }).
-                  You can inspect schema in the left sidebar or connect your own data sources.
-                </p>
-              </div>
+              <HomepageWelcome 
+                currentDb={currentDb}
+                tables={tables}
+                onSelectPrompt={handleSelectPrompt}
+                onOpenSchemaMap={showSchemaMap ? () => setSchemaModalOpen(true) : null}
+                isDark={isDark}
+                isNewConversation={Boolean(activeChatId)}
+              />
             )}
 
             {/* Conversation Messages */}

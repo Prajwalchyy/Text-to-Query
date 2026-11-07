@@ -11,9 +11,101 @@ import {
   Layers, 
   FileJson,
   FileSpreadsheet,
-  Plus,
-  RefreshCw
+  Check,
+  Sparkles
 } from 'lucide-react';
+
+/**
+ * Extracts normalized file extension (e.g. '.csv', '.db').
+ */
+const getFileExtension = (filename = '') => {
+  const parts = filename.toLowerCase().split('.');
+  return parts.length > 1 ? `.${parts.pop()}` : '';
+};
+
+/**
+ * Detects the engine type and supported query languages/tools from file extension.
+ */
+const detectFileTypeInfo = (filename = '') => {
+  const ext = getFileExtension(filename);
+  if (!ext) return null;
+
+  // 1. Relational SQL (.db, .sqlite, .sql, etc.)
+  if (['.db', '.sqlite', '.sqlite3', '.s3db', '.sl3', '.sql'].includes(ext)) {
+    return {
+      ext,
+      category: 'SQL Database',
+      dbType: 'sql',
+      badgeColor: 'indigo',
+      tools: [
+        { name: 'SQL', color: 'indigo' },
+        { name: 'Python (Pandas)', color: 'amber' },
+        { name: 'R', color: 'blue' }
+      ]
+    };
+  }
+
+  // 2. NoSQL Document Store (.json, .jsonl, .bson)
+  if (['.json', '.jsonl', '.bson'].includes(ext)) {
+    return {
+      ext,
+      category: 'NoSQL Document Store',
+      dbType: 'nosql',
+      badgeColor: 'amber',
+      tools: [
+        { name: 'NoSQL', color: 'amber' },
+        { name: 'Python', color: 'emerald' },
+        { name: 'R', color: 'blue' }
+      ]
+    };
+  }
+
+  // 3. Spreadsheets: .csv, .tsv
+  if (['.csv', '.tsv'].includes(ext)) {
+    return {
+      ext,
+      category: 'CSV Spreadsheet',
+      dbType: 'csv',
+      badgeColor: 'emerald',
+      tools: [
+        { name: 'Python (Pandas)', color: 'amber' },
+        { name: 'Excel', color: 'emerald' },
+        { name: 'R', color: 'blue' }
+      ]
+    };
+  }
+
+  // 4. Spreadsheets: .xlsx, .xls
+  if (['.xlsx', '.xls'].includes(ext)) {
+    return {
+      ext,
+      category: 'Excel Workbook',
+      dbType: 'excel',
+      badgeColor: 'emerald',
+      tools: [
+        { name: 'Python (Pandas)', color: 'amber' },
+        { name: 'Excel', color: 'emerald' },
+        { name: 'R', color: 'blue' }
+      ]
+    };
+  }
+
+  // 5. Other file formats supported by Pandas or R that contain tabular data
+  if (['.parquet', '.feather', '.orc', '.h5', '.hdf5', '.dta', '.sav', '.sas7bdat'].includes(ext)) {
+    return {
+      ext,
+      category: 'Tabular Dataset',
+      dbType: 'csv',
+      badgeColor: 'purple',
+      tools: [
+        { name: 'Python (Pandas)', color: 'amber' },
+        { name: 'R', color: 'blue' }
+      ]
+    };
+  }
+
+  return null;
+};
 
 export default function UploadDbModal({ 
   isOpen, 
@@ -24,196 +116,68 @@ export default function UploadDbModal({
   isDark, 
   apiBaseUrl 
 }) {
-  const [uploadMode, setUploadMode] = useState('full'); // 'full' | 'merge'
-  const [selectedType, setSelectedType] = useState('sql'); // 'sql' | 'nosql'
-  const [files, setFiles] = useState([]);
+  const [file, setFile] = useState(null);
   const [dbName, setDbName] = useState('');
-  const [groupName, setGroupName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [appendingDbId, setAppendingDbId] = useState(null);
-  const [isAppending, setIsAppending] = useState(false);
-  const [appendingColDbId, setAppendingColDbId] = useState(null);
-  const [isAppendingCol, setIsAppendingCol] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
-  const [conflictData, setConflictData] = useState(null);
   const fileInputRef = useRef(null);
-  const appendFileInputRef = useRef(null);
-  const appendCollectionInputRef = useRef(null);
 
   if (!isOpen) return null;
 
-  const handleModeChange = (mode) => {
-    setUploadMode(mode);
-    setFiles([]);
-    setDbName('');
-    setGroupName('');
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleTypeChange = (type) => {
-    setSelectedType(type);
-    setFiles([]);
-    setDbName('');
-    setGroupName('');
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // Real-time detected file type and supported languages from active file
+  const detectedInfo = file ? detectFileTypeInfo(file.name) : null;
 
   const handleFileChange = (e) => {
-    const selectedList = Array.from(e.target.files || []);
-    if (selectedList.length === 0) return;
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
     setErrorMsg(null);
     setSuccessMsg(null);
-    setConflictData(null);
 
-    // =========================================================================
-    // CASE A: MERGE MODE
-    // =========================================================================
-    if (uploadMode === 'merge') {
-      if (selectedType === 'sql') {
-        const hasDbFile = selectedList.some((f) => {
-          const fn = f.name.toLowerCase();
-          return fn.endsWith('.db') || fn.endsWith('.sqlite') || fn.endsWith('.sqlite3') || fn.endsWith('.s3db') || fn.endsWith('.sl3');
-        });
-        if (hasDbFile) {
-          setErrorMsg(".db / .sqlite files are full databases, not tables. Please choose 'Full Database(s)' mode or select only .sql table script files.");
-          setFiles([]);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          return;
-        }
-
-        const allSql = selectedList.every((f) => f.name.toLowerCase().endsWith('.sql'));
-        if (!allSql) {
-          setErrorMsg("In Multiple Tables (Merge) mode, all files must be .sql table script dumps.");
-          setFiles([]);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          return;
-        }
-
-        setFiles(selectedList);
-        if (!dbName.trim()) {
-          setDbName("Combined SQL Database");
-        }
-        return;
-      }
-
-      if (selectedType === 'nosql') {
-        const allDocFiles = selectedList.every((f) => {
-          const fn = f.name.toLowerCase();
-          return fn.endsWith('.json') || fn.endsWith('.jsonl') || fn.endsWith('.bson');
-        });
-        if (!allDocFiles) {
-          setErrorMsg("In Multiple Collections (Merge) mode, all files must be .json, .jsonl, or .bson collection files.");
-          setFiles([]);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          return;
-        }
-
-        setFiles(selectedList);
-        if (!dbName.trim()) {
-          setDbName("Combined NoSQL Store");
-        }
-        return;
-      }
+    // Validate that the file has a supported format
+    const info = detectFileTypeInfo(selectedFile.name);
+    if (!info) {
+      setErrorMsg(`Unsupported file type: '${selectedFile.name}'. Please choose a supported dataset file (.db, .sqlite, .sql, .json, .csv, .xlsx, or .parquet).`);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
 
-    // =========================================================================
-    // CASE B: FULL DATABASE(S) MODE (Single or Bulk Import)
-    // =========================================================================
-    if (selectedType === 'sql') {
-      const validSql = selectedList.every((f) => {
-        const fn = f.name.toLowerCase();
-        return fn.endsWith('.db') || fn.endsWith('.sqlite') || fn.endsWith('.sqlite3') || fn.endsWith('.s3db') || fn.endsWith('.sl3') || fn.endsWith('.sql');
-      });
-      if (!validSql) {
-        setErrorMsg("All selected files must be valid SQL database files (.db, .sqlite, or full .sql dumps).");
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-    } else if (selectedType === 'nosql') {
-      const validNoSql = selectedList.every((f) => {
-        const fn = f.name.toLowerCase();
-        return fn.endsWith('.json') || fn.endsWith('.jsonl') || fn.endsWith('.bson');
-      });
-      if (!validNoSql) {
-        setErrorMsg("All selected files must be valid NoSQL document files (.json, .jsonl, or MongoDB .bson).");
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-    } else if (selectedType === 'spreadsheet') {
-      const validSpreadsheet = selectedList.every((f) => {
-        const fn = f.name.toLowerCase();
-        return fn.endsWith('.csv') || fn.endsWith('.xlsx') || fn.endsWith('.xls');
-      });
-      if (!validSpreadsheet) {
-        setErrorMsg("All selected files must be valid spreadsheets (.csv, .xlsx, or .xls).");
-        setFiles([]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-    }
+    setFile(selectedFile);
 
-    setFiles(selectedList);
-
-    if (selectedList.length === 1 && !dbName.trim()) {
-      const cleanName = selectedList[0].name.replace(/\.(db|sqlite|sqlite3|s3db|sl3|sql|json|jsonl|bson|csv|xlsx|xls)$/i, '').replace(/[_-]/g, ' ');
+    if (!dbName.trim()) {
+      const cleanName = selectedFile.name
+        .replace(/\.(db|sqlite|sqlite3|s3db|sl3|sql|json|jsonl|bson|csv|tsv|xlsx|xls|parquet|feather|orc)$/i, '')
+        .replace(/[_-]/g, ' ');
       setDbName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
-    } else if (selectedList.length > 1 && !groupName.trim()) {
-      setGroupName("Imported Batch " + new Date().toLocaleDateString('en-CA'));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (files.length === 0) {
-      setErrorMsg("Please select at least one file first.");
+    if (!file) {
+      setErrorMsg("Please select a dataset file first.");
       return;
     }
 
-    // In merge mode or single file mode, name is required
-    if (uploadMode === 'merge' && !dbName.trim()) {
-      setErrorMsg("Please provide a custom name for this merged database.");
-      return;
-    }
-    if (uploadMode === 'full' && files.length === 1 && !dbName.trim()) {
-      setErrorMsg("Please provide a custom display name for this database.");
+    if (!dbName.trim()) {
+      setErrorMsg("Please provide a custom display name for this dataset.");
       return;
     }
 
     setIsUploading(true);
     setErrorMsg(null);
     setSuccessMsg(null);
-    setConflictData(null);
+
+    const primaryType = detectedInfo?.dbType || 'sql';
 
     const formData = new FormData();
-    if (files.length === 1) {
-      formData.append("file", files[0]);
-    } else {
-      files.forEach((f) => {
-        formData.append("files", f);
-      });
-    }
+    formData.append("file", file);
     formData.append("name", dbName.trim());
-    formData.append("type", selectedType);
-    formData.append("mode", uploadMode);
-    if (groupName.trim()) {
-      formData.append("group_name", groupName.trim());
-    }
+    formData.append("type", primaryType);
 
     try {
       const response = await fetch(`${apiBaseUrl}/databases/upload`, {
@@ -233,12 +197,11 @@ export default function UploadDbModal({
         onUploadSuccess(result);
       }
 
-      setFiles([]);
+      setFile(null);
       setDbName('');
-      setGroupName('');
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || "Failed to upload file(s).");
+      setErrorMsg(err.message || "Failed to upload file.");
     } finally {
       setIsUploading(false);
     }
@@ -249,7 +212,6 @@ export default function UploadDbModal({
     setConfirmDeleteId(null);
     setErrorMsg(null);
     setSuccessMsg(null);
-    setConflictData(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/databases/${dbId}`, {
@@ -272,203 +234,8 @@ export default function UploadDbModal({
     }
   };
 
-  // Trigger file picker to append SQL table
-  const handleTriggerAppend = (dbId) => {
-    setAppendingDbId(dbId);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-    if (appendFileInputRef.current) {
-      appendFileInputRef.current.value = '';
-      appendFileInputRef.current.click();
-    }
-  };
-
-  // Upload table script to existing SQL DB
-  const handleAppendFileSelected = async (e) => {
-    const selected = e.target.files?.[0];
-    if (!selected || !appendingDbId) return;
-
-    if (!selected.name.toLowerCase().endsWith('.sql')) {
-      setErrorMsg("Only .sql table script files can be appended to an existing SQL database.");
-      return;
-    }
-
-    setIsAppending(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-
-    const formData = new FormData();
-    formData.append("file", selected);
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/databases/${appendingDbId}/append-table`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.status === 409) {
-        const conflictRes = await response.json();
-        const conflictDetail = conflictRes.detail || {};
-        setConflictData({
-          type: 'table',
-          dbId: appendingDbId,
-          file: selected,
-          name: conflictDetail.table_name || conflictDetail.conflicts?.[0] || selected.name
-        });
-        return;
-      }
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || "Failed to append table.");
-      }
-
-      const result = await response.json();
-      setSuccessMsg(result.message || `Table script '${selected.name}' added successfully!`);
-      if (onUploadSuccess && result.database) {
-        onUploadSuccess(result.database);
-      }
-    } catch (err) {
-      setErrorMsg(err.message || "Failed to append table.");
-    } finally {
-      setIsAppending(false);
-      setAppendingDbId(null);
-    }
-  };
-
-  // Trigger file picker to append NoSQL collection
-  const handleTriggerAppendCollection = (dbId) => {
-    setAppendingColDbId(dbId);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-    if (appendCollectionInputRef.current) {
-      appendCollectionInputRef.current.value = '';
-      appendCollectionInputRef.current.click();
-    }
-  };
-
-  // Upload collection file to existing NoSQL DB
-  const handleAppendCollectionSelected = async (e) => {
-    const selected = e.target.files?.[0];
-    if (!selected || !appendingColDbId) return;
-
-    const fn = selected.name.toLowerCase();
-    if (!fn.endsWith('.json') && !fn.endsWith('.jsonl') && !fn.endsWith('.bson')) {
-      setErrorMsg("Only .json, .jsonl, or .bson collection files can be appended to an existing NoSQL database.");
-      return;
-    }
-
-    setIsAppendingCol(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    setConflictData(null);
-
-    const formData = new FormData();
-    formData.append("file", selected);
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/databases/${appendingColDbId}/append-collection`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.status === 409) {
-        const conflictRes = await response.json();
-        const conflictDetail = conflictRes.detail || {};
-        setConflictData({
-          type: 'collection',
-          dbId: appendingColDbId,
-          file: selected,
-          name: conflictDetail.collection_name || conflictDetail.conflicts?.[0] || selected.name
-        });
-        return;
-      }
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || "Failed to append collection.");
-      }
-
-      const result = await response.json();
-      setSuccessMsg(result.message || `Collection '${selected.name}' added successfully!`);
-      if (onUploadSuccess && result.database) {
-        onUploadSuccess(result.database);
-      }
-    } catch (err) {
-      setErrorMsg(err.message || "Failed to append collection.");
-    } finally {
-      setIsAppendingCol(false);
-      setAppendingColDbId(null);
-    }
-  };
-
-  // Confirm overwrite and replace existing table or collection
-  const handleConfirmOverwrite = async () => {
-    if (!conflictData) return;
-
-    const isCol = conflictData.type === 'collection';
-    if (isCol) setIsAppendingCol(true);
-    else setIsAppending(true);
-
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    const formData = new FormData();
-    formData.append("file", conflictData.file);
-    formData.append("overwrite", "true");
-
-    const endpoint = isCol
-      ? `${apiBaseUrl}/databases/${conflictData.dbId}/append-collection`
-      : `${apiBaseUrl}/databases/${conflictData.dbId}/append-table`;
-
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || `Failed to overwrite ${conflictData.type}.`);
-      }
-
-      const result = await response.json();
-      setSuccessMsg(result.message || `${isCol ? 'Collection' : 'Table'} '${conflictData.name}' replaced successfully!`);
-      setConflictData(null);
-      if (onUploadSuccess && result.database) {
-        onUploadSuccess(result.database);
-      }
-    } catch (err) {
-      setErrorMsg(err.message || `Failed to overwrite ${conflictData.type}.`);
-    } finally {
-      setIsAppending(false);
-      setIsAppendingCol(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
-      {/* Hidden file input for appending SQL table */}
-      <input
-        ref={appendFileInputRef}
-        type="file"
-        accept=".sql"
-        onChange={handleAppendFileSelected}
-        className="hidden"
-      />
-
-      {/* Hidden file input for appending NoSQL collection */}
-      <input
-        ref={appendCollectionInputRef}
-        type="file"
-        accept=".json,.jsonl,.bson"
-        onChange={handleAppendCollectionSelected}
-        className="hidden"
-      />
-
       <div className={`w-full max-w-lg rounded-2xl p-6 shadow-2xl border transition-all my-8 ${
         isDark ? 'bg-slate-900 border-slate-700/80 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
       }`}>
@@ -480,7 +247,7 @@ export default function UploadDbModal({
             </div>
             <div>
               <h3 className="text-base font-bold">Manage Data Sources</h3>
-              <p className="text-xs text-slate-400">View active data sources or connect new SQL, NoSQL & Spreadsheet datasets</p>
+              <p className="text-xs text-slate-400">View active data sources or connect new SQL, NoSQL & Tabular datasets</p>
             </div>
           </div>
           <button
@@ -496,39 +263,6 @@ export default function UploadDbModal({
           <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 flex items-start gap-2 animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span className="leading-relaxed font-medium">{successMsg}</span>
-          </div>
-        )}
-
-        {/* Table / Collection Collision Confirmation Banner */}
-        {conflictData && (
-          <div className="mb-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 space-y-2.5 animate-fadeIn">
-            <div className="flex items-center gap-2 font-bold text-amber-400">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{conflictData.type === 'collection' ? 'Collection Collision Warning' : 'Table Collision Warning'}</span>
-            </div>
-            <p className="text-slate-300 leading-relaxed text-[11px]">
-              {conflictData.type === 'collection' ? 'Collection' : 'Table'}{' '}
-              <code className="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono text-[11px] font-semibold">{conflictData.name}</code>{' '}
-              already exists in this dataset. Do you want to overwrite and replace it with this new file, or cancel?
-            </p>
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={handleConfirmOverwrite}
-                disabled={isAppending || isAppendingCol}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-[11px] transition-all cursor-pointer shadow-xs shadow-amber-600/30"
-              >
-                {(isAppending || isAppendingCol) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                <span>Overwrite & Replace</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setConflictData(null)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         )}
 
@@ -563,16 +297,6 @@ export default function UploadDbModal({
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                 SQL
                               </span>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
-                              {db.upload_mode === 'single' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                                  Single File
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.table_count || 0} tables
@@ -586,22 +310,6 @@ export default function UploadDbModal({
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {/* ➕ APPEND TABLE BUTTON */}
-                            <button
-                              onClick={() => handleTriggerAppend(db.id)}
-                              disabled={isAppending && appendingDbId === db.id}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 transition-all cursor-pointer"
-                              title="Append an additional .sql table script to this database"
-                            >
-                              {isAppending && appendingDbId === db.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Plus className="w-3 h-3" />
-                              )}
-                              <span>Add Table</span>
-                            </button>
-
-                            {/* 🗑️ DELETE BUTTON WITH INLINE CONFIRM */}
                             {confirmDeleteId === db.id ? (
                               <div className="flex items-center gap-1 shrink-0 animate-fadeIn">
                                 <button
@@ -624,7 +332,7 @@ export default function UploadDbModal({
                             ) : (
                               <button
                                 onClick={() => setConfirmDeleteId(db.id)}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shrink-0"
                                 title="Delete this custom SQL database"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -662,19 +370,9 @@ export default function UploadDbModal({
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                 NoSQL
                               </span>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
-                              {db.upload_mode === 'single' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                                  Single File
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                              <Layers className="w-3 h-3" /> {db.doc_count || 0} documents
+                              <Layers className="w-3 h-3" /> {db.table_count || 1} {db.table_count === 1 ? 'collection' : 'collections'}
                             </p>
                           </div>
                         </div>
@@ -685,22 +383,6 @@ export default function UploadDbModal({
                           </span>
                         ) : (
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {/* ➕ APPEND COLLECTION BUTTON */}
-                            <button
-                              onClick={() => handleTriggerAppendCollection(db.id)}
-                              disabled={isAppendingCol && appendingColDbId === db.id}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all cursor-pointer"
-                              title="Append an additional .json / .bson collection to this NoSQL database"
-                            >
-                              {isAppendingCol && appendingColDbId === db.id ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Plus className="w-3 h-3" />
-                              )}
-                              <span>Add Collection</span>
-                            </button>
-
-                            {/* 🗑️ DELETE BUTTON WITH INLINE CONFIRM */}
                             {confirmDeleteId === db.id ? (
                               <div className="flex items-center gap-1 shrink-0 animate-fadeIn">
                                 <button
@@ -739,12 +421,12 @@ export default function UploadDbModal({
               </div>
             )}
 
-            {/* Category C: Spreadsheets (CSV & Excel) */}
+            {/* Category C: Tabular Datasets (CSV & Excel) */}
             {databases.some(d => d.type === 'csv' || d.type === 'excel') && (
               <div>
                 <div className="flex items-center gap-1.5 mb-1.5 px-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
                   <FileSpreadsheet className="w-3 h-3" />
-                  <span>Spreadsheets & Formulas ({databases.filter(d => d.type === 'csv' || d.type === 'excel').length})</span>
+                  <span>Tabular Datasets ({databases.filter(d => d.type === 'csv' || d.type === 'excel').length})</span>
                 </div>
                 <div className={`divide-y rounded-xl border overflow-hidden ${
                   isDark ? 'bg-slate-950/60 border-slate-800 divide-slate-800/80' : 'bg-slate-50 border-slate-200 divide-slate-200'
@@ -762,19 +444,13 @@ export default function UploadDbModal({
                               <span className="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                 {isExcel ? 'Excel' : 'CSV'}
                               </span>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
-                              {db.upload_mode === 'single' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                                  Single File
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                              <Layers className="w-3 h-3" /> {isExcel ? `${db.sheet_count || 1} sheets` : `${db.row_count || 0} rows`}
+                              <Layers className="w-3 h-3" /> {(db.sheet_count || db.table_count || 1) <= 1 && db.column_count
+                                ? `${db.column_count} ${db.column_count === 1 ? 'column' : 'columns'}, ${(db.row_count || 0).toLocaleString()} rows`
+                                : (db.sheet_count || db.table_count || 1) > 1
+                                  ? `${(db.row_count || 0).toLocaleString()} rows (${db.sheet_count || db.table_count} sheets)`
+                                  : `${(db.row_count || 0).toLocaleString()} rows`}
                             </p>
                           </div>
                         </div>
@@ -791,7 +467,7 @@ export default function UploadDbModal({
                                   onClick={() => handleDelete(db.id, db.name)}
                                   disabled={deletingId === db.id}
                                   className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-600 hover:bg-rose-500 text-white transition-all cursor-pointer shadow-xs shadow-rose-600/30"
-                                  title="Permanently delete this spreadsheet"
+                                  title="Permanently delete this tabular dataset"
                                 >
                                   {deletingId === db.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                                   <span>Confirm</span>
@@ -808,7 +484,7 @@ export default function UploadDbModal({
                               <button
                                 onClick={() => setConfirmDeleteId(db.id)}
                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer shrink-0"
-                                title="Delete this custom spreadsheet"
+                                title="Delete this custom tabular dataset"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Delete</span>
@@ -827,122 +503,60 @@ export default function UploadDbModal({
 
         {/* SECTION 2: UPLOAD DATASET */}
         <div className="pt-4 border-t border-slate-700/40">
-          {/* 1. Upload Mode Selector */}
-          <div className="mb-3.5">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
-              1. Choose Upload Mode
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleModeChange('full')}
-                className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  uploadMode === 'full'
-                    ? 'bg-indigo-600/15 border-indigo-500 text-indigo-400 shadow-sm shadow-indigo-500/15'
-                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <Database className="w-4 h-4 shrink-0 text-indigo-400" />
-                <div className="text-left">
-                  <div className="text-xs font-bold">Full Data Source(s)</div>
-                  <div className="text-[10px] text-slate-400 font-normal">Single dataset or bulk import multiple files</div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleModeChange('merge')}
-                className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  uploadMode === 'merge'
-                    ? 'bg-indigo-600/15 border-indigo-500 text-indigo-400 shadow-sm shadow-indigo-500/15'
-                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <Layers className="w-4 h-4 shrink-0 text-indigo-400" />
-                <div className="text-left">
-                  <div className="text-xs font-bold">
-                    {selectedType === 'sql' ? 'Multiple Tables (Merge)' : 'Multiple Collections (Merge)'}
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-normal">
-                    {selectedType === 'sql' ? 'Combine .sql tables into 1 Database' : 'Combine files into 1 Dataset'}
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* 2. Type Selector Tabs */}
+          {/* 1. Supported File Types Display */}
           <div className="mb-4">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
-              2. Select Engine Type
+              1. Supported File Types
             </span>
             <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleTypeChange('sql')}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  selectedType === 'sql'
-                    ? 'bg-indigo-600/15 border-indigo-500 text-indigo-400 shadow-sm shadow-indigo-500/20'
-                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <Database className="w-4 h-4 text-indigo-400 shrink-0" />
-                <div className="text-left truncate">
-                  <div className="text-xs font-bold truncate">SQL Database</div>
-                  <div className="text-[9px] text-slate-400 font-normal truncate">
-                    .db, .sqlite, .sql
-                  </div>
+              <div className={`p-2.5 rounded-xl border text-xs transition-all ${
+                isDark ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Database className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span className="text-xs font-bold text-slate-200 truncate">SQL Database</span>
                 </div>
-              </button>
+                <div className="text-[10px] text-slate-400 font-mono truncate">
+                  .db, .sqlite, .sql
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => handleTypeChange('nosql')}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  selectedType === 'nosql'
-                    ? 'bg-amber-500/15 border-amber-500 text-amber-400 shadow-sm shadow-amber-500/20'
-                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <FileJson className="w-4 h-4 text-amber-400 shrink-0" />
-                <div className="text-left truncate">
-                  <div className="text-xs font-bold truncate">NoSQL Store</div>
-                  <div className="text-[9px] text-slate-400 font-normal truncate">
-                    .json, .bson
-                  </div>
+              <div className={`p-2.5 rounded-xl border text-xs transition-all ${
+                isDark ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <FileJson className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-xs font-bold text-slate-200 truncate">NoSQL Store</span>
                 </div>
-              </button>
+                <div className="text-[10px] text-slate-400 font-mono truncate">
+                  .json, .jsonl, .bson
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => handleTypeChange('spreadsheet')}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                  selectedType === 'spreadsheet'
-                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-400 shadow-sm shadow-emerald-500/20'
-                    : isDark ? 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400 shrink-0" />
-                <div className="text-left truncate">
-                  <div className="text-xs font-bold truncate">Spreadsheet</div>
-                  <div className="text-[9px] text-slate-400 font-normal truncate">
-                    .csv, .xlsx
-                  </div>
+              <div className={`p-2.5 rounded-xl border text-xs transition-all ${
+                isDark ? 'bg-slate-950/40 border-slate-800' : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-xs font-bold text-slate-200 truncate">Tabular Dataset</span>
                 </div>
-              </button>
+                <div className="text-[10px] text-slate-400 font-mono truncate">
+                  .csv, .xlsx, .parquet
+                </div>
+              </div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* 3. File Picker */}
+            {/* 2. File Picker */}
             <div>
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5 px-0.5">
-                3. Choose {selectedType === 'spreadsheet' ? 'Spreadsheet (.csv / .xlsx) File(s)' : uploadMode === 'merge' ? (selectedType === 'sql' ? 'Table Script (.sql) Files' : 'Collection (.json / .bson) Files') : (selectedType === 'sql' ? 'SQL (.db / .sqlite / .sql) File(s)' : 'NoSQL (.json / .bson) File(s)')}
+                2. Choose Dataset File
               </span>
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
-                  files.length > 0 
+                  file 
                     ? 'border-emerald-500/50 bg-emerald-500/5' 
                     : isDark ? 'border-slate-700 hover:border-indigo-500 bg-slate-950/40' : 'border-slate-300 hover:border-indigo-500 bg-slate-50'
                 }`}
@@ -950,113 +564,92 @@ export default function UploadDbModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  multiple
-                  accept={
-                    selectedType === 'spreadsheet'
-                      ? '.csv,.xlsx,.xls'
-                      : uploadMode === 'merge'
-                        ? (selectedType === 'sql' ? '.sql' : '.json,.jsonl,.bson')
-                        : (selectedType === 'sql' ? '.db,.sqlite,.sqlite3,.s3db,.sl3,.sql' : '.json,.jsonl,.bson')
-                  }
+                  accept=".db,.sqlite,.sqlite3,.s3db,.sl3,.sql,.json,.jsonl,.bson,.csv,.tsv,.xlsx,.xls,.parquet,.feather,.orc"
                   onChange={handleFileChange}
                   className="hidden"
                 />
 
-                {files.length === 1 && (
+                {file ? (
                   <div className="flex items-center justify-center gap-2 text-xs font-medium text-emerald-400">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{files[0].name} ({(files[0].size / 1024).toFixed(1)} KB)</span>
+                    <span className="truncate">{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
                   </div>
-                )}
-
-                {files.length > 1 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400">
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>
-                        {uploadMode === 'merge'
-                          ? `${files.length} ${selectedType === 'sql' ? 'Table Scripts' : 'Collections'} (Merged into 1 Database)`
-                          : `${files.length} Datasets Selected (Bulk Import as Separate Sources)`}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 justify-center max-h-24 overflow-y-auto custom-scrollbar p-1">
-                      {files.map((f, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                          📄 {f.name}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-slate-400">Click to replace or select different files</p>
-                  </div>
-                )}
-
-                {files.length === 0 && (
+                ) : (
                   <div>
-                    {selectedType === 'spreadsheet' ? (
-                      <FileSpreadsheet className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
-                    ) : selectedType === 'sql' ? (
-                      <Database className="w-5 h-5 mx-auto mb-1 text-indigo-400" />
-                    ) : (
-                      <FileJson className="w-5 h-5 mx-auto mb-1 text-amber-400" />
-                    )}
+                    <Database className="w-5 h-5 mx-auto mb-1 text-indigo-400" />
                     <p className="text-xs font-medium">
                       Click to browse or drag and drop
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      {selectedType === 'spreadsheet'
-                        ? 'Select 1 or multiple .csv / .xlsx spreadsheet files'
-                        : uploadMode === 'merge'
-                          ? (selectedType === 'sql' ? 'Select multiple .sql table dumps to merge' : 'Select multiple .json/.bson collection files to merge')
-                          : (selectedType === 'sql' ? 'Select 1 or multiple full .db / .sqlite / .sql files' : 'Select 1 or multiple full .json / .bson files')}
+                      Select a .db, .sqlite, .sql, .json, .csv, .xlsx, or .parquet file
                     </p>
                   </div>
                 )}
               </div>
+
+              {/* Dynamic Auto-Detected Engine & Supported Languages/Tools Display */}
+              {detectedInfo && (
+                <div className={`mt-2.5 p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn ${
+                  isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <div className="text-[11px] font-semibold text-slate-200">
+                      <span>Detected: </span>
+                      <span className="text-indigo-400 font-mono font-bold">{detectedInfo.category}</span>
+                      <span className="text-[10px] text-slate-400 font-mono ml-1">({detectedInfo.ext})</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] text-slate-400 font-medium">Supported Tools:</span>
+                    {detectedInfo.tools.map((tool, idx) => (
+                      <span
+                        key={idx}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                          tool.color === 'indigo'
+                            ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                            : tool.color === 'amber'
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                              : tool.color === 'emerald'
+                                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                                : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                        }`}
+                      >
+                        <Check className="w-2.5 h-2.5" />
+                        {tool.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* 4. Custom Name Input or Batch Group Name */}
-            {(uploadMode === 'merge' || files.length <= 1) ? (
-              <div>
-                <label className="block text-xs font-semibold mb-1 text-slate-300">
-                  4. Custom Display Name
-                </label>
-                <input
-                  type="text"
-                  value={dbName}
-                  onChange={(e) => setDbName(e.target.value)}
-                  placeholder={
-                    selectedType === 'spreadsheet'
-                      ? 'e.g. Sales Performance (CSV) or Financial Budget (Excel)'
-                      : uploadMode === 'merge'
-                        ? (selectedType === 'sql' ? 'e.g. Combined Sales DB' : 'e.g. Merged Catalog Store')
-                        : (selectedType === 'sql' ? 'e.g. Sales 2025 (SQL)' : 'e.g. Product Catalog (JSON)')
-                  }
-                  className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
-                    isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
-                  }`}
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs font-semibold mb-1 text-slate-300">
-                    4. Batch / Group Name (Saved to Folder)
-                  </label>
-                  <input
-                    type="text"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="e.g. Q3 Sales Reports, Inventory Batch, Marketing Spreadsheets"
-                    className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
-                      isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
-                    }`}
-                  />
-                </div>
-                <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-300">
-                  📁 <strong>Multi-File Group Storage:</strong> Files are saved together in <code>data/{selectedType === 'spreadsheet' ? 'csv' : selectedType}/multiple/{'{group_folder}'}/</code>. Display names are derived automatically from each file.
-                </div>
-              </div>
-            )}
+            {/* 3. Custom Display Name */}
+            <div>
+              <label className="block text-xs font-semibold mb-1 text-slate-300">
+                3. Custom Display Name
+              </label>
+              <input
+                type="text"
+                value={dbName}
+                onChange={(e) => setDbName(e.target.value)}
+                placeholder={
+                  detectedInfo?.dbType === 'sql'
+                    ? 'e.g. Sales 2025 (SQL)'
+                    : detectedInfo?.dbType === 'nosql'
+                      ? 'e.g. Product Catalog (JSON)'
+                      : detectedInfo?.dbType === 'excel'
+                        ? 'e.g. Financial Budget (Excel)'
+                        : detectedInfo?.dbType === 'csv'
+                          ? 'e.g. Sales Performance (CSV)'
+                          : 'e.g. My Dataset'
+                }
+                className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:border-indigo-500 transition-colors ${
+                  isDark ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400'
+                }`}
+              />
+            </div>
 
             {/* Error Message */}
             {errorMsg && (
@@ -1079,18 +672,12 @@ export default function UploadDbModal({
               </button>
               <button
                 type="submit"
-                disabled={isUploading || files.length === 0 || (uploadMode === 'merge' && !dbName.trim()) || (uploadMode === 'full' && files.length === 1 && !dbName.trim())}
+                disabled={isUploading || !file || !dbName.trim()}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-semibold shadow-xs shadow-indigo-600/30 transition-all cursor-pointer"
               >
                 {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                 <span>
-                  {isUploading 
-                    ? "Processing..." 
-                    : uploadMode === 'merge' 
-                      ? `Merge & Save (${files.length} ${selectedType === 'sql' ? 'Tables' : 'Collections'})` 
-                      : files.length > 1 
-                        ? `Bulk Import (${files.length} Data Sources)` 
-                        : "Save & Register"}
+                  {isUploading ? "Uploading..." : "Save & Register"}
                 </span>
               </button>
             </div>

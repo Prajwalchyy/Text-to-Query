@@ -58,6 +58,7 @@ try:
         get_chat_session,
         get_conversation_context,
         list_all_chats,
+        update_chat_db,
         update_chat_title,
     )
     from src.storage.registry import get_database, list_databases
@@ -69,6 +70,7 @@ except ImportError:
         get_chat_session,
         get_conversation_context,
         list_all_chats,
+        update_chat_db,
         update_chat_title,
     )
     from storage.registry import get_database, list_databases
@@ -119,9 +121,20 @@ def create_chat_session_data(
     payload: CreateChatRequest,
     file_path: Optional[Union[Path, str]] = None,
 ) -> Dict[str, Any]:
-    """Creates and persists a new conversation session."""
+    """Creates and persists a new conversation session associated with one dataset."""
     try:
-        chat = create_chat_session(chat_id=payload.id, title=payload.title, file_path=file_path)
+        db_id = payload.db_id.strip() if payload.db_id else None
+        db_name = payload.db_name
+        if db_id and not db_name:
+            db_info = get_database(db_id)
+            db_name = db_info.get("name") if db_info else None
+        chat = create_chat_session(
+            chat_id=payload.id,
+            title=payload.title,
+            file_path=file_path,
+            db_id=db_id,
+            db_name=db_name,
+        )
         return chat
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create chat: {str(e)}")
@@ -132,15 +145,40 @@ def update_chat_title_data(
     payload: UpdateChatRequest,
     file_path: Optional[Union[Path, str]] = None,
 ) -> Dict[str, Any]:
-    """Updates a conversation session title."""
-    clean_title = (payload.title or "").strip()
-    if not clean_title:
-        raise HTTPException(status_code=400, detail="Title cannot be empty.")
+    """Updates a conversation session title or dataset (if 0 messages)."""
+    clean_title = (payload.title or "").strip() if payload.title is not None else None
 
-    success = update_chat_title(chat_id=chat_id, title=clean_title, file_path=file_path)
-    if not success:
+    existing = get_chat_session(chat_id, file_path=file_path)
+    if not existing:
         raise HTTPException(status_code=404, detail="Chat not found.")
-    return {"success": True, "chat_id": chat_id, "title": clean_title}
+
+    updated_fields = {}
+
+    if clean_title:
+        success = update_chat_title(chat_id=chat_id, title=clean_title, file_path=file_path)
+        if not success:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        updated_fields["title"] = clean_title
+
+    if payload.db_id:
+        if len(existing.get("messages", [])) > 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot change dataset of a conversation that already contains messages. Each conversation is locked to one dataset."
+            )
+        db_info = get_database(payload.db_id)
+        db_name = payload.db_name or (db_info.get("name") if db_info else None)
+        success_db = update_chat_db(chat_id=chat_id, db_id=payload.db_id, db_name=db_name, file_path=file_path)
+        if not success_db:
+            raise HTTPException(status_code=400, detail="Failed to update dataset for conversation.")
+        updated_fields["db_id"] = payload.db_id
+        if db_name:
+            updated_fields["db_name"] = db_name
+
+    if not updated_fields:
+        raise HTTPException(status_code=400, detail="No valid update fields provided.")
+
+    return {"success": True, "chat_id": chat_id, **updated_fields}
 
 
 def delete_chat_data(
@@ -163,7 +201,8 @@ def execute_query_data(
     """
     Executes a Text-to-SQL or multi-language query within a specific chat session:
     1. Validates non-empty prompt.
-    2. Resolves target dataset metadata (defaults to Chinook).
+    2. Enforces STRICT 1-Dataset-Per-Conversation: queries always run against the
+       conversation's bound dataset (locked from session creation/first prompt).
     3. Auto-titles the chat session from initial question if new or empty.
     4. Fetches conversational memory window (last 4 turns).
     5. Stores user prompt message in chat storage.
@@ -176,25 +215,45 @@ def execute_query_data(
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
     try:
-        # Resolve database metadata
-        db_id = payload.db_id if payload.db_id and payload.db_id.strip() else "chinook"
-        db_info = get_database(db_id)
-        if not db_info:
-            db_info = {"name": "Default Database", "id": "chinook", "type": "sql"}
-
-        # Auto-title chat from first question if session is new or has 0 messages
+        # Check existing chat session or create one
         existing_chat = get_chat_session(chat_id, file_path=file_path)
         auto_title = clean_q[:32].strip() or "New Conversation"
 
         if existing_chat is None:
-            create_chat_session(chat_id=chat_id, title=auto_title, file_path=file_path)
-        elif len(existing_chat.get("messages", [])) == 0:
-            update_chat_title(chat_id=chat_id, title=auto_title, file_path=file_path)
+            # Auto-create chat session bound to payload.db_id or chinook
+            db_id = (payload.db_id or "chinook").strip()
+            db_info = get_database(db_id)
+            if not db_info:
+                db_info = {"name": "Default Database", "id": db_id, "type": "sql"}
+            create_chat_session(
+                chat_id=chat_id,
+                title=auto_title,
+                file_path=file_path,
+                db_id=db_id,
+                db_name=db_info.get("name", "Default Database"),
+            )
+        else:
+            # Chat already exists! STRICTLY ENFORCE ONE DATASET PER CONVERSATION:
+            # The conversation is permanently bound to its existing db_id.
+            bound_db_id = existing_chat.get("db_id")
+            if not bound_db_id:
+                bound_db_id = (payload.db_id or "chinook").strip()
+                db_info = get_database(bound_db_id)
+                db_name = db_info.get("name") if db_info else None
+                update_chat_db(chat_id, bound_db_id, db_name=db_name, file_path=file_path)
+            db_id = bound_db_id
+            db_info = get_database(db_id)
+            if not db_info:
+                db_info = {
+                    "name": existing_chat.get("db_name", "Default Database"),
+                    "id": db_id,
+                    "type": "sql"
+                }
 
-        # 1. Fetch Prior Conversation Context (Memory Window)
-        conversation_context = get_conversation_context(chat_id=chat_id, limit=4, file_path=file_path)
+            if len(existing_chat.get("messages", [])) == 0:
+                update_chat_title(chat_id=chat_id, title=auto_title, file_path=file_path)
 
-        # 2. Store User Message
+        # 1. Store User Message
         user_msg_id = str(int(time.time() * 1000))
         append_chat_message(
             chat_id=chat_id,
@@ -204,13 +263,13 @@ def execute_query_data(
             file_path=file_path,
         )
 
-        # 3. Run Pipeline with Conversational Memory and Target Language
+        # 2. Run Pipeline with Stateless Individual Prompt (Zero Turn Loop Penalty)
         target_lang = payload.target_language
         result = run_pipeline(
             question=clean_q,
             db_id=db_id,
             target_language=target_lang,
-            history=conversation_context,
+            history=None,
         )
 
         # Determine resulting code_type
@@ -280,6 +339,7 @@ def execute_query_data(
             "needed_tables": result.get("needed_tables", []),
             "available_tables": result.get("available_tables", []),
             "suggested_questions": result.get("suggested_questions", []),
+            "db_id": db_id,
             "db_name": db_info.get("name", "Default"),
             "db_type": db_info.get("type", "sql"),
             "code_type": result_code_type,

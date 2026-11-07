@@ -52,28 +52,22 @@ def get_upload_dir_for_type(
     group_folder: str = "",
 ) -> Path:
     """
-    Returns the appropriate categorized storage directory under data/:
-    - Single upload: data/{type}/single/
-    - Multiple/group upload: data/{type}/multiple/{group_folder}/
+    Returns the categorized storage directory under data/:
+    - Single dataset upload: data/{type}/single/
     """
     ext = file_ext.lower()
     if dataset_type == "sql" or ext in [".db", ".sqlite", ".sqlite3", ".sql"]:
         base_dir = RELATIONAL_DIR
     elif dataset_type == "nosql" or ext in [".json", ".jsonl", ".bson"]:
         base_dir = NOSQL_DIR
-    elif dataset_type == "csv" or ext == ".csv":
+    elif dataset_type == "csv" or ext in [".csv", ".tsv", ".parquet"]:
         base_dir = CSV_DIR
     elif dataset_type == "excel" or ext in [".xlsx", ".xls"]:
         base_dir = EXCEL_DIR
     else:
         base_dir = RELATIONAL_DIR
 
-    if upload_mode == "multiple" and group_folder.strip() != "":
-        clean_folder = re.sub(r'[^a-zA-Z0-9_\-]', '_', group_folder.strip().lower())
-        target = base_dir / "multiple" / clean_folder
-    else:
-        target = base_dir / "single"
-
+    target = base_dir / "single"
     target.mkdir(parents=True, exist_ok=True)
     return target
 
@@ -96,9 +90,13 @@ def count_sqlite_tables(db_path: Path | str) -> int:
 
 
 def count_csv_rows(csv_path: Path | str) -> int:
-    """Counts data rows in a CSV file (excluding header)."""
+    """Counts data rows in a CSV, TSV, or Parquet file (excluding header)."""
     try:
         path = Path(csv_path).resolve()
+        ext = path.suffix.lower()
+        if ext == ".parquet":
+            import pyarrow.parquet as pq
+            return pq.read_metadata(str(path)).num_rows
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
             lines = [line for line in f if line.strip()]
             return max(0, len(lines) - 1)
@@ -106,25 +104,56 @@ def count_csv_rows(csv_path: Path | str) -> int:
         return 0
 
 
+def count_csv_columns(csv_path: Path | str) -> int:
+    """Counts columns in a CSV, TSV, or Parquet file."""
+    try:
+        path = Path(csv_path).resolve()
+        ext = path.suffix.lower()
+        if ext == ".parquet":
+            import pyarrow.parquet as pq
+            return pq.read_metadata(str(path)).num_columns
+        sep = "\t" if ext == ".tsv" else ","
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    import csv
+                    reader = csv.reader([line], delimiter=sep)
+                    row = next(reader)
+                    return len(row)
+        return 0
+    except Exception:
+        return 0
+
+
 def inspect_excel_workbook(excel_path: Path | str) -> Dict[str, Any]:
-    """Inspects sheet names and estimated row counts for an Excel workbook."""
+    """Inspects sheet names, row counts, and column counts for an Excel workbook."""
     try:
         import openpyxl
         path = Path(excel_path).resolve()
         wb = openpyxl.load_workbook(str(path), read_only=True)
         sheets = wb.sheetnames
         total_rows = 0
+        total_columns = 0
         sheet_details = []
         for name in sheets:
             ws = wb[name]
             r = ws.max_row or 0
+            c = ws.max_column or 0
             data_rows = max(0, r - 1)
             total_rows += data_rows
-            sheet_details.append({"name": name, "rows": data_rows})
+            if len(sheets) == 1:
+                total_columns = c
+            sheet_details.append({"name": name, "rows": data_rows, "columns": c})
         wb.close()
-        return {"sheets": sheets, "total_rows": total_rows, "sheet_details": sheet_details}
+        return {
+            "sheets": sheets,
+            "total_rows": total_rows,
+            "column_count": total_columns,
+            "sheet_details": sheet_details
+        }
     except Exception:
-        return {"sheets": [], "total_rows": 0, "sheet_details": []}
+        return {"sheets": [], "total_rows": 0, "column_count": 0, "sheet_details": []}
 
 
 def count_json_docs(json_path: Path | str) -> int:
@@ -155,6 +184,28 @@ def count_json_docs(json_path: Path | str) -> int:
                 return len([line for line in content.splitlines() if line.strip()])
     except Exception:
         return 0
+
+
+def count_json_tables(json_path: Path | str) -> int:
+    """Counts distinct collections/tables in a JSON, JSONL, or BSON file."""
+    path = Path(json_path).resolve()
+    ext = path.suffix.lower()
+
+    if ext in [".bson", ".jsonl"]:
+        return 1
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            if not content:
+                return 1
+            if content.startswith("{"):
+                data = json.loads(content)
+                tables = [k for k, v in data.items() if isinstance(v, (list, dict))]
+                return len(tables) if tables else 1
+            return 1
+    except Exception:
+        return 1
 
 
 # ==============================================================================
@@ -210,7 +261,9 @@ def _ensure_defaults_present(dbs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "type": "nosql",
             "filename": "ecommerce_store.json",
             "path": str(DEFAULT_NOSQL_PATH.resolve()),
+            "table_count": count_json_tables(DEFAULT_NOSQL_PATH),
             "doc_count": count_json_docs(DEFAULT_NOSQL_PATH),
+            "row_count": count_json_docs(DEFAULT_NOSQL_PATH),
             "is_default": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
@@ -225,6 +278,7 @@ def _ensure_defaults_present(dbs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "filename": "sales_performance.csv",
             "path": str(DEFAULT_CSV_PATH.resolve()),
             "row_count": count_csv_rows(DEFAULT_CSV_PATH),
+            "column_count": count_csv_columns(DEFAULT_CSV_PATH),
             "table_count": 1,
             "is_default": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -244,6 +298,7 @@ def _ensure_defaults_present(dbs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "sheets": sheet_info.get("sheets", []),
             "table_count": len(sheet_info.get("sheets", [])),
             "row_count": sheet_info.get("total_rows", 0),
+            "column_count": sheet_info.get("column_count", 0),
             "is_default": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
@@ -290,7 +345,7 @@ def register_database(
     and registers it with metadata.
     """
     ext = filename.lower()
-    is_csv = ext.endswith(".csv")
+    is_csv = ext.endswith((".csv", ".tsv", ".parquet"))
     is_excel = ext.endswith((".xlsx", ".xls"))
     is_nosql = ext.endswith((".json", ".jsonl", ".bson"))
     clean_name = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip().lower())
@@ -298,6 +353,7 @@ def register_database(
 
     if is_csv:
         row_count = count_csv_rows(file_path)
+        col_count = count_csv_columns(file_path)
         new_entry = {
             "id": db_id,
             "name": name.strip(),
@@ -308,6 +364,7 @@ def register_database(
             "group_name": group_name,
             "group_id": group_id,
             "row_count": row_count,
+            "column_count": col_count,
             "table_count": 1,
             "is_default": False,
             "created_at": datetime.now(timezone.utc).isoformat(),
@@ -327,6 +384,7 @@ def register_database(
             "sheets": sheet_info.get("sheets", []),
             "table_count": len(sheet_info.get("sheets", [])),
             "row_count": sheet_info.get("total_rows", 0),
+            "column_count": sheet_info.get("column_count", 0),
             "is_default": False,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -334,6 +392,7 @@ def register_database(
         doc_count = count_json_docs(file_path)
         if doc_count == 0:
             raise ValueError("The uploaded NoSQL file is empty or contains invalid JSON/BSON documents.")
+        table_count = count_json_tables(file_path)
 
         new_entry = {
             "id": db_id,
@@ -344,7 +403,9 @@ def register_database(
             "upload_mode": upload_mode,
             "group_name": group_name,
             "group_id": group_id,
+            "table_count": table_count,
             "doc_count": doc_count,
+            "row_count": doc_count,
             "is_default": False,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -410,15 +471,7 @@ def delete_database(db_id: str) -> bool:
     managed_parents = [RELATIONAL_DIR, NOSQL_DIR, CSV_DIR, EXCEL_DIR, UPLOADS_DIR]
     if file_path.exists() and any(p in file_path.parents for p in managed_parents):
         try:
-            parent_dir = file_path.parent
             file_path.unlink()
-            # Clean up multiple/group directory if now empty
-            if parent_dir.name != "single" and "multiple" in [p.name for p in parent_dir.parents]:
-                try:
-                    if not any(parent_dir.iterdir()):
-                        parent_dir.rmdir()
-                except OSError:
-                    pass
         except OSError:
             pass
 

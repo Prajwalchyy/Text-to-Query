@@ -41,14 +41,14 @@ LANGUAGE_CONFIG: Dict[str, Dict[str, Any]] = {
         "name": "SQL",
         "badge": "SQL",
         "color": "indigo",
-        "supported_db_types": ["sql", "csv", "excel"],
+        "supported_db_types": ["sql"],
     },
     "excel_formula": {
         "id": "excel_formula",
         "name": "Excel",
         "badge": "Excel",
         "color": "emerald",
-        "supported_db_types": ["sql", "csv", "excel", "nosql"],
+        "supported_db_types": ["excel", "csv"],
     },
     "pandas": {
         "id": "pandas",

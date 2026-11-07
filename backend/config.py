@@ -123,7 +123,7 @@ def get_upload_dir(
         base_dir = RELATIONAL_DIR
     elif norm_type == "nosql" or ext in [".json", ".jsonl"]:
         base_dir = NOSQL_DIR
-    elif norm_type == "csv" or ext == ".csv":
+    elif norm_type == "csv" or ext in [".csv", ".tsv", ".parquet"]:
         base_dir = CSV_DIR
     elif norm_type == "excel" or ext in [".xlsx", ".xls"]:
         base_dir = EXCEL_DIR

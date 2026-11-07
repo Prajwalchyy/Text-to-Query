@@ -137,6 +137,14 @@ def load_spreadsheet(
         if not excel_data:
             raise ValueError(f"Excel workbook contains no readable sheets: {path}")
         return {str(sheet): df for sheet, df in excel_data.items()}
+    elif ext == ".tsv":
+        df = pd.read_csv(str(path), sep="\t")
+        sheet_name = path.stem.lower().replace("-", "_").replace(" ", "_")
+        return {sheet_name: df}
+    elif ext == ".parquet":
+        df = pd.read_parquet(str(path))
+        sheet_name = path.stem.lower().replace("-", "_").replace(" ", "_")
+        return {sheet_name: df}
     else:
         df = pd.read_csv(str(path))
         sheet_name = path.stem.lower().replace("-", "_").replace(" ", "_")

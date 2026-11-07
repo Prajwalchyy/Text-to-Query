@@ -1,51 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Code2, ChevronDown, Check } from 'lucide-react';
 
+const ALL_LANGUAGES = {
+  sql: { id: 'sql', name: 'SQL', color: 'indigo' },
+  nosql: { id: 'nosql', name: 'NoSQL', color: 'amber' },
+  pandas: { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
+  excel_formula: { id: 'excel_formula', name: 'Excel', color: 'emerald' },
+  r: { id: 'r', name: 'R', color: 'sky' },
+};
+
+const getDefaultLanguage = (dbType) => {
+  const type = (dbType || 'sql').toLowerCase();
+  if (type === 'nosql') return 'nosql';
+  if (type === 'excel') return 'excel_formula';
+  if (type === 'csv') return 'pandas';
+  return 'sql';
+};
+
 const getAvailableLanguages = (dbType) => {
   const type = (dbType || 'sql').toLowerCase();
-
-  if (type === 'sql') {
-    return [
-      { id: 'sql', name: 'SQL', color: 'indigo' },
-      { id: 'excel_formula', name: 'Excel', color: 'emerald' },
-      { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
-      { id: 'r', name: 'R', color: 'sky' },
-    ];
-  }
-
   if (type === 'nosql') {
-    return [
-      { id: 'nosql', name: 'MongoDB MQL', color: 'emerald' },
-      { id: 'excel_formula', name: 'Excel', color: 'emerald' },
-      { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
-      { id: 'r', name: 'R', color: 'sky' },
-    ];
+    return [ALL_LANGUAGES.nosql, ALL_LANGUAGES.pandas, ALL_LANGUAGES.r];
   }
-
-  if (type === 'csv') {
-    return [
-      { id: 'sql', name: 'SQL', color: 'indigo' },
-      { id: 'excel_formula', name: 'Excel', color: 'emerald' },
-      { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
-      { id: 'r', name: 'R', color: 'sky' },
-    ];
-  }
-
   if (type === 'excel') {
-    return [
-      { id: 'excel_formula', name: 'Excel', color: 'emerald' },
-      { id: 'sql', name: 'SQL', color: 'indigo' },
-      { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
-      { id: 'r', name: 'R', color: 'sky' },
-    ];
+    return [ALL_LANGUAGES.excel_formula, ALL_LANGUAGES.pandas, ALL_LANGUAGES.r];
   }
-
-  return [
-    { id: 'sql', name: 'SQL', color: 'indigo' },
-    { id: 'excel_formula', name: 'Excel', color: 'emerald' },
-    { id: 'pandas', name: 'Python (Pandas)', color: 'cyan' },
-    { id: 'r', name: 'R', color: 'sky' },
-  ];
+  if (type === 'csv') {
+    return [ALL_LANGUAGES.pandas, ALL_LANGUAGES.excel_formula, ALL_LANGUAGES.r];
+  }
+  // Default for SQL relational databases
+  return [ALL_LANGUAGES.sql, ALL_LANGUAGES.pandas, ALL_LANGUAGES.r];
 };
 
 export default function ChatInput({ 
@@ -57,7 +41,7 @@ export default function ChatInput({
 }) {
   const [text, setText] = useState('');
   const availableLanguages = getAvailableLanguages(currentDb?.type);
-  const defaultLangId = availableLanguages[0]?.id || 'sql';
+  const defaultLangId = getDefaultLanguage(currentDb?.type);
   const [targetLanguage, setTargetLanguage] = useState(defaultLangId);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const textareaRef = useRef(null);
@@ -66,13 +50,18 @@ export default function ChatInput({
   const activeLangConfig = availableLanguages.find(l => l.id === targetLanguage) || availableLanguages[0];
   const isCustomLang = targetLanguage !== defaultLangId;
 
-  // Auto-reset language if database type changes and language is incompatible
+  // Auto-switch target language when database changes or if selected language is invalid for current database
+  const prevDbIdRef = useRef(currentDb?.id);
   useEffect(() => {
-    const validLangs = getAvailableLanguages(currentDb?.type);
-    if (!validLangs.some(l => l.id === targetLanguage)) {
-      setTargetLanguage(validLangs[0]?.id || 'sql');
+    const validIds = availableLanguages.map(l => l.id);
+    const dbChanged = currentDb?.id && currentDb.id !== prevDbIdRef.current;
+    if (dbChanged) {
+      prevDbIdRef.current = currentDb.id;
+      setTargetLanguage(getDefaultLanguage(currentDb?.type));
+    } else if (!validIds.includes(targetLanguage)) {
+      setTargetLanguage(getDefaultLanguage(currentDb?.type));
     }
-  }, [currentDb?.type, currentDb?.id, targetLanguage]);
+  }, [currentDb?.id, currentDb?.type, availableLanguages, targetLanguage]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -188,7 +177,7 @@ export default function ChatInput({
                   isDark ? 'bg-slate-900/95 border-slate-700/90 text-slate-200 shadow-black/60' : 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-300/60'
                 }`}>
                   <div className="px-3 py-1.5 border-b border-slate-800/60 text-[10px] uppercase font-bold text-slate-400">
-                    Compatible Languages
+                    Select Language or Tools
                   </div>
 
                   <div className="py-1">
@@ -234,7 +223,7 @@ export default function ChatInput({
         </div>
 
         <div className="flex items-center justify-between px-1 text-[10px] text-slate-400 mt-2">
-          <span>Enterprise Multi-Engine • SQL, NoSQL & Spreadsheets • AST Sandboxed Guardrails</span>
+          <span>Enterprise Multi-Engine • SQL, NoSQL & Tabular Datasets • AST Sandboxed Guardrails</span>
           <span className="font-mono text-indigo-400/80 font-medium">Enter to execute</span>
         </div>
       </form>

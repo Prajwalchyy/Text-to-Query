@@ -15,6 +15,7 @@ from engines.sql_engine import (
     get_sql_schema,
     get_table_details,
     get_table_names,
+    get_table_row_count,
     get_table_schema,
     resolve_sqlite_path,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "get_sql_schema",
     "get_table_details",
     "get_table_names",
+    "get_table_row_count",
     "get_table_schema",
     "resolve_sqlite_path",
     # NoSQL Engine

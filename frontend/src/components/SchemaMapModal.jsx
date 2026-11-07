@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
-  X, Database, Network, Search, ArrowRight, Key, Link as LinkIcon, 
+  X, Database, Network, Search, Key, Link as LinkIcon, 
   Layers, FileJson, ZoomIn, ZoomOut, RotateCcw, Move
 } from 'lucide-react';
 
@@ -198,7 +198,6 @@ export default function SchemaMapModal({
 
   const isExcel = dbType === 'excel';
   const isCsv = dbType === 'csv';
-  const isSpreadsheet = isExcel || isCsv;
   const isNoSql = dbType === 'nosql';
   const activeFocusTable = selectedTable || hoveredTable;
 

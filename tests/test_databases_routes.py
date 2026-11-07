@@ -12,8 +12,6 @@ from backend.src.api.databases_routes import (
     get_tables,
     delete_database,
     upload_dataset,
-    append_table_script,
-    append_collection_docs,
     introspect_schema,
     DatabaseController,
 )
@@ -48,6 +46,7 @@ def test_get_tables_chinook_sql():
     customer_table = next(t for t in data["tables"] if t["name"] == "Customer")
     assert any("PK" in c for c in customer_table["cols"])
     assert any("CustomerId" in c["name"] for c in customer_table["columns"])
+    assert customer_table.get("count") == 59
 
 
 def test_get_tables_nosql():
@@ -60,6 +59,7 @@ def test_get_tables_nosql():
     col_names = [t["name"] for t in data["tables"]]
     assert "customers" in col_names or "products" in col_names
     assert len(data["relationships"]) >= 0
+    assert all("count" in t and isinstance(t["count"], int) for t in data["tables"])
 
 
 def test_get_tables_csv():
@@ -68,15 +68,17 @@ def test_get_tables_csv():
     assert data["type"] == "csv"
     assert len(data["tables"]) >= 1
     assert "columns" in data["tables"][0]
+    assert data["tables"][0].get("count") == 12
 
 
 def test_get_tables_excel():
     """Verify get_tables('financial_budget') introspects Excel sheets."""
     data = get_tables("financial_budget")
     assert data["type"] == "excel"
-    assert len(data["tables"]) >= 2
+    assert len(data["tables"]) >= 1
     sheet_names = [t["name"] for t in data["tables"]]
-    assert "DepartmentBudget" in sheet_names or "ExpenseDetails" in sheet_names
+    assert "DepartmentBudget" in sheet_names
+    assert all("count" in t and isinstance(t["count"], int) for t in data["tables"])
 
 
 def test_upload_missing_files_fails():
@@ -84,34 +86,44 @@ def test_upload_missing_files_fails():
     with pytest.raises(HTTPException) as exc:
         upload_dataset(files=[], file=None, name="test_empty")
     assert exc.value.status_code == 400
-    assert "At least one file is required" in str(exc.value.detail)
+    assert "required" in str(exc.value.detail).lower()
 
 
-def test_merge_upload_requires_name():
-    """Verify merge mode upload without display name raises HTTPException(400)."""
+def test_merge_mode_rejected():
+    """Verify merge mode upload is rejected with HTTPException(400)."""
     mock_file = UploadFile(filename="test.sql", file=io.BytesIO(b"CREATE TABLE test (id INT);"))
     with pytest.raises(HTTPException) as exc:
-        upload_dataset(files=[mock_file], name="   ", mode="merge", dataset_type="sql")
+        upload_dataset(files=[mock_file], name="test", mode="merge", dataset_type="sql")
     assert exc.value.status_code == 400
-    assert "Custom Display Name is required" in str(exc.value.detail)
+    assert "Merge mode has been removed" in str(exc.value.detail)
 
 
-def test_append_table_invalid_extension():
-    """Verify appending non-sql file raises HTTPException(400)."""
+def test_multiple_files_rejected():
+    """Verify uploading multiple files is rejected with HTTPException(400)."""
+    f1 = UploadFile(filename="test1.db", file=io.BytesIO(b""))
+    f2 = UploadFile(filename="test2.db", file=io.BytesIO(b""))
+    with pytest.raises(HTTPException) as exc:
+        upload_dataset(files=[f1, f2], name="test")
+    assert exc.value.status_code == 400
+    assert "Multiple file upload has been removed" in str(exc.value.detail)
+
+
+def test_upload_invalid_sql_extension():
+    """Verify uploading non-sql file raises HTTPException(400)."""
     mock_file = UploadFile(filename="test.txt", file=io.BytesIO(b"dummy text"))
     with pytest.raises(HTTPException) as exc:
-        append_table_script(db_id="chinook", file=mock_file)
+        upload_dataset(files=[mock_file], name="test", mode="full", dataset_type="sql")
     assert exc.value.status_code == 400
-    assert "Only .sql table scripts" in str(exc.value.detail)
+    assert "Invalid file type for SQL" in str(exc.value.detail)
 
 
-def test_append_collection_invalid_extension():
-    """Verify appending non-json/bson file raises HTTPException(400)."""
+def test_upload_invalid_nosql_extension():
+    """Verify uploading non-json/bson file raises HTTPException(400)."""
     mock_file = UploadFile(filename="test.txt", file=io.BytesIO(b"dummy text"))
     with pytest.raises(HTTPException) as exc:
-        append_collection_docs(db_id="ecommerce_store", file=mock_file)
+        upload_dataset(files=[mock_file], name="test", mode="full", dataset_type="nosql")
     assert exc.value.status_code == 400
-    assert "Only .json, .jsonl, or .bson" in str(exc.value.detail)
+    assert "Invalid file type for NoSQL" in str(exc.value.detail)
 
 
 def test_delete_default_database_blocked():

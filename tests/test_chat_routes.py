@@ -141,6 +141,7 @@ def test_get_supported_languages_for_sql():
     assert "java" not in lang_ids
     assert "csharp" not in lang_ids
     assert "nosql" not in lang_ids
+    assert "excel_formula" not in lang_ids
 
 
 def test_get_supported_languages_for_nosql():
@@ -153,7 +154,9 @@ def test_get_supported_languages_for_nosql():
     lang_ids = [l["id"] for l in res["languages"]]
     assert "nosql" in lang_ids
     assert "pandas" in lang_ids
+    assert "r" in lang_ids
     assert "sql" not in lang_ids
+    assert "excel_formula" not in lang_ids
 
 
 # ==============================================================================
@@ -267,9 +270,10 @@ def test_execute_query_flow(temp_chat_file):
         assert session["messages"][1]["sql"] == "SELECT Name FROM Artist LIMIT 5;"
 
 
-def test_execute_query_conversation_history(temp_chat_file):
+def test_execute_query_stateless_individual_turns(temp_chat_file):
     """
-    Verify multi-turn query execution passes previous turns to run_pipeline.
+    Verify multi-turn query execution treats each prompt individually without
+    passing prior conversation turns to run_pipeline (eliminating token turn penalty).
     """
     mock_res_1 = {
         "question": "What is the highest invoice?",
@@ -305,14 +309,17 @@ def test_execute_query_conversation_history(temp_chat_file):
         execute_query_data(chat_id="multi-turn-chat", payload=req2, file_path=temp_chat_file)
 
         assert mock_run.call_count == 2
+        # Verify both turns were invoked independently without prior conversation context
+        first_call_kwargs = mock_run.call_args_list[0][1]
+        assert first_call_kwargs.get("history") is None
+
         second_call_kwargs = mock_run.call_args_list[1][1]
-        history = second_call_kwargs.get("history")
-        assert history is not None
-        assert len(history) == 2  # Turn 1: user + assistant
-        assert history[0]["role"] == "user"
-        assert history[0]["content"] == "What is the highest invoice?"
-        assert history[1]["role"] == "assistant"
-        assert history[1]["sql"] == "SELECT MAX(Total) FROM Invoice;"
+        assert second_call_kwargs.get("history") is None
+
+        # Verify chat history persistence still records all turns for the UI session
+        session = list_chats_data(file_path=temp_chat_file)["chats"][0]
+        assert session["id"] == "multi-turn-chat"
+        assert len(session["messages"]) == 4  # Turn 1 (user+assistant) + Turn 2 (user+assistant)
 
 
 # ==============================================================================
@@ -342,4 +349,112 @@ def test_router_endpoints_registered():
     assert "/chats/{chat_id}/query" in routes
     assert "/chats/convert-code" in routes
     assert "/chats/languages/{db_id}" in routes
+
+
+# ==============================================================================
+# One Dataset Per Conversation Enforcement Tests
+# ==============================================================================
+def test_create_chat_with_dataset_persists(temp_chat_file):
+    """Verify creating a session explicitly records db_id and db_name."""
+    req = CreateChatRequest(id="session-nosql-01", title="Store Inventory", db_id="ecommerce_store")
+    created = create_chat_session_data(req, file_path=temp_chat_file)
+
+    assert created["id"] == "session-nosql-01"
+    assert created["db_id"] == "ecommerce_store"
+    assert "E-Commerce" in created["db_name"]
+
+    listed = list_chats_data(file_path=temp_chat_file)
+    assert len(listed["chats"]) == 1
+    assert listed["chats"][0]["db_id"] == "ecommerce_store"
+
+
+def test_one_dataset_per_conversation_enforced_in_query(temp_chat_file):
+    """
+    Verify strict 1-Dataset-Per-Conversation invariant:
+    If a chat session is bound to 'chinook', any subsequent query payload with a
+    different db_id (e.g. 'ecommerce_store') MUST be overridden to use 'chinook'.
+    """
+    mock_res = {
+        "question": "Show tracks",
+        "title": "Track Listing",
+        "status": "SUCCESS",
+        "final_sql": "SELECT * FROM Track LIMIT 5;",
+        "code_type": "sql",
+        "data": [{"TrackId": 1}],
+        "summary": "Tracks returned.",
+        "confidence_score": 0.9,
+        "attempts": 1,
+        "latency_ms": 100,
+        "sub_queries": [],
+        "needed_tables": [],
+        "available_tables": ["Track"],
+        "suggested_questions": [],
+    }
+
+    # 1. Create chat bound to chinook
+    create_req = CreateChatRequest(id="session-strict-chinook", title="Music Chat", db_id="chinook")
+    create_chat_session_data(create_req, file_path=temp_chat_file)
+
+    with patch("backend.src.api.chat_routes.run_pipeline", return_value=mock_res) as mock_run:
+        # 2. Try to query with a DIFFERENT dataset (ecommerce_store)
+        query_req = QueryRequest(
+            question="Show tracks",
+            db_id="ecommerce_store",  # Attempt to switch dataset within existing conversation
+            target_language="sql"
+        )
+        res = execute_query_data(
+            chat_id="session-strict-chinook",
+            payload=query_req,
+            file_path=temp_chat_file
+        )
+
+        # 3. Assert run_pipeline was called with chinook (NOT ecommerce_store)
+        mock_run.assert_called_once()
+        assert mock_run.call_args[1]["db_id"] == "chinook"
+
+        # 4. Assert response telemetry reflects chinook
+        assert res["db_id"] == "chinook"
+        assert res["telemetry"]["db_id"] == "chinook"
+
+
+def test_update_chat_dataset_allowed_for_empty_chat(temp_chat_file):
+    """Verify an empty conversation (0 messages) can update its dataset."""
+    create_req = CreateChatRequest(id="session-empty", title="New Conversation", db_id="chinook")
+    create_chat_session_data(create_req, file_path=temp_chat_file)
+
+    # Update dataset before any messages exist
+    upd = UpdateChatRequest(db_id="sales_performance")
+    res = update_chat_title_data(chat_id="session-empty", payload=upd, file_path=temp_chat_file)
+
+    assert res["success"] is True
+    assert res["db_id"] == "sales_performance"
+
+    listed = list_chats_data(file_path=temp_chat_file)
+    assert listed["chats"][0]["db_id"] == "sales_performance"
+
+
+def test_update_chat_dataset_rejected_once_messages_exist(temp_chat_file):
+    """Verify attempting to change dataset on a conversation with messages is rejected (HTTP 400)."""
+    # 1. Create chat
+    create_req = CreateChatRequest(id="session-locked", title="Music Analysis", db_id="chinook")
+    create_chat_session_data(create_req, file_path=temp_chat_file)
+
+    # 2. Add a message to make it non-empty
+    from backend.src.storage.chat_store import append_chat_message
+    append_chat_message(
+        chat_id="session-locked",
+        message_id="msg-1",
+        role="user",
+        content="What is top artist?",
+        file_path=temp_chat_file
+    )
+
+    # 3. Attempt to change dataset should raise HTTPException 400
+    upd = UpdateChatRequest(db_id="ecommerce_store")
+    with pytest.raises(HTTPException) as exc_info:
+        update_chat_title_data(chat_id="session-locked", payload=upd, file_path=temp_chat_file)
+
+    assert exc_info.value.status_code == 400
+    assert "Cannot change dataset" in exc_info.value.detail
+
 

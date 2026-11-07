@@ -9,7 +9,7 @@ Simulates live frontend client interactions across all major application workflo
 4. SQL Pipeline Query Execution & Telemetry (Chinook database)
 5. NoSQL MQL Aggregation & Schema Explorer (ecommerce_store.json)
 6. Tabular CSV Pandas Analysis (sales_performance.csv)
-7. Multi-Sheet Excel Budget Formula Evaluation (financial_budget.xlsx)
+7. Excel Budget Formula Evaluation (financial_budget.xlsx)
 8. Cross-Dialect Polyglot Translation Bridge (/api/chats/convert-code)
 9. Supported Dialect Catalog (/api/chats/languages/{db_id})
 10. Table & Collection Conflict Detection (409 Conflict)
@@ -247,7 +247,8 @@ def test_e2e_supported_languages_catalog():
     sql_lang_ids = [l["id"] for l in sql_langs["languages"]]
     assert "sql" in sql_lang_ids
     assert "pandas" in sql_lang_ids
-    assert "excel_formula" in sql_lang_ids
+    assert "r" in sql_lang_ids
+    assert "excel_formula" not in sql_lang_ids
     assert "nosql" not in sql_lang_ids
 
     # NoSQL
@@ -255,12 +256,17 @@ def test_e2e_supported_languages_catalog():
     assert nosql_langs["db_type"] == "nosql"
     nosql_lang_ids = [l["id"] for l in nosql_langs["languages"]]
     assert "nosql" in nosql_lang_ids
+    assert "pandas" in nosql_lang_ids
+    assert "r" in nosql_lang_ids
     assert "sql" not in nosql_lang_ids
+    assert "excel_formula" not in nosql_lang_ids
 
     # CSV / Excel
     csv_langs = get_supported_languages_data("sales_performance")
     assert csv_langs["db_type"] == "csv"
     csv_lang_ids = [l["id"] for l in csv_langs["languages"]]
-    assert "sql" in csv_lang_ids
+    assert "sql" not in csv_lang_ids
+    assert "nosql" not in csv_lang_ids
     assert "pandas" in csv_lang_ids
     assert "excel_formula" in csv_lang_ids
+    assert "r" in csv_lang_ids

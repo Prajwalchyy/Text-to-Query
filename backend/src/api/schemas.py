@@ -25,6 +25,8 @@ class CreateChatRequest(ApiBaseModel):
     """Payload for creating a new conversational chat session."""
     id: str = Field(..., description="Unique chat identifier")
     title: Optional[str] = Field(default="New Conversation", description="Display title for the chat")
+    db_id: Optional[str] = Field(default=None, description="Associated data source identifier")
+    db_name: Optional[str] = Field(default=None, description="Display name for associated data source")
 
     @field_validator("id")
     @classmethod
@@ -40,17 +42,26 @@ class CreateChatRequest(ApiBaseModel):
             return "New Conversation"
         return v.strip()
 
+    @field_validator("db_id")
+    @classmethod
+    def validate_db_id(cls, v: Optional[str]) -> Optional[str]:
+        if not v or not v.strip():
+            return None
+        return v.strip()
+
 
 class UpdateChatRequest(ApiBaseModel):
-    """Payload for updating a chat session's title."""
-    title: str = Field(..., description="New display title")
+    """Payload for updating a chat session's title or dataset."""
+    title: Optional[str] = Field(default=None, description="New display title")
+    db_id: Optional[str] = Field(default=None, description="New dataset identifier (only allowed if 0 messages)")
+    db_name: Optional[str] = Field(default=None, description="New dataset display name")
 
     @field_validator("title")
     @classmethod
-    def validate_title(cls, v: str) -> str:
-        if not v or not v.strip():
+    def validate_title(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
             raise ValueError("Title cannot be empty.")
-        return v.strip()
+        return v.strip() if v is not None else None
 
 
 class QueryRequest(ApiBaseModel):
@@ -138,8 +149,8 @@ class DatabaseUploadForm(ApiBaseModel):
     """Form parameters for dataset uploads."""
     name: Optional[str] = Field(default="", description="Display name for custom database")
     type: Optional[str] = Field(default=None, description="Dataset type: sql, nosql, csv, excel")
-    mode: str = Field(default="full", description="Upload mode: 'full' or 'merge'")
-    group_name: Optional[str] = Field(default=None, description="Group folder name for bulk uploads")
+    mode: str = Field(default="full", description="Upload mode: single dataset file")
+    group_name: Optional[str] = Field(default=None, description="Optional legacy group name")
 
 
 class AppendTableForm(ApiBaseModel):
@@ -223,6 +234,8 @@ class ChatSessionDetail(ApiBaseModel):
     """Complete conversational session including all message turns."""
     id: str = Field(..., description="Session identifier")
     title: str = Field(..., description="Session title")
+    db_id: Optional[str] = Field(default="chinook", description="Associated dataset identifier")
+    db_name: Optional[str] = Field(default=None, description="Associated dataset display name")
     created_at: Optional[str] = Field(default=None, description="Creation ISO timestamp")
     updated_at: Optional[str] = Field(default=None, description="Last update ISO timestamp")
     messages: List[Dict[str, Any]] = Field(default_factory=list, description="List of messages")

@@ -167,6 +167,28 @@ def get_table_details(
         conn.close()
 
 
+def get_table_row_count(db_path: Optional[Path | str], table_name: str) -> int:
+    """
+    Returns the total row count for a given SQLite table.
+    Safely escapes the table name.
+    """
+    path = resolve_sqlite_path(db_path)
+    if not path.exists():
+        return 0
+
+    conn = sqlite3.connect(str(path))
+    try:
+        cursor = conn.cursor()
+        safe_name = table_name.replace('"', '""')
+        cursor.execute(f'SELECT COUNT(*) FROM "{safe_name}";')
+        row = cursor.fetchone()
+        return row[0] if row else 0
+    except Exception:
+        return 0
+    finally:
+        conn.close()
+
+
 def get_all_relationships(db_path: Optional[Path | str] = None) -> List[Dict[str, str]]:
     """
     Introspects and returns all foreign key relationships across the entire database.

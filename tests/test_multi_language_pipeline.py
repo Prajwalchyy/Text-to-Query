@@ -15,36 +15,36 @@ def test_domain_compatibility_rules():
     """Validates strict domain guardrails: Excel formula and MQL boundary enforcement."""
     gen = MultiLanguageGenerator()
 
-    # 1. Relational SQL DB: accepts SQL, Excel, Python, R; rejects NoSQL, JS, Java, C#
+    # 1. Relational SQL DB: accepts SQL, Python (Pandas), R; rejects NoSQL, Excel, JS, Java, C#
     assert gen.is_language_supported("sql", "sql") is True
-    assert gen.is_language_supported("sql", "excel_formula") is True
     assert gen.is_language_supported("sql", "pandas") is True
     assert gen.is_language_supported("sql", "r") is True
+    assert gen.is_language_supported("sql", "excel_formula") is False
+    assert gen.is_language_supported("sql", "nosql") is False
     assert gen.is_language_supported("sql", "javascript") is False
     assert gen.is_language_supported("sql", "java") is False
     assert gen.is_language_supported("sql", "csharp") is False
-    assert gen.is_language_supported("sql", "nosql") is False
 
-    # 2. NoSQL DB: accepts MQL, Excel, Python, R; rejects SQL, JS, Java, C#
+    # 2. NoSQL DB: accepts MQL, Python, R; rejects SQL, Excel, JS, Java, C#
     assert gen.is_language_supported("nosql", "nosql") is True
-    assert gen.is_language_supported("nosql", "excel_formula") is True
     assert gen.is_language_supported("nosql", "pandas") is True
     assert gen.is_language_supported("nosql", "r") is True
+    assert gen.is_language_supported("nosql", "excel_formula") is False
+    assert gen.is_language_supported("nosql", "sql") is False
     assert gen.is_language_supported("nosql", "javascript") is False
     assert gen.is_language_supported("nosql", "java") is False
     assert gen.is_language_supported("nosql", "csharp") is False
-    assert gen.is_language_supported("nosql", "sql") is False
 
-    # 3. CSV & Excel Spreadsheets: accept SQL, Pandas, Excel Formula, R; reject NoSQL, JS, Java, C#
+    # 3. CSV & Excel Spreadsheets: accept Pandas, Excel Formula, R; reject SQL, NoSQL, JS, Java, C#
     for sheet_type in ["csv", "excel"]:
-        assert gen.is_language_supported(sheet_type, "sql") is True
         assert gen.is_language_supported(sheet_type, "pandas") is True
         assert gen.is_language_supported(sheet_type, "excel_formula") is True
         assert gen.is_language_supported(sheet_type, "r") is True
+        assert gen.is_language_supported(sheet_type, "sql") is False
+        assert gen.is_language_supported(sheet_type, "nosql") is False
         assert gen.is_language_supported(sheet_type, "javascript") is False
         assert gen.is_language_supported(sheet_type, "java") is False
         assert gen.is_language_supported(sheet_type, "csharp") is False
-        assert gen.is_language_supported(sheet_type, "nosql") is False
 
 
 def test_sql_execution_on_csv_spreadsheet():

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Database, FileJson, ChevronDown, Check, Plus, Search, 
-  Layers, Sparkles, FileSpreadsheet, Table2, Trash2, X, Loader2
+  Layers, Sparkles, FileSpreadsheet, Trash2, X, Loader2, Lock
 } from 'lucide-react';
 
 export default function DatabaseSelectorPopover({
@@ -11,7 +11,9 @@ export default function DatabaseSelectorPopover({
   onOpenUpload,
   onDeleteDatabase,
   apiBaseUrl,
-  isDark
+  isDark,
+  isLocked = false,
+  activeChatDbName = ''
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,7 +33,6 @@ export default function DatabaseSelectorPopover({
 
   const isCurrentNoSql = currentDb.type === 'nosql';
   const isCurrentSpreadsheet = currentDb.type === 'csv' || currentDb.type === 'excel';
-  const isCurrentExcel = currentDb.type === 'excel';
 
   // Filter databases by search query
   const filteredDbs = useMemo(() => {
@@ -81,7 +82,7 @@ export default function DatabaseSelectorPopover({
     setConfirmDeleteId(null);
   };
 
-  const handleDelete = async (e, dbId, name) => {
+  const handleDelete = async (e, dbId, _name) => {
     e.stopPropagation();
     setDeletingId(dbId);
     setConfirmDeleteId(null);
@@ -153,17 +154,24 @@ export default function DatabaseSelectorPopover({
                 : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
           }`}>
             {isCurrentSpreadsheet
-              ? (isCurrentExcel ? `${currentDb.sheet_count || 1} sheets` : `${currentDb.row_count || 0} rows`)
+              ? (currentDb.column_count
+                  ? `${currentDb.column_count} ${currentDb.column_count === 1 ? 'col' : 'cols'}, ${(currentDb.row_count || 0).toLocaleString()} rows`
+                  : `${(currentDb.row_count || 0).toLocaleString()} rows`)
               : isCurrentNoSql 
-                ? `${currentDb.doc_count || 0} docs` 
+                ? `${currentDb.table_count || 1} ${currentDb.table_count === 1 ? 'collection' : 'collections'}` 
                 : `${currentDb.table_count || 0} tables`}
           </span>
         </div>
 
-        {/* Rotating Chevron */}
-        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
-          isOpen ? 'rotate-180 text-indigo-400' : ''
-        }`} />
+        {/* Rotating Chevron & Optional Lock Indicator */}
+        <div className="flex items-center gap-1 shrink-0">
+          {isLocked && (
+            <Lock className="w-3 h-3 text-amber-400" title={`Locked to conversation: ${currentDb.name}`} />
+          )}
+          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-indigo-400' : ''
+          }`} />
+        </div>
       </button>
 
       {/* FLOATING POPOVER MODAL */}
@@ -185,6 +193,18 @@ export default function DatabaseSelectorPopover({
               {databases.length} sources
             </span>
           </div>
+
+          {/* LOCKED CONVERSATION INFORMATIVE BANNER */}
+          {isLocked && (
+            <div className={`px-3.5 py-2 border-b text-[11px] flex items-center gap-2 ${
+              isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'
+            }`}>
+              <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>
+                Current chat is locked to <strong>{activeChatDbName || currentDb.name}</strong>. Choosing another dataset starts a new conversation.
+              </span>
+            </div>
+          )}
 
           {/* SEARCH BOX */}
           <div className="p-3 border-b border-slate-800/40">
@@ -244,11 +264,6 @@ export default function DatabaseSelectorPopover({
                               <p className="text-xs font-semibold truncate group-hover:text-indigo-400 transition-colors">
                                 {db.name}
                               </p>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
                               <Layers className="w-3 h-3" /> {db.table_count || 0} tables · SQLite
@@ -340,14 +355,9 @@ export default function DatabaseSelectorPopover({
                               <p className="text-xs font-semibold truncate group-hover:text-amber-400 transition-colors">
                                 {db.name}
                               </p>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                              <Layers className="w-3 h-3" /> {db.doc_count || 0} documents · JSON
+                              <Layers className="w-3 h-3" /> {db.table_count || 1} {db.table_count === 1 ? 'collection' : 'collections'} · JSON
                             </p>
                           </div>
                         </div>
@@ -405,12 +415,12 @@ export default function DatabaseSelectorPopover({
               </div>
             )}
 
-            {/* Section 3: Spreadsheets & Formulas (CSV & Excel) */}
+            {/* Section 3: Tabular Datasets (CSV & Excel) */}
             {spreadsheetDatabases.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                   <FileSpreadsheet className="w-3 h-3" />
-                  <span>Spreadsheets & Formulas ({spreadsheetDatabases.length})</span>
+                  <span>Tabular Datasets ({spreadsheetDatabases.length})</span>
                 </div>
                 <div className="space-y-1 mt-0.5">
                   {spreadsheetDatabases.map((db) => {
@@ -443,14 +453,13 @@ export default function DatabaseSelectorPopover({
                               <p className="text-xs font-semibold truncate group-hover:text-emerald-400 transition-colors">
                                 {db.name}
                               </p>
-                              {db.upload_mode === 'multiple' && (
-                                <span className="px-1.5 py-0.2 rounded text-[8px] font-medium bg-purple-500/15 text-purple-400 border border-purple-500/25 shrink-0 flex items-center gap-0.5" title={`Batch Group: ${db.group_name || 'Multi-File'}`}>
-                                  📁 {db.group_name || 'Group'}
-                                </span>
-                              )}
                             </div>
                             <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
-                              <Layers className="w-3 h-3" /> {isExcel ? `${db.sheet_count || 1} sheets · Excel Formula` : `${db.row_count || 0} rows · Pandas`}
+                              <Layers className="w-3 h-3" /> {(db.sheet_count || db.table_count || 1) <= 1 && db.column_count
+                                ? `${db.column_count} ${db.column_count === 1 ? 'column' : 'columns'}, ${(db.row_count || 0).toLocaleString()} rows`
+                                : (db.sheet_count || db.table_count || 1) > 1
+                                  ? `${(db.row_count || 0).toLocaleString()} rows (${db.sheet_count || db.table_count} sheets)`
+                                  : `${(db.row_count || 0).toLocaleString()} rows`} · {isExcel ? 'Excel Formula' : 'Pandas'}
                             </p>
                           </div>
                         </div>

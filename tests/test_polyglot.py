@@ -37,54 +37,67 @@ def test_language_config_catalog():
 
 def test_is_language_supported_matrix():
     """Verify matrix of supported languages across SQL, NoSQL, CSV, and Excel."""
-    # 1. SQL (Relational)
+    # 1. SQL (Relational) - SQL, Python (Pandas), R supported; NoSQL & Excel rejected
     assert is_language_supported("sql", "sql") is True
     assert is_language_supported("sql", "pandas") is True
     assert is_language_supported("sql", "r") is True
-    assert is_language_supported("sql", "excel_formula") is True
+    assert is_language_supported("sql", "excel_formula") is False
+    assert is_language_supported("sql", "nosql") is False
     assert is_language_supported("sql", "javascript") is False
     assert is_language_supported("sql", "java") is False
     assert is_language_supported("sql", "csharp") is False
-    assert is_language_supported("sql", "nosql") is False
 
-    # 2. NoSQL (MongoDB)
+    # 2. NoSQL (MongoDB) - NoSQL, Python, R supported; SQL & Excel rejected
     assert is_language_supported("nosql", "nosql") is True
     assert is_language_supported("nosql", "pandas") is True
     assert is_language_supported("nosql", "r") is True
-    assert is_language_supported("nosql", "excel_formula") is True
+    assert is_language_supported("nosql", "excel_formula") is False
+    assert is_language_supported("nosql", "sql") is False
     assert is_language_supported("nosql", "javascript") is False
     assert is_language_supported("nosql", "java") is False
     assert is_language_supported("nosql", "csharp") is False
-    assert is_language_supported("nosql", "sql") is False
 
-    # 3. CSV & Excel (Spreadsheets)
+    # 3. CSV & Excel (Spreadsheets) - Pandas, Excel Formula, R supported; SQL & NoSQL rejected
     for sheet_type in ["csv", "excel"]:
-        assert is_language_supported(sheet_type, "sql") is True
         assert is_language_supported(sheet_type, "pandas") is True
         assert is_language_supported(sheet_type, "excel_formula") is True
         assert is_language_supported(sheet_type, "r") is True
+        assert is_language_supported(sheet_type, "sql") is False
+        assert is_language_supported(sheet_type, "nosql") is False
         assert is_language_supported(sheet_type, "javascript") is False
         assert is_language_supported(sheet_type, "java") is False
         assert is_language_supported(sheet_type, "csharp") is False
-        assert is_language_supported(sheet_type, "nosql") is False
 
 
 def test_get_supported_languages():
     """Verify language list filtering by database engine type."""
     sql_langs = [cfg["id"] for cfg in get_supported_languages("sql")]
     assert "sql" in sql_langs
-    assert "excel_formula" in sql_langs
+    assert "pandas" in sql_langs
+    assert "r" in sql_langs
+    assert "excel_formula" not in sql_langs
     assert "nosql" not in sql_langs
 
     nosql_langs = [cfg["id"] for cfg in get_supported_languages("nosql")]
     assert "nosql" in nosql_langs
-    assert "excel_formula" in nosql_langs
+    assert "pandas" in nosql_langs
+    assert "r" in nosql_langs
+    assert "excel_formula" not in nosql_langs
     assert "sql" not in nosql_langs
 
     csv_langs = [cfg["id"] for cfg in get_supported_languages("csv")]
+    assert "pandas" in csv_langs
     assert "excel_formula" in csv_langs
-    assert "sql" in csv_langs
+    assert "r" in csv_langs
+    assert "sql" not in csv_langs
     assert "nosql" not in csv_langs
+
+    excel_langs = [cfg["id"] for cfg in get_supported_languages("excel")]
+    assert "excel_formula" in excel_langs
+    assert "pandas" in excel_langs
+    assert "r" in excel_langs
+    assert "sql" not in excel_langs
+    assert "nosql" not in excel_langs
 
 
 def test_generate_polyglot_code_success_with_mock():

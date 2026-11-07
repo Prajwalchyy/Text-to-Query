@@ -89,10 +89,6 @@ def test_openapi_schema_contains_all_mounted_routes():
     assert "get" in paths["/api/databases"]
     assert "/api/databases/upload" in paths
     assert "post" in paths["/api/databases/upload"]
-    assert "/api/databases/{db_id}/append-table" in paths
-    assert "post" in paths["/api/databases/{db_id}/append-table"]
-    assert "/api/databases/{db_id}/append-collection" in paths
-    assert "post" in paths["/api/databases/{db_id}/append-collection"]
     assert "/api/databases/{db_id}" in paths
     assert "delete" in paths["/api/databases/{db_id}"]
     assert "/api/tables" in paths

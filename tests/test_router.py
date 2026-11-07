@@ -321,7 +321,8 @@ def test_functional_pipeline_adapter():
     lang_ids = [l["id"] for l in langs]
     assert "sql" in lang_ids
     assert "pandas" in lang_ids
-    assert "excel_formula" in lang_ids
+    assert "r" in lang_ids
+    assert "excel_formula" not in lang_ids
     assert "nosql" not in lang_ids
 
     mock_llm_sql = '[{"title": "Test", "sql": "SELECT 1 AS num;"}]'
