@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { User, Sparkles, Database, AlertCircle, Lightbulb, ArrowRight, Inbox, Copy, Check, CornerDownLeft, Target, FileSpreadsheet, FileJson } from 'lucide-react';
-import ResultBlock from './ResultBlock';
+import QueryCodeCard from './QueryCodeCard';
 import DataTable from './DataTable';
 import JsonDocumentViewer from './JsonDocumentViewer';
-import DetailsPopover from './DetailsPopover';
+import TelemetryPopover from './TelemetryPopover';
 
 export default function ChatMessage({ 
   message, 
@@ -344,7 +344,7 @@ export default function ChatMessage({
 
               {/* 1. Generated SQL / MQL / Python / Excel Formula / Multi-Language Block */}
               {hasSql && (
-                <ResultBlock 
+                <QueryCodeCard 
                   sql={currentSql} 
                   isDark={isDark} 
                   codeType={codeType}
@@ -377,7 +377,7 @@ export default function ChatMessage({
           )}
 
           {/* 3. Technical Details Popover (Includes Guardrail reason and Latency) */}
-          <DetailsPopover telemetry={telemetryData} isDark={isDark} />
+          <TelemetryPopover telemetry={telemetryData} isDark={isDark} />
         </div>
       </div>
     </div>

@@ -181,7 +181,7 @@ export default function Sidebar({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold tracking-tight group-hover:text-indigo-400 transition-colors">Text to Code</h1>
+              <h1 className="text-sm font-bold tracking-tight group-hover:text-indigo-400 transition-colors">Text to Query</h1>
             </div>
           </button>
 

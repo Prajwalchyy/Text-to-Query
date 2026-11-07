@@ -3,10 +3,10 @@ import { Menu, WifiOff, AlertTriangle, RefreshCw, Sparkles, Network, PanelLeftOp
 import Sidebar from './components/Sidebar';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
-import UploadDatasets from './components/UploadDatasets';
+import UploadDatasetModal from './components/UploadDatasetModal';
 import SchemaMapModal from './components/SchemaMapModal';
 import SwitchDatasetModal from './components/SwitchDatasetModal';
-import DatabaseSelectorPopover from './components/DatabaseSelectorPopover';
+import DatasetSelectorPopover from './components/DatasetSelectorPopover';
 import HomepageWelcome from './components/HomepageWelcome';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -552,7 +552,7 @@ export default function App() {
       />
 
       {/* Manage & Upload Databases / Datasets Modal */}
-      <UploadDatasets
+      <UploadDatasetModal
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         databases={databases}
@@ -621,7 +621,7 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             {/* 🗄️ PROMINENT DATABASE SELECTOR & UPLOAD CONTROLS */}
             <div className="flex items-center gap-2">
-              <DatabaseSelectorPopover
+              <DatasetSelectorPopover
                 databases={databases}
                 selectedDbId={selectedDbId}
                 onSelectDb={handleSelectDb}

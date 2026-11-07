@@ -10,7 +10,7 @@ import {
   Table as TableIcon,
   RefreshCw
 } from 'lucide-react';
-import { generateDatasetPrompts } from '../utils/promptGenerator';
+import { generateDatasetPrompts } from '../utils/sampleQuerySuggestions';
 
 // Module-level session cache: ensures generated prompts stay rock-solid
 // and never re-roll across intermediate async data loading or re-renders
@@ -97,12 +97,12 @@ export default function HomepageWelcome({
           <Sparkles className="w-7 h-7" />
         </div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
-          {isNewConversation ? "New Conversation" : "Welcome to Text to Code"}
+          {isNewConversation ? "New Conversation" : "Welcome to Text to Query"}
         </h1>
         <p className="text-xs md:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
           {isNewConversation 
             ? `Ready to query ${currentDb?.name || 'your dataset'}. Pick a prompt suggestion below or ask anything to get started.`
-            : "Ask questions in plain natural language. Text to Code automatically translates your intent into safe, verified SQL, Python, Excel formulas, or NoSQL queries."}
+            : "Ask questions in plain natural language. Text to Query automatically translates your intent into safe, verified SQL, Python, Excel formulas, or NoSQL queries."}
         </p>
       </div>
 
