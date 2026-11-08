@@ -1,12 +1,22 @@
 # ==============================================================================
-# Enterprise Text-to-SQL System Dependencies
+# Text to Query (Text to Code) - Backend Dependencies
 # ==============================================================================
 
-# Database & Schema Introspection
-sqlalchemy>=2.0.0
-pandas>=2.0.0
+# Web Framework, ASGI Server & File Handling
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
 
-# Security, AST Parsing & Guardrails
+# Data Processing, Tabular & Spreadsheet Engines
+pandas>=2.0.0
+numpy>=1.26.0
+openpyxl>=3.1.0
+
+# Database Introspection & NoSQL BSON Handling
+sqlalchemy>=2.0.0
+pymongo>=4.6.0
+
+# Query Parsing, AST Guardrails & Security
 sqlglot>=23.0.0
 
 # LLM Providers & AI Orchestration
@@ -14,15 +24,11 @@ openai>=1.12.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 
-# Environment Configuration
+# Environment Configuration & Logging
 python-dotenv>=1.0.0
-
-# Observability & Structured Logging
 structlog>=24.1.0
 
-# REST API & Web Service
-fastapi>=0.110.0
-uvicorn>=0.28.0
-
-# Testing & Benchmarking Suite
+# Testing & Quality Verification Suite
 pytest>=8.0.0
+httpx>=0.27.0
+anyio>=4.0.0
