@@ -5,10 +5,11 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Documentation & Markdown Files (Blocked from repository)
+# 1. Documentation & Markdown Files (Keep README.md allowed for GitHub)
 # ------------------------------------------------------------------------------
 *.md
 **/*.md
+!README.md
 
 # ------------------------------------------------------------------------------
 # 2. Environment Secrets (Keep Example Templates Allowed)
