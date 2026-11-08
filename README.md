@@ -26,14 +26,14 @@
 
 ## 🚀 Key Features
 
-- **Conversational Memory**: Remembers context across multi-turn chats and resolves pronouns (`"their sales"`, `"filter those"`).
-- **Multi-Dialect Query Generation**: Converts plain English into SQL, NoSQL (MongoDB MQL), Python (Pandas), R, and Excel formulas.
-- **One-Click Code Conversion**: Instantly converts queries and code blocks between all supported programming dialects.
-- **Compound Query Splitter**: Automatically decomposes multi-part questions into tabbed sub-queries.
-- **AST Security Guardrails**: Strictly enforces read-only execution and blocks dangerous mutations, unauthorized imports, or system calls.
-- **Self-Healing Reflection**: Automatically catches execution/schema errors and repairs queries up to 3 times.
-- **LLM-as-a-Judge**: Evaluates query results against user intent and provides a confidence score and summary.
-- **Adaptive Data Visualizations**: Interactive data tables with CSV/JSON export, collapsible JSON tree viewer, and dynamic ER diagram canvas.
+- **Conversational Chatbot**: Chat interface with conversation history and dataset suggestion chips.
+- **Generated Code Card**: Displays generated queries in SQL, MongoDB MQL, Python (Pandas), R, or Excel Formulas with syntax highlighting.
+- **One-Click Language Switcher**: Switch the displayed query to another programming dialect directly from the code card.
+- **Interactive Data Table**: View tabular results in a clean table with row counts and one-click CSV / JSON download buttons.
+- **Collapsible JSON Viewer**: Expand and inspect NoSQL document results in an interactive tree view.
+- **Visual Schema Map**: Draggable ER diagram showing tables, columns, and relationship lines between foreign keys.
+- **Multi-Tab Results**: Automatically splits multi-part questions into separate tabs with their own code and data views.
+- **Dataset Manager & Uploader**: Switch between datasets or upload custom SQLite, NoSQL, CSV, and Excel files.
 
 ---
 
@@ -44,6 +44,7 @@ Text to Query
 ├── backend/
 │   ├── config.py                      # Centralized configuration, filesystem paths & .env loader
 │   ├── main.py                        # FastAPI application entry point, CORS & lifecycle
+│   ├── requirements.txt               # Backend Python dependencies
 │   ├── data/                          # Data directory
 │   │   ├── databases.json             # Master registry of active and uploaded datasets
 │   │   ├── default/                   # Protected system default datasets
@@ -92,7 +93,7 @@ Text to Query
 │   │   └── utils/
 │   │       └── sampleQuerySuggestions.js # Dataset-aware query suggestion chip generator
 │   └── package.json
-└── requirements.txt                   # Unified requirements covering backend and frontend
+└── samples/                           # Multi-format sample datasets for testing
 ```
 
 ---
@@ -100,6 +101,7 @@ Text to Query
 ## 🛠️ Quickstart Guide
 
 ### Prerequisites
+
 - **Python**: 3.11+ (Anaconda / Miniconda recommended)
 - **Node.js**: 18+ & **npm**
 
@@ -125,6 +127,7 @@ cp .env_example .env
 ```
 
 Open `backend/.env` and provide your Groq or OpenAI API key:
+
 ```ini
 API_KEY="gsk_your_groq_api_key_here"
 MODEL="llama-3.3-70b-versatile"
@@ -133,16 +136,19 @@ DATABASE_URL="sqlite:///chinook.db"
 ```
 
 Start the FastAPI backend server:
+
 ```powershell
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-*API docs and OpenAPI spec will be live at: `http://localhost:8000/docs`*
+
+_API docs and OpenAPI spec will be live at: `http://localhost:8000/docs`_
 
 ---
 
 ### 2. Frontend Setup
 
 In a new terminal window:
+
 ```powershell
 cd text-to-query/frontend
 
@@ -152,7 +158,8 @@ npm install
 # Start Vite development server
 npm run dev
 ```
-*Open your browser at: `http://localhost:5173`*
+
+_Open your browser at: `http://localhost:5173`_
 
 ---
 

@@ -7,7 +7,7 @@
     "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_query\\backend\\data\\default\\db\\chinook.db",
     "table_count": 11,
     "is_default": true,
-    "created_at": "2026-09-01T14:43:16.521604+00:00"
+    "created_at": "2026-11-08T05:43:10.118258+00:00"
   },
   {
     "id": "ecommerce_store",
@@ -19,7 +19,7 @@
     "doc_count": 107,
     "row_count": 107,
     "is_default": true,
-    "created_at": "2026-09-02T17:00:42.386418+00:00"
+    "created_at": "2026-11-08T05:43:10.119818+00:00"
   },
   {
     "id": "sales_performance",
@@ -31,7 +31,7 @@
     "column_count": 9,
     "table_count": 1,
     "is_default": true,
-    "created_at": "2026-09-04T08:35:35.779158+00:00"
+    "created_at": "2026-11-08T05:43:10.122014+00:00"
   },
   {
     "id": "financial_budget",
@@ -47,60 +47,6 @@
     "row_count": 1000,
     "column_count": 13,
     "is_default": true,
-    "created_at": "2026-09-04T08:35:36.028788+00:00"
-  },
-  {
-    "id": "healthcare_patients_1794063484",
-    "name": "Healthcare Patients",
-    "type": "sql",
-    "filename": "healthcare_patients.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\healthcare_patients.db",
-    "upload_mode": "single",
-    "group_name": null,
-    "group_id": null,
-    "table_count": 5,
-    "is_default": false,
-    "created_at": "2026-11-07T14:58:04.023495+00:00"
-  },
-  {
-    "id": "company_management__combined__1794063484",
-    "name": "Company Management (Combined)",
-    "type": "sql",
-    "filename": "combined_sql_database.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\combined_sql_database.db",
-    "upload_mode": "single",
-    "group_name": null,
-    "group_id": null,
-    "table_count": 4,
-    "is_default": false,
-    "created_at": "2026-11-07T14:58:04.027472+00:00"
-  },
-  {
-    "id": "northwind_e_commerce_1794063484",
-    "name": "Northwind E-Commerce",
-    "type": "sql",
-    "filename": "northwind_ecommerce.db",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\db\\northwind_ecommerce.db",
-    "upload_mode": "single",
-    "group_name": null,
-    "group_id": null,
-    "table_count": 7,
-    "is_default": false,
-    "created_at": "2026-11-07T14:58:04.044977+00:00"
-  },
-  {
-    "id": "online_academy__courses___reviews__1794063484",
-    "name": "Online Academy (Courses & Reviews)",
-    "type": "nosql",
-    "filename": "test_academy.json",
-    "path": "E:\\ALL_CODES_HERE_NOW\\PROJECT-LIST\\AI_ENG\\Text_to_sql\\backend\\data\\uploads\\json\\test_academy.json",
-    "upload_mode": "single",
-    "group_name": null,
-    "group_id": null,
-    "table_count": 4,
-    "doc_count": 20,
-    "row_count": 20,
-    "is_default": false,
-    "created_at": "2026-11-07T14:58:04.063884+00:00"
+    "created_at": "2026-11-08T05:43:10.469516+00:00"
   }
 ]
