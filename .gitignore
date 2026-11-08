@@ -28,7 +28,7 @@
 !frontend/.env.example
 
 # ------------------------------------------------------------------------------
-# 3. Python Caches & Virtual Environments
+# 3. Python Caches, Virtual Environments & Tests
 # ------------------------------------------------------------------------------
 __pycache__/
 *.pyc
@@ -36,6 +36,7 @@ __pycache__/
 env/
 venv/
 .pytest_cache/
+tests/
 
 # ------------------------------------------------------------------------------
 # 4. Node.js Dependencies & Frontend Build Outputs

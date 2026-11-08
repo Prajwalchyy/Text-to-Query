@@ -8,8 +8,6 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Tests](https://img.shields.io/badge/Tests-187%20Passed-success?logo=pytest&logoColor=white)](tests/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
@@ -28,29 +26,14 @@
 
 ## 🚀 Key Features
 
-### 1. 💬 Conversational Intelligence & Memory
-- **4-Turn Context Window**: Maintains a sliding conversational history window to resolve pronouns and coreferences (e.g. *"Show their top 5 invoices"*, *"Filter those by USA"*).
-- **Compound Query Decomposition**: Automatically detects multi-intent questions (e.g. *"1. Top sales reps by revenue, 2. Monthly growth rate"*), splits them into discrete sub-queries, and presents them in the UI via sub-query tabs.
-- **Out-of-Domain (OOD) Guard**: Gracefully intercepts questions referencing non-existent tables or business concepts, explaining missing schema entities and providing helpful suggestions.
-
-### 2. 🛡️ Zero-Mutation Guardrails & Sandboxing
-- **SQL Guard (`sqlglot` AST)**: Strictly permits `SELECT` and `UNION` statements. Automatically blocks mutations (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `ALTER`, `TRUNCATE`) and multi-statement injection attacks.
-- **NoSQL Guard (AST Walker)**: Enforces read-only MQL operations (`find`, `aggregate`). Blocks destructive operators (`$set`, `$unset`, `$delete`, `$drop`, `$merge`).
-- **Tabular/Pandas AST Sandbox**: Analyzes Python syntax trees via `ast.NodeVisitor`. Blocks unauthorized imports (`os`, `sys`, `subprocess`), system calls (`eval`, `exec`, `open`), loops, and custom function definitions.
-
-### 3. 🔁 3-Attempt Self-Healing Reflection Loop
-- If a generated query encounters syntax or execution errors (e.g. invalid column name or type mismatch), the error traceback and live schema are reflected back to the LLM.
-- Automatically repairs the query in up to **3 iterative attempts** before presenting the result.
-
-### 4. ⚖️ LLM-as-a-Judge Evaluation & Telemetry
-- A secondary evaluation pass analyzes the generated code against user intent and execution output.
-- Returns a semantic **confidence score (0.0 to 1.0)**, execution latency metrics, retry counts, and a concise natural language explanation.
-
-### 5. 🖥️ Modern Web UI (React 19 + Tailwind CSS v4)
-- **Adaptive Data Viewer**: Seamlessly renders relational and spreadsheet data in virtualized **Data Tables** (with CSV & JSON export) and document collections in an expandable **JSON Tree Viewer**.
-- **Interactive ER Canvas**: Draggable schema diagram with dynamic cubic bezier SVG lines connecting foreign keys to primary keys.
-- **Dialect Switcher**: Live code card allowing instant syntax highlighting and one-click polyglot conversion.
-- **Dataset Manager**: Upload standalone files or merged multi-file datasets (`.db`, `.sqlite`, `.json`, `.bson`, `.csv`, `.xlsx`).
+- **Conversational Memory**: Remembers context across multi-turn chats and resolves pronouns (`"their sales"`, `"filter those"`).
+- **Multi-Dialect Query Generation**: Converts plain English into SQL, NoSQL (MongoDB MQL), Python (Pandas), R, and Excel formulas.
+- **One-Click Code Conversion**: Instantly converts queries and code blocks between all supported programming dialects.
+- **Compound Query Splitter**: Automatically decomposes multi-part questions into tabbed sub-queries.
+- **AST Security Guardrails**: Strictly enforces read-only execution and blocks dangerous mutations, unauthorized imports, or system calls.
+- **Self-Healing Reflection**: Automatically catches execution/schema errors and repairs queries up to 3 times.
+- **LLM-as-a-Judge**: Evaluates query results against user intent and provides a confidence score and summary.
+- **Adaptive Data Visualizations**: Interactive data tables with CSV/JSON export, collapsible JSON tree viewer, and dynamic ER diagram canvas.
 
 ---
 
@@ -109,7 +92,7 @@ Text to Query
 │   │   └── utils/
 │   │       └── sampleQuerySuggestions.js # Dataset-aware query suggestion chip generator
 │   └── package.json
-└── tests/                             # 187 comprehensive unit & integration tests
+└── requirements.txt                   # Unified requirements covering backend and frontend
 ```
 
 ---
@@ -173,43 +156,9 @@ npm run dev
 
 ---
 
-## 🧪 Testing & Verification
-
-The test suite contains **187 automated tests** covering AST guardrails, dialect engines, router pipelines, self-healing reflection loops, and session storage:
-
-```powershell
-# Run all backend tests
-pytest tests/
-
-# Run frontend linting & production build check
-cd frontend
-npm run lint
-npm run build
-```
-
----
-
-## 💡 Example Queries by Dialect
-
-| Dialect | Example Natural Language Prompt | Generated Code / Output |
-|---|---|---|
-| **SQL** | *"Which 5 artists have the most tracks in the catalog?"* | `SELECT Artist.Name, COUNT(Track.TrackId) AS TrackCount FROM Artist JOIN Album ... LIMIT 5;` |
-| **NoSQL (MQL)** | *"Find all electronics products with rating above 4.5 sorted by price"* | `db.products.find({"category": "Electronics", "rating": {"$gt": 4.5}}).sort({"price": -1})` |
-| **Python (Pandas)** | *"Calculate total sales and profit margin grouped by region"* | `result_df = df.groupby('Region').agg({'Sales': 'sum', 'Profit': 'sum'}).reset_index()` |
-| **Excel Formulas** | *"Sum the revenue in column C where status in column D is Completed"* | `=SUMIFS(C:C, D:D, "Completed")` |
-| **R (Tidyverse)** | *"Filter active customers and count orders per state"* | `customers %>% filter(status == 'Active') %>% count(state, sort = TRUE)` |
-
----
-
 ## 🔒 Security & Data Protection
 
 - **Read-Only Invariant**: Guardrails strictly forbid state-mutating operations (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`).
 - **Sandbox Isolation**: Arbitrary OS access, network sockets, subprocessing, and file writes are barred at the AST parsing layer.
 - **Protected System Datasets**: Default datasets are immutable and safe from accidental deletion.
 - **Secret Hygiene**: API credentials are read exclusively from local `.env` files and never tracked in Git.
-
----
-
-## 📄 License
-
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
